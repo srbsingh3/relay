@@ -95,3 +95,14 @@ simplicity, security, and complete local operation.
 - Cursor, Claude Code, and Codex configs update correctly.
 - Sandbox and hardened runtime enabled.
 - Signed macOS build.
+
+## Future Improvements
+
+- **Drift detection & conflict resolution (post-MVP)**
+  - On app launch and when the user clicks **Sync Now**, read each detected agent adapter config (`mcp.json`) for Cursor, Claude Code, and Codex, and diff against the canonical output generated from `registry.json` + Keychain.
+  - If drift is detected, present an **Out of sync** prompt with three choices:
+    1) **Keep Relay version** — overwrite agent configs with Relay state.
+    2) **Import from agent** — update `registry.json` and Keychain from the agent's config.
+    3) **Ignore once** — dismiss without changes for this session.
+  - Implementation notes: use atomic writes (temp file + fsync + rename), create a `.bak` before overwrite, and display a minimal diff in the UI for clarity.
+  - Status: **Not in MVP**; schedule as a post-MVP enhancement.
