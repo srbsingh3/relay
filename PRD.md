@@ -7,7 +7,7 @@ simplicity, security, and complete local operation.
 
 ## Primary Goals
 1. Securely add, remove, toggle, and sync MCP servers.
-2. Automatically update Cursor, Claude Code, and Codex MCP config files.
+2. Automatically update Claude Code, Cursor, and Codex MCP configuration files.
 3. Store all secrets in the macOS Keychain — no plaintext storage.
 4. Operate fully offline — no internet access or telemetry.
 5. Provide a minimal, intuitive UI.
@@ -24,9 +24,17 @@ simplicity, security, and complete local operation.
 - **Registry File:** `~/Library/Application Support/Relay/registry.json`
 - **Keychain Service:** `com.relay.app` for secret storage.
 - **Adapters:**
-  - Cursor: `~/Library/Application Support/Cursor/.../mcp.json`
-  - Claude Code: `~/Library/Application Support/Claude/.../mcp.json`
-  - Codex: `~/Library/Application Support/Codex/.../mcp.json`
+  - Cursor (user scope): `~/.cursor/mcp.json`
+    - Relay writes global MCP entries here (JSON).
+    - Project scope (read-only in MVP): `<project>/.cursor/mcp.json` (Relay does not modify project files).
+
+  - Claude Code (user scope): `~/.claude.json`
+    - Relay updates the user-level MCP servers inside this file (JSON) and preserves unrelated keys.
+    - Project scope (read-only in MVP): `<project>/.mcp.json` (Relay does not modify project files).
+    - Note: `~/.claude/settings.json` holds user settings, not the MCP server store.
+
+  - Codex (user scope): `~/.codex/config.toml`
+    - Relay updates the TOML MCP section, creating/updating `[mcp_servers.<name>]` tables and preserving other config.
 
 ## Data Model
 
@@ -63,7 +71,7 @@ simplicity, security, and complete local operation.
 1. Add MCP Server (Name, Endpoint, Token)
 2. Remove MCP Server
 3. Toggle MCP Server (enabled/disabled)
-4. Sync with Cursor, Claude Code, and Codex configs
+4. Sync with Claude Code, Cursor, and Codex configs
 5. Detect agents and display config paths
 6. Per-app enable/disable scopes (Cursor, Claude Code, Codex) per server
 
@@ -99,7 +107,7 @@ simplicity, security, and complete local operation.
 ## Completion Criteria
 - Works fully offline.
 - All tokens stored securely in Keychain.
-- Cursor, Claude Code, and Codex configs update correctly.
+- Claude Code, Cursor, and Codex configurations update correctly.
 - Sandbox and hardened runtime enabled.
 - Signed macOS build.
 - "All apps" master switch behaves as specified: default all ON on add; individual overrides set it to Custom; toggles disabled for undetected agents.
@@ -116,12 +124,20 @@ simplicity, security, and complete local operation.
   - Status: **Not in MVP**; schedule as a post-MVP enhancement.
 
 ## Agent Detection (MVP)
-- Detect presence of Cursor, Claude Code, and Codex agents by checking for their MCP config files.
-- Display detected agents in the Settings section.
-- Allow toggling of per-app scopes only for detected agents.
-- Paths checked: Cursor → `~/Library/Application Support/Cursor/.../mcp.json`; Claude Code → `~/Library/Application Support/Claude/.../mcp.json`; Codex → `~/Library/Application Support/Codex/.../mcp.json`.
+- Cursor: mark **Detected** if `~/.cursor/mcp.json` exists OR the `~/.cursor` directory exists.
+- Claude Code: mark **Detected** if `~/.claude.json` exists OR the `claude` CLI is on PATH (`which claude`).
+- Codex: mark **Detected** if `~/.codex/config.toml` exists OR the `codex` CLI is on PATH (`which codex`).
+- Show the resolved user config path(s) in Settings (read-only).
+- No deep scanning and no background watching.
+
+## Sync Behavior
+- Cursor: write the effective MCP servers to `~/.cursor/mcp.json` (JSON merge; atomic write: temp file + fsync + rename; also create a `.bak`).
+- Claude Code: merge enabled servers into `~/.claude.json` under the MCP section; remove disabled; atomic write with `.bak`.
+- Codex: update `~/.codex/config.toml` by creating/updating `[mcp_servers.<name>]` tables; remove disabled; atomic write with `.bak`.
+
+## UI Overview
 
 ### Per-App Toggles (MVP)
 - **All apps** master switch on each server row: default ON. Turning it OFF sets all app toggles OFF. Changing any individual toggle switches the master to a **Custom** state; turning the master ON again sets all detected app toggles ON.
-- **Servers list:** each server row shows three small pill toggles — Cursor / Claude / Codex — reflecting the per-app scopes in `registry.json` (`apps` object). Default: all ON for detected agents.
-- **Add/Edit Modal:** includes an **All apps** switch and the same three toggles. Default is all ON; toggles are disabled (read-only) for agents that are not detected.
+- **Servers list:** each server row shows three small pill toggles — Cursor / Claude Code / Codex — with app icons; reflecting per-app scopes in `registry.json` (`apps` object). Default: all ON for detected agents.
+- **Add/Edit Modal:** includes an **All apps** switch and the same three toggles (with icons). Toggles are disabled (read-only) for agents that are not detected.
