@@ -53,12 +53,19 @@ simplicity, security, and complete local operation.
 - Account: `token:<tokenAlias>`
 - Password: secret token value
 
+### Per-app scopes (MVP)
+- Each server may include an optional "apps" object to scope enablement per supported agent.
+- MVP UI **always** exposes per-app toggles. Default is **All apps ON**; users can then turn specific apps OFF.
+- Effective rule: `effectiveEnabled(agent) = enabled && (apps[agent] ?? true)`.
+- Storage rule: if all detected apps remain ON, the UI omits the "apps" object (interpreted as all true). It only persists `apps` when an app is explicitly turned OFF.
+
 ## Core Features
 1. Add MCP Server (Name, Endpoint, Token)
 2. Remove MCP Server
 3. Toggle MCP Server (enabled/disabled)
 4. Sync with Cursor, Claude Code, and Codex configs
 5. Detect agents and display config paths
+6. Per-app enable/disable scopes (Cursor, Claude Code, Codex) per server
 
 ## Security
 - `contextIsolation`: true
@@ -95,6 +102,7 @@ simplicity, security, and complete local operation.
 - Cursor, Claude Code, and Codex configs update correctly.
 - Sandbox and hardened runtime enabled.
 - Signed macOS build.
+- "All apps" master switch behaves as specified: default all ON on add; individual overrides set it to Custom; toggles disabled for undetected agents.
 
 ## Future Improvements
 
@@ -106,3 +114,14 @@ simplicity, security, and complete local operation.
     3) **Ignore once** — dismiss without changes for this session.
   - Implementation notes: use atomic writes (temp file + fsync + rename), create a `.bak` before overwrite, and display a minimal diff in the UI for clarity.
   - Status: **Not in MVP**; schedule as a post-MVP enhancement.
+
+## Agent Detection (MVP)
+- Detect presence of Cursor, Claude Code, and Codex agents by checking for their MCP config files.
+- Display detected agents in the Settings section.
+- Allow toggling of per-app scopes only for detected agents.
+- Paths checked: Cursor → `~/Library/Application Support/Cursor/.../mcp.json`; Claude Code → `~/Library/Application Support/Claude/.../mcp.json`; Codex → `~/Library/Application Support/Codex/.../mcp.json`.
+
+### Per-App Toggles (MVP)
+- **All apps** master switch on each server row: default ON. Turning it OFF sets all app toggles OFF. Changing any individual toggle switches the master to a **Custom** state; turning the master ON again sets all detected app toggles ON.
+- **Servers list:** each server row shows three small pill toggles — Cursor / Claude / Codex — reflecting the per-app scopes in `registry.json` (`apps` object). Default: all ON for detected agents.
+- **Add/Edit Modal:** includes an **All apps** switch and the same three toggles. Default is all ON; toggles are disabled (read-only) for agents that are not detected.
