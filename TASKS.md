@@ -12,10 +12,10 @@ Use it as the primary execution plan for the macOS MVP.
 
 ## Milestone 1 — Foundation & Shell
 
-- [ ] 1.1 **Scaffold project**
-  - [ ] 1.1.1 Create Electron + Vite monorepo / packages structure.
-  - [ ] 1.1.2 Set up shared TypeScript config, linting, and testing baseline.
-  - [ ] 1.1.3 Add `PRD.md`, `AGENTS.md`, and `TASKS.md` to the repo as living references.
+- [x] 1.1 **Scaffold project**
+  - [x] 1.1.1 Create Electron + Vite monorepo / packages structure.
+  - [x] 1.1.2 Set up shared TypeScript config, linting, and testing baseline.
+  - [x] 1.1.3 Add `PRD.md`, `AGENTS.md`, and `TASKS.md` to the repo as living references.
 
 - [ ] 1.2 **Secure BrowserWindow shell**
   - [ ] 1.2.1 Create main Electron process entry.

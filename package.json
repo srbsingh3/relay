@@ -1,0 +1,51 @@
+{
+  "name": "relay",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Relay macOS offline MCP orchestrator",
+  "scripts": {
+    "dev": "run-p dev:main dev:renderer dev:electron",
+    "dev:main": "tsc -w -p packages/main/tsconfig.json",
+    "dev:renderer": "cd packages/renderer && vite build --watch",
+    "dev:electron": "wait-on packages/main/dist/main.js packages/main/dist/preload.js packages/renderer/dist/index.html && electron packages/main/dist/main.js",
+    "build": "npm run build:main && npm run build:renderer",
+    "build:main": "tsc -p packages/main/tsconfig.json",
+    "build:renderer": "cd packages/renderer && vite build",
+    "lint": "eslint \"packages/**/*.{ts,tsx,js,jsx}\"",
+    "test": "vitest",
+    "typecheck": "tsc -p tsconfig.base.json --noEmit"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=18.17.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.4",
+    "@types/react-dom": "^19.2.3",
+    "@typescript-eslint/eslint-plugin": "^8.46.4",
+    "@typescript-eslint/parser": "^8.46.4",
+    "@vitejs/plugin-react": "^5.1.1",
+    "electron": "^39.1.2",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "jsdom": "^27.2.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.4",
+    "vite": "^7.2.2",
+    "vitest": "^4.0.8",
+    "wait-on": "^9.0.3"
+  }
+}
