@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { app, BrowserWindow, nativeTheme, session } from 'electron';
+import { registerIpcHandlers } from './ipc/handlers';
 
 const isMac = process.platform === 'darwin';
 const rendererHtml = path.join(__dirname, '../../renderer/dist/index.html');
@@ -24,7 +25,7 @@ const applySecurityPolicies = () => {
   const cspValue = "default-src 'self'";
 
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-    const responseHeaders = {
+    const responseHeaders: Record<string, string[]> = {
       ...(details.responseHeaders ?? {}),
       'Content-Security-Policy': [cspValue]
     };
@@ -87,6 +88,7 @@ const createWindow = () => {
 app.whenReady().then(() => {
   nativeTheme.themeSource = 'dark';
   applySecurityPolicies();
+  registerIpcHandlers();
   createWindow();
 
   app.on('activate', () => {

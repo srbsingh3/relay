@@ -34,14 +34,14 @@ Use it as the primary execution plan for the macOS MVP.
   - [x] 1.3.3 Audit dependencies for telemetry/analytics and disable/remove them.
   - [x] 1.3.4 Confirm app functions with network disabled (no network calls made on launch).
 
-- [ ] 1.4 **Preload + IPC contract**
-  - [ ] 1.4.1 Implement preload script exposing a minimal, typed IPC bridge.
-  - [ ] 1.4.2 Define IPC channels for:
-    - [ ] 1.4.2.1 Registry read/write.
-    - [ ] 1.4.2.2 Keychain lookups.
-    - [ ] 1.4.2.3 Agent detection results.
-    - [ ] 1.4.2.4 Sync invocation + status.
-  - [ ] 1.4.3 Ensure preload never exposes Node primitives directly to the renderer.
+- [x] 1.4 **Preload + IPC contract**
+  - [x] 1.4.1 Implement preload script exposing a minimal, typed IPC bridge.
+  - [x] 1.4.2 Define IPC channels for:
+    - [x] 1.4.2.1 Registry read/write.
+    - [x] 1.4.2.2 Keychain lookups.
+    - [x] 1.4.2.3 Agent detection results.
+    - [x] 1.4.2.4 Sync invocation + status.
+  - [x] 1.4.3 Ensure preload never exposes Node primitives directly to the renderer.
 
 - [ ] 1.5 **Tray menu**
   - [ ] 1.5.1 Add tray icon and menu with:
