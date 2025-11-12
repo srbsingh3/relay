@@ -17,9 +17,38 @@ import {
 const REGISTRY_DIRECTORY_NAME = 'Relay';
 const REGISTRY_FILE_NAME = 'registry.json';
 const JSON_INDENT = 2;
+const SERVER_ID_PREFIX = 'srv_';
+const DEFAULT_SERVER_SLUG = 'server';
 
 let cachedRegistry: RegistryFile | null = null;
 let hasEnsuredDirectory = false;
+
+const slugifyServerName = (input: string): string => {
+  const slug = input
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/_{2,}/g, '_')
+    .replace(/^_+|_+$/g, '');
+  return slug.length > 0 ? slug : DEFAULT_SERVER_SLUG;
+};
+
+const reserveUniqueId = (seed: string, usedIds: Set<string>): string => {
+  let candidate = seed;
+  let counter = 2;
+
+  while (usedIds.has(candidate)) {
+    candidate = `${seed}_${counter}`;
+    counter += 1;
+  }
+
+  usedIds.add(candidate);
+  return candidate;
+};
+
+const createGeneratedServerId = (name: string, usedIds: Set<string>): string => {
+  const slug = slugifyServerName(name);
+  return reserveUniqueId(`${SERVER_ID_PREFIX}${slug}`, usedIds);
+};
 
 export class RegistryError extends Error {}
 
@@ -110,7 +139,7 @@ const sanitizeApps = (value: unknown): RegistryAppOverrides | undefined => {
   }
 
   const entries = Object.entries(value).filter(
-    ([key, val]) => typeof val === 'boolean' && isSupportedAgentKey(key)
+    ([key, val]) => val === false && isSupportedAgentKey(key)
   );
   if (entries.length === 0) {
     return undefined;
@@ -122,19 +151,20 @@ const sanitizeApps = (value: unknown): RegistryAppOverrides | undefined => {
   }, {});
 };
 
-const sanitizeServerRecord = (value: unknown): RegistryServerRecord | null => {
+const sanitizeServerRecord = (value: unknown, usedIds: Set<string>): RegistryServerRecord | null => {
   if (!isRecord(value)) {
     return null;
   }
 
-  const id = nonEmptyString(value.id);
   const name = nonEmptyString(value.name);
   const launch = sanitizeLaunchConfig(value.launch);
 
-  if (!id || !name || !launch) {
+  if (!name || !launch) {
     return null;
   }
 
+  const providedId = nonEmptyString(value.id);
+  const id = providedId ? reserveUniqueId(providedId, usedIds) : createGeneratedServerId(name, usedIds);
   const enabled = typeof value.enabled === 'boolean' ? value.enabled : true;
   const env = sanitizeEnvironment(value.env);
   const apps = sanitizeApps(value.apps);
@@ -161,8 +191,11 @@ const sanitizeRegistryFile = (value: unknown): RegistryFile => {
 
   const parsedVersion = Number((value as Record<string, unknown>).version);
   const version = Number.isFinite(parsedVersion) ? parsedVersion : REGISTRY_VERSION;
+  const usedIds = new Set<string>();
   const servers = Array.isArray(value.servers)
-    ? value.servers.map(sanitizeServerRecord).filter((server): server is RegistryServerRecord => Boolean(server))
+    ? value.servers
+        .map((server) => sanitizeServerRecord(server, usedIds))
+        .filter((server): server is RegistryServerRecord => Boolean(server))
     : [];
 
   return {
@@ -197,7 +230,7 @@ const normalizeApps = (apps?: RegistryAppOverrides): RegistryAppOverrides | unde
   }
 
   const sortedEntries = Object.entries(apps).filter(
-    ([key, value]) => typeof value === 'boolean' && isSupportedAgentKey(key)
+    ([key, value]) => value === false && isSupportedAgentKey(key)
   );
   if (sortedEntries.length === 0) {
     return undefined;
@@ -296,6 +329,15 @@ export const saveRegistry = async (registry: RegistryFile): Promise<RegistryFile
   await persistRegistry(normalized);
   cachedRegistry = normalized;
   return normalized;
+};
+
+export const effectiveEnabled = (server: RegistryServerRecord, agent: SupportedAgent): boolean => {
+  return Boolean(server.enabled) && (server.apps?.[agent] ?? true);
+};
+
+export const generateServerId = (name: string, existingServers: RegistryServerRecord[] = []): string => {
+  const usedIds = new Set(existingServers.map((server) => server.id));
+  return createGeneratedServerId(name, usedIds);
 };
 
 export const clearRegistryCache = () => {

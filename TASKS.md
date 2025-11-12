@@ -85,12 +85,12 @@ Use it as the primary execution plan for the macOS MVP.
     - [x] 2.2.3.2 Creating new files.
     - [x] 2.2.3.3 Error handling / tmp cleanup.
 
-- [ ] 2.3 **Registry invariants**
-  - [ ] 2.3.1 Implement auto ID generation (`srv_<slug>`) with collision-safe logic.
-  - [ ] 2.3.2 Ensure only `apps` overrides (false entries) are persisted.
-  - [ ] 2.3.3 Implement `effectiveEnabled(agent)` helper:
-    - [ ] 2.3.3.1 `enabled && (apps[agent] ?? true)`
-  - [ ] 2.3.4 Add tests confirming overrides + defaults.
+- [x] 2.3 **Registry invariants**
+  - [x] 2.3.1 Implement auto ID generation (`srv_<slug>`) with collision-safe logic.
+  - [x] 2.3.2 Ensure only `apps` overrides (false entries) are persisted.
+  - [x] 2.3.3 Implement `effectiveEnabled(agent)` helper:
+    - [x] 2.3.3.1 `enabled && (apps[agent] ?? true)`
+  - [x] 2.3.4 Add tests confirming overrides + defaults.
 
 - [ ] 2.4 **Keychain helper (security guardrail)**
   - [ ] 2.4.1 Integrate Keychain bindings (e.g., `keytar` or native module).

@@ -28,7 +28,7 @@ Keep PRD untouched, update this playbook only when guardrails shift, and let TAS
 - **Honor existing patterns** – read the surrounding files, mirror established conventions, and prefer evolving shared helpers over one-off fixes.
 - **Incremental testing** – run relevant unit/integration tests after each meaningful change; never stack unverified edits.
 - **Conventional commits** – when committing, use `type(scope): summary` formatting so history stays machine-readable.
-- **Design-facing communication** – remember the UI owner is a designer with working knowledge of code. Explain architectural choices in clear, respectful language: technical enough to be precise, but free of unnecessary jargon so they can evaluate UX impact.
+- **Design-facing communication** – Remember the UI owner is not deeply technical. When describing changes, keep explanations simple, intuitive, and focused on how the change affects the user experience. Avoid jargon unless necessary, and add a brief plain‑language summary so the reasoning is easy to follow.
 
 ### Before touching code
 1. Re-read the relevant section of `TASKS.md`.
