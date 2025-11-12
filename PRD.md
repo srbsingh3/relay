@@ -1,273 +1,97 @@
-# Relay — macOS MVP Specification (PRD)
+# Relay — AI Build PRD (macOS MVP)
 
-## Purpose
-Relay is a local-only macOS Electron application that allows users to manage MCP
-servers across multiple AI agents such as Cursor, Claude Code, and Codex. It focuses on
-simplicity, security, and complete local operation.
+## Mission Snapshot
+- macOS-only Electron app that locally manages MCP servers shared by Cursor, Claude Code, and Codex.
+- Runs fully offline: no telemetry, no network calls, no remote sync.
+- Prioritizes secure secret storage (macOS Keychain) and deterministic config writes for each supported agent.
 
-## Primary Goals
-1. Securely add, remove, toggle, and sync MCP servers.
-2. Automatically update Claude Code, Cursor, and Codex MCP configuration files.
-3. Store all secrets in the macOS Keychain — no plaintext storage.
-4. Operate fully offline — no internet access or telemetry.
-5. Provide a minimal, intuitive UI.
+## Success Criteria
+- Users can add, remove, edit, enable/disable MCP servers.
+- Per-app scopes for Cursor/Claude Code/Codex are always available and default to ON.
+- `Sync Now` updates each detected agent's config file exactly once per invocation, preserving unrelated keys and creating `.bak` backups.
+- Tokens never touch disk outside Keychain; Keychain lookups happen only in-memory during sync.
+- Binary ships as signed, hardened macOS `.dmg` with sandbox, `contextIsolation`, and `nodeIntegration=false`.
 
-## Non-Goals
-- No Windows/Linux builds.
-- No auto-updates or online sync.
-- No analytics or telemetry.
-- No process management of MCP servers.
+## Scope Guardrails (Non-goals)
+- No Windows/Linux builds, no auto-update channel, no analytics.
+- No process management for MCP servers themselves.
+- Project-scoped agent configs are read-only for MVP.
+- Drift detection, diff previews, or cloud sync are explicitly post-MVP.
 
-## Architecture Overview
-- **Frontend:** React (Vite) inside Electron window.
-- **Backend:** Electron main process with Keychain, file IO, and IPC handling.
-- **Registry File:** `~/Library/Application Support/Relay/registry.json`
-- **Keychain Service:** `com.relay.app` for secret storage.
-- **Adapters:**
-  - Cursor (user scope): `~/.cursor/mcp.json`
-    - Relay writes global MCP entries here (JSON).
-    - Project scope (read-only in MVP): `<project>/.cursor/mcp.json` (Relay does not modify project files).
+## System Blueprint
+- **Frontend:** React + Vite rendered inside Electron BrowserWindow (900×600, dark theme, Liquid Glass aesthetic).
+- **Backend:** Electron main process handles IPC, filesystem IO, Keychain calls, and tray menu.
+- **Registry:** `~/Library/Application Support/Relay/registry.json` (canonical server list + metadata).
+- **Keychain:** macOS Keychain item service `com.relay.app`; account format `token:<alias>`.
+- **Secrets contract:** `registry.json` stores only aliases (`keychain:<alias>`). Plaintext secrets live solely in Keychain.
+- **Tray menu:** Open Relay, Sync Now, Quit.
 
-  - Claude Code (user scope): `~/.claude.json`
-    - Relay updates the user-level MCP servers inside this file (JSON) and preserves unrelated keys.
-    - Project scope (read-only in MVP): `<project>/.mcp.json` (Relay does not modify project files).
-    - Note: `~/.claude/settings.json` holds user settings, not the MCP server store.
-
-  - Codex (user scope): `~/.codex/config.toml`
-    - Relay updates the TOML MCP section, creating/updating `[mcp_servers.<name>]` tables and preserving other config.
-
-## Data Model
-
-### `registry.json`
-
+## Data Contracts
+### Registry schema (versioned JSON)
 ```json
 {
   "version": 1,
   "servers": [
     {
-      "id": "srv_123",
-      "name": "Local Search",
-      "endpoint": "http://127.0.0.1:3001",
-      "tokenAlias": "alias_local_search",
-      "enabled": true
+      "id": "srv_context7",
+      "name": "Context7",
+      "enabled": true,
+      "launch": { "mode": "command", "command": "context7-mcp", "args": [] },
+      "env": { "CONTEXT7_API_KEY": "keychain:alias_context7_api_key" },
+      "apps": { "cursor": true, "claude": true, "codex": true }
     }
   ]
 }
 ```
+- `apps` is optional; omit it when every detected app is ON. Persist only the overrides (false entries) to keep defaults implicit.
+- Effective enablement formula: `effectiveEnabled(agent) = enabled && (apps[agent] ?? true)`.
 
-### Keychain
+### Keychain usage
+- `service = "com.relay.app"`, `account = "token:<alias>"`, `password = <secret>`.
+- Write/update secrets when the user saves a server. Delete on server removal if no other server reuses the alias.
 
-- Service: `com.relay.app`
-- Account: `token:<tokenAlias>`
-- Password: secret token value
+## Adapter Contracts (user scope paths)
+| Agent | Path | Format | Write Rules |
+| --- | --- | --- | --- |
+| Cursor | `~/.cursor/mcp.json` | JSON with `mcpServers` map | Merge Relay servers into `mcpServers`. Remove entries Relay manages when disabled. Preserve unrelated keys. |
+| Claude Code | `~/.claude.json` | JSON with `mcpServers` | Same merge/remove behavior; leave other top-level keys untouched. |
+| Codex | `~/.codex/config.toml` | TOML with `[mcp_servers."<name>"]` tables | Create/update/delete tables per Relay server. Preserve all other config blocks. |
 
-### Per-app scopes (MVP)
-- Each server may include an optional "apps" object to scope enablement per supported agent.
-- MVP UI **always** exposes per-app toggles. Default is **All apps ON**; users can then turn specific apps OFF.
-- Effective rule: `effectiveEnabled(agent) = enabled && (apps[agent] ?? true)`.
-- Storage rule: if all detected apps remain ON, the UI omits the "apps" object (interpreted as all true). It only persists `apps` when an app is explicitly turned OFF.
+- Project-scope files (`<project>/.cursor/mcp.json`, `<project>/.mcp.json`) are displayed read-only; Relay never edits them in MVP.
+- Path resolution must expand `~`, follow symlinks, and ensure parent directories exist before writing.
 
-## Core Features
-1. Add MCP Server (Name, Endpoint, Token)
-2. Remove MCP Server
-3. Toggle MCP Server (enabled/disabled)
-4. Sync with Claude Code, Cursor, and Codex configs
-5. Detect agents and display config paths
-6. Per-app enable/disable scopes (Cursor, Claude Code, Codex) per server
+## Agent Detection Logic
+- Cursor detected if `~/.cursor` directory exists or `~/.cursor/mcp.json` file exists.
+- Claude Code detected if `~/.claude.json` exists or `which claude` succeeds.
+- Codex detected if `~/.codex/config.toml` exists or `which codex` succeeds.
+- Surface detection status + resolved config paths inside Settings; non-detected app toggles are disabled.
 
-## Security
-- `contextIsolation`: true
-- `nodeIntegration`: false
-- `sandbox`: true
-- Strict Content Security Policy (CSP)
-- Signed and hardened macOS build
-- Tokens only in Keychain, never in registry
+## UX & Behavior
+- **Servers list:** rows show name, endpoint summary, enable toggle, All Apps master switch, and per-app pill toggles (Cursor / Claude / Codex). Icons optional but recommended.
+- **All Apps switch:** ON sets every detected app to true. Turning OFF sets all to false. Changing any individual toggle sets master to `Custom`. Toggling master back ON sets all detected apps to true again.
+- **Add/Edit modal:** fields for Name, Endpoint/Launch command + args, token alias (with Keychain write), optional env vars, enable toggle, and per-app toggles (disabled for undetected apps). Validation happens inline.
+- **Settings view:** shows detected agents, their config paths, last sync timestamp, and a `Sync Now` button.
+- **Notifications:** toast `Synced (N apps)`; include partial counts when some apps are skipped.
 
-## UI Overview
-- Dark theme, 900x600 window
-- Visual direction follows Apple's macOS Liquid Glass OSS guidelines for a modern, translucent aesthetic across panels and controls.
+## Primary User Flows
+1. **Launch**: initialize registry if missing, detect agents, load Keychain aliases.
+2. **Add server**:
+   - Collect Name, command, optional args/env vars, Keychain alias + value.
+   - Default `enabled=true`, All Apps ON.
+   - Persist server to registry (assign `id`, ensure uniqueness) and secrets to Keychain.
+3. **Edit server**: same modal; allow renaming and alias reassignment. Keep historical `.bak` of registry prior to save.
+4. **Toggle enablement / per-app scopes**: update registry immediately; no Keychain touch unless alias changed.
+5. **Remove server**: delete from registry, optionally delete Keychain secret (only if no other server references alias).
+6. **Sync Now**:
+   - Resolve secrets from Keychain for each enabled server and each app with `effectiveEnabled=true`.
+   - Materialize adapter-specific payloads (JSON/TOML) and run atomic writes (details below).
+   - Skip undetected apps; include them in the confirmation count as `Synced (N/3 apps)`.
 
-### Sections
-- Servers (Add, Remove, Toggle, Sync)
-- Add/Edit Modal (Name, Endpoint, Token)
-- Settings (Detected Agents)
+## Sync & File IO Rules
+- Always perform atomic writes: write to `*.tmp`, `fsync`, rename, clean up.
+- Before overwrite, copy current file to `*.bak`. If the destination is missing, create directories and start from minimal scaffold.
+- Invalid JSON/TOML → surface error with actions: Open file, Restore backup, Skip app. Never leave partial files behind.
 
-### Tray Menu
-- Open Relay
-- Sync Now
-- Quit
-
-### Per-App Toggles (MVP)
-- **All apps** master switch on each server row: default ON. Turning it OFF sets all app toggles OFF. Changing any individual toggle switches the master to a **Custom** state; turning the master ON again sets all detected app toggles ON.
-- **Servers list:** each server row shows three small pill toggles — Cursor / Claude Code / Codex — with app icons; reflecting per-app scopes in `registry.json` (`apps` object). Default: all ON for detected agents.
-- **Add/Edit Modal:** includes an **All apps** switch and the same three toggles (with icons). Toggles are disabled (read-only) for agents that are not detected.
-
-## Build & Distribution
-- macOS only build (`.dmg`)
-- App ID: `com.relay.app`
-- Product Name: `Relay`
-- Category: Developer Tools
-- No auto-updater or internet connection
-
-## Completion Criteria
-- Works fully offline.
-- All tokens stored securely in Keychain.
-- Claude Code, Cursor, and Codex configurations update correctly.
-- Sandbox and hardened runtime enabled.
-- Signed macOS build.
-- "All apps" master switch behaves as specified: default all ON on add; individual overrides set it to Custom; toggles disabled for undetected agents.
-
-## Future Improvements
-
-- **Drift detection & conflict resolution (post-MVP)**
-  - On app launch and when the user clicks **Sync Now**, read each detected agent adapter config (`mcp.json`) for Cursor, Claude Code, and Codex, and diff against the canonical output generated from `registry.json` + Keychain.
-  - If drift is detected, present an **Out of sync** prompt with three choices:
-    1) **Keep Relay version** — overwrite agent configs with Relay state.
-    2) **Import from agent** — update `registry.json` and Keychain from the agent's config.
-    3) **Ignore once** — dismiss without changes for this session.
-  - Implementation notes: use atomic writes (temp file + fsync + rename), create a `.bak` before overwrite, and display a minimal diff in the UI for clarity.
-  - Status: **Not in MVP**; schedule as a post-MVP enhancement.
-- **Preview writes (post-MVP)**
-  - Add a **Preview writes** toggle to Sync: show per-app tabs (Cursor / Claude Code / Codex) with the exact content that would be written.
-  - Present a minimal inline diff against the current on-disk file; support **Copy** and **Save as…**.
-  - Allow per-app apply checkboxes; default is all selected.
-  - No network calls; respects atomic write + `.bak` safeguards.
-
-## Agent Detection (MVP)
-- Cursor: mark **Detected** if `~/.cursor/mcp.json` exists OR the `~/.cursor` directory exists.
-- Claude Code: mark **Detected** if `~/.claude.json` exists OR the `claude` CLI is on PATH (`which claude`).
-- Codex: mark **Detected** if `~/.codex/config.toml` exists OR the `codex` CLI is on PATH (`which codex`).
-- Show the resolved user config path(s) in Settings (read-only).
-- No deep scanning and no background watching.
-
-## Sync Behavior
-- Cursor: write the effective MCP servers to `~/.cursor/mcp.json` (JSON merge; atomic write: temp file + fsync + rename; also create a `.bak`).
-- Claude Code: merge enabled servers into `~/.claude.json` under the MCP section; remove disabled; atomic write with `.bak`.
-- Codex: update `~/.codex/config.toml` by creating/updating `[mcp_servers.<name>]` tables; remove disabled; atomic write with `.bak`.
-
-## Happy Path Task Flow (MVP)
-
-1. **Launch Relay** — Detected apps are shown; per-app toggles default **ON** (All apps ON).
-2. **Add MCP Server** — Click **Add Server** and fill:
-   - **Name** (e.g., "Context7").
-   - **Launch (STDIO command)**: `command` and optional `args[]`.
-   - **Env vars (optional)**: add keys; values stored in **Keychain** via alias; never written to disk in plaintext.
-   - **Scope**: keep **All apps** ON with app chips for **Cursor / Claude Code / Codex**.
-3. **Save** — Server is written to `registry.json`; secrets to Keychain.
-
-   **Example canonical entry (generated in `registry.json`):**
-   ```json
-   {
-     "servers": [
-       {
-         "id": "srv_context7",
-         "name": "Context7",
-         "enabled": true,
-         "launch": { "mode": "command", "command": "context7-mcp", "args": [] },
-         "env": { "CONTEXT7_API_KEY": "keychain:alias_context7_api_key" },
-         "apps": { "cursor": true, "claude": true, "codex": true }
-       }
-     ]
-   }
-   ```
-4. **Sync Now** — Relay writes the correct format per app:
-   - **Cursor** → update `~/.cursor/mcp.json` (JSON merge under `mcpServers`).
-     ```json
-     {
-       "mcpServers": {
-         "Context7": {
-           "command": "context7-mcp",
-           "args": [],
-           "env": { "CONTEXT7_API_KEY": "<resolved-from-keychain>" }
-         }
-       }
-     }
-     ```
-   - **Claude Code** → merge into `~/.claude.json` under `mcpServers`.
-     ```json
-     {
-       "mcpServers": {
-         "Context7": {
-           "command": "context7-mcp",
-           "args": [],
-           "env": { "CONTEXT7_API_KEY": "<resolved-from-keychain>" }
-         }
-       }
-     }
-     ```
-   - **Codex** → update `~/.codex/config.toml` under `[mcp_servers."<name>"]`.
-     ```toml
-     [mcp_servers."Context7"]
-     command = "context7-mcp"
-     args = []
-     env = { CONTEXT7_API_KEY = "<resolved-from-keychain>" }
-     ```
-5. **Confirmation** — Show toast: `Synced (3 apps)` (or `Synced (N apps)` if some were not detected).
-6. **Use** — Open the apps; restart if required for them to pick up changes.
-
-## Edge Cases (MVP)
-
-- **App not detected** — Toggle is disabled; Sync skips that app and shows `Synced (N/3 apps)`.
-- **Missing files/directories** — Create parent dirs and initialize minimal config files if absent.
-- **Invalid existing config (JSON/TOML)** — Before writing, create a `.bak`. If parse fails, surface an error with actions: **Open file**, **Restore backup**, **Skip this app**.
-- **Permission denied / read-only filesystem** — Abort for that app with a clear error; do not escalate privileges.
-- **Command not found** — We still write configs; show a non-blocking warning that the app may fail to launch the server until it’s installed.
-- **Secrets not provided** — If an env var value isn’t in Keychain, show a warning on Save and exclude that key from the written config; user can add it later and re-sync.
-- **Concurrent edits during Sync** — Writes are atomic; last-write-wins (drift detection is post-MVP).
-- **Non-standard install paths** — We only write to default user-scope paths. Project-scoped files are read-only in MVP.
-- **Path resolution** — Expand `~` via OS APIs and follow symlinks to avoid partial paths.
-- **App open while writing** — Atomic rename avoids partial reads; apps typically load config on start—restart if needed.
-
-## Config Examples (for AI Coding Agents)
-
-### Canonical object (registry.json)
-```json
-{
-  "id": "srv_context7",
-  "name": "Context7",
-  "enabled": true,
-  "launch": { "mode": "command", "command": "context7-mcp", "args": [] },
-  "env": { "CONTEXT7_API_KEY": "keychain:alias_context7_api_key" },
-  "apps": { "cursor": true, "claude": true, "codex": true }
-}
-```
-
-### Adapter outputs
-**Cursor → `~/.cursor/mcp.json`**
-```json
-{
-  "mcpServers": {
-    "Context7": {
-      "command": "context7-mcp",
-      "args": [],
-      "env": { "CONTEXT7_API_KEY": "<resolved-from-keychain>" }
-    }
-  }
-}
-```
-
-**Claude Code → `~/.claude.json`**
-```json
-{
-  "mcpServers": {
-    "Context7": {
-      "command": "context7-mcp",
-      "args": [],
-      "env": { "CONTEXT7_API_KEY": "<resolved-from-keychain>" }
-    }
-  }
-}
-```
-
-**Codex → `~/.codex/config.toml`**
-```toml
-[mcp_servers."Context7"]
-command = "context7-mcp"
-args = []
-env = { CONTEXT7_API_KEY = "<resolved-from-keychain>" }
-```
-
-### Atomic write helper (TypeScript)
 ```ts
 import { promises as fs } from "fs";
 import { dirname } from "path";
@@ -284,7 +108,7 @@ export async function atomicWrite(filePath: string, content: string) {
 
   try {
     try { await fs.copyFile(filePath, bak); } catch {}
-    await fs.writeFile(tmp, content, { encoding: "utf8" });
+    await fs.writeFile(tmp, content, "utf8");
     await fs.rename(tmp, filePath);
   } finally {
     try { await fs.unlink(tmp); } catch {}
@@ -292,7 +116,72 @@ export async function atomicWrite(filePath: string, content: string) {
 }
 ```
 
-### Keychain resolution
-- Store secrets as `keychain:<alias>` in `registry.json`.
-- At sync time, resolve each alias to a plaintext value **in memory** and inject into the per-app config objects.
-- Never persist resolved secret values in `registry.json`.
+### Adapter Output References
+```jsonc
+// Cursor ~/.cursor/mcp.json
+{
+  "mcpServers": {
+    "Context7": {
+      "command": "context7-mcp",
+      "args": [],
+      "env": { "CONTEXT7_API_KEY": "<resolved-from-keychain>" }
+    }
+  }
+}
+```
+```jsonc
+// Claude Code ~/.claude.json
+{
+  "mcpServers": {
+    "Context7": {
+      "command": "context7-mcp",
+      "args": [],
+      "env": { "CONTEXT7_API_KEY": "<resolved-from-keychain>" }
+    }
+  }
+}
+```
+```toml
+# Codex ~/.codex/config.toml
+[mcp_servers."Context7"]
+command = "context7-mcp"
+args = []
+env = { CONTEXT7_API_KEY = "<resolved-from-keychain>" }
+```
+
+## Security Hard Requirements
+- Electron `contextIsolation=true`, `nodeIntegration=false`, `sandbox=true`.
+- Strict Content Security Policy; load assets from local files only.
+- Keep secrets in-process only; purge buffers immediately after sync.
+- Sign + harden the macOS build; no network permissions requested.
+
+## Edge Cases & Error Handling
+- **Missing paths**: create parent directories and seed minimal config structures.
+- **Invalid config syntax**: stop writing, leave `.bak`, show actionable error with Open / Restore / Skip.
+- **Permission denied**: abort for that app, show error, continue with others.
+- **Command not installed**: still write configs; surface warning that the MCP binary may be missing.
+- **Secret missing in Keychain**: warn user, omit the env var from generated config, keep server saved so they can fix and re-sync.
+- **Concurrent edits**: rely on atomic overwrite; last write wins (drift detection is future work).
+- **App running during sync**: atomic rename prevents partial reads; tell users to restart target apps if needed.
+
+## Build & Distribution
+- Target macOS `.dmg`; App ID `com.relay.app`, Product Name `Relay`, Category `Developer Tools`.
+- No auto-updater; updates ship manually.
+- Bundle must work offline out of the box.
+
+## Recommended Implementation Order (for AI agent)
+1. Scaffold Electron + Vite project with secure BrowserWindow defaults and tray menu.
+2. Implement registry + Keychain services (read/write, schema validation, migrations).
+3. Build server CRUD UI (list + modal) including All Apps logic.
+4. Add agent detection + Settings view.
+5. Implement sync engine adapters (Cursor → Claude → Codex) reusing shared atomic write helper.
+6. Wire `Sync Now` from UI + tray; include toast feedback and error surfaces per app.
+7. Add packaging configuration for signed, hardened `.dmg` (macOS only) and ensure offline mode.
+8. QA edge cases: missing files, invalid JSON/TOML, missing secrets, disabled apps.
+
+## Post-MVP Backlog
+- Drift detection with diff + resolve actions.
+- Sync preview showing generated content per app before write.
+- Per-project config management.
+- Optional telemetry/health checks (only if requirements change to allow network).
+- Opt-in local usage metrics (append-only log + lightweight dashboard) so the author can track adoption without leaving the offline sandbox.
