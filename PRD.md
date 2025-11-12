@@ -2,12 +2,12 @@
 
 ## Purpose
 Relay is a local-only macOS Electron application that allows users to manage MCP
-servers across multiple AI agents such as Cursor and Claude. It focuses on
+servers across multiple AI agents such as Cursor, Claude Code, and Codex. It focuses on
 simplicity, security, and complete local operation.
 
 ## Primary Goals
 1. Securely add, remove, toggle, and sync MCP servers.
-2. Automatically update Cursor and Claude MCP config files.
+2. Automatically update Cursor, Claude Code, and Codex MCP config files.
 3. Store all secrets in the macOS Keychain — no plaintext storage.
 4. Operate fully offline — no internet access or telemetry.
 5. Provide a minimal, intuitive UI.
@@ -25,7 +25,8 @@ simplicity, security, and complete local operation.
 - **Keychain Service:** `com.relay.app` for secret storage.
 - **Adapters:**
   - Cursor: `~/Library/Application Support/Cursor/.../mcp.json`
-  - Claude: `~/Library/Application Support/Claude/.../mcp.json`
+  - Claude Code: `~/Library/Application Support/Claude/.../mcp.json`
+  - Codex: `~/Library/Application Support/Codex/.../mcp.json`
 
 ## Data Model
 
@@ -56,7 +57,7 @@ simplicity, security, and complete local operation.
 1. Add MCP Server (Name, Endpoint, Token)
 2. Remove MCP Server
 3. Toggle MCP Server (enabled/disabled)
-4. Sync with Cursor and Claude configs
+4. Sync with Cursor, Claude Code, and Codex configs
 5. Detect agents and display config paths
 
 ## Security
@@ -69,6 +70,7 @@ simplicity, security, and complete local operation.
 
 ## UI Overview
 - Dark theme, 900x600 window
+- Visual direction follows Apple's macOS Liquid Glass OSS guidelines for a modern, translucent aesthetic across panels and controls.
 
 ### Sections
 - Servers (Add, Remove, Toggle, Sync)
@@ -90,6 +92,6 @@ simplicity, security, and complete local operation.
 ## Completion Criteria
 - Works fully offline.
 - All tokens stored securely in Keychain.
-- Cursor and Claude configs update correctly.
+- Cursor, Claude Code, and Codex configs update correctly.
 - Sandbox and hardened runtime enabled.
 - Signed macOS build.
