@@ -60,30 +60,30 @@ Use it as the primary execution plan for the macOS MVP.
 
 ## Milestone 2 — Registry & Keychain Services
 
-- [ ] 2.1 **Registry schema + file**
-  - [ ] 2.1.1 Define TypeScript types mirroring `PRD.md` registry sample:
-    - [ ] 2.1.1.1 `version`, `servers[]`, `launch`, `env`, `apps`, etc.
-  - [ ] 2.1.2 Implement registry location:
-    - [ ] 2.1.2.1 `~/Library/Application Support/Relay/registry.json`
-  - [ ] 2.1.3 Implement registry service:
-    - [ ] 2.1.3.1 `loadRegistry()`: validate schema, initialize with default structure if missing.
-    - [ ] 2.1.3.2 `saveRegistry()`: deterministic writes, keep version field, maintain ordering.
-  - [ ] 2.1.4 Implement version key and stub migration switchboard:
-    - [ ] 2.1.4.1 Add `version` to file.
-    - [ ] 2.1.4.2 Add migration hook invoked on load.
+- [x] 2.1 **Registry schema + file**
+  - [x] 2.1.1 Define TypeScript types mirroring `PRD.md` registry sample:
+    - [x] 2.1.1.1 `version`, `servers[]`, `launch`, `env`, `apps`, etc.
+  - [x] 2.1.2 Implement registry location:
+    - [x] 2.1.2.1 `~/Library/Application Support/Relay/registry.json`
+  - [x] 2.1.3 Implement registry service:
+    - [x] 2.1.3.1 `loadRegistry()`: validate schema, initialize with default structure if missing.
+    - [x] 2.1.3.2 `saveRegistry()`: deterministic writes, keep version field, maintain ordering.
+  - [x] 2.1.4 Implement version key and stub migration switchboard:
+    - [x] 2.1.4.1 Add `version` to file.
+    - [x] 2.1.4.2 Add migration hook invoked on load.
 
-- [ ] 2.2 **Deterministic IO helper**
-  - [ ] 2.2.1 Implement `ensureDir(path)` helper.
-  - [ ] 2.2.2 Implement shared `atomicWrite(filePath, content)`:
-    - [ ] 2.2.2.1 Write to `*.tmp`.
-    - [ ] 2.2.2.2 `fsync` the tmp file (if applicable in your implementation).
-    - [ ] 2.2.2.3 Rename tmp → target.
-    - [ ] 2.2.2.4 Clean up tmp in finally block.
-    - [ ] 2.2.2.5 Create `.bak` copy of original file prior to overwrite.
-  - [ ] 2.2.3 Add unit tests for `atomicWrite`:
-    - [ ] 2.2.3.1 Overwriting existing files.
-    - [ ] 2.2.3.2 Creating new files.
-    - [ ] 2.2.3.3 Error handling / tmp cleanup.
+- [x] 2.2 **Deterministic IO helper**
+  - [x] 2.2.1 Implement `ensureDir(path)` helper.
+  - [x] 2.2.2 Implement shared `atomicWrite(filePath, content)`:
+    - [x] 2.2.2.1 Write to `*.tmp`.
+    - [x] 2.2.2.2 `fsync` the tmp file (if applicable in your implementation).
+    - [x] 2.2.2.3 Rename tmp → target.
+    - [x] 2.2.2.4 Clean up tmp in finally block.
+    - [x] 2.2.2.5 Create `.bak` copy of original file prior to overwrite.
+  - [x] 2.2.3 Add unit tests for `atomicWrite`:
+    - [x] 2.2.3.1 Overwriting existing files.
+    - [x] 2.2.3.2 Creating new files.
+    - [x] 2.2.3.3 Error handling / tmp cleanup.
 
 - [ ] 2.3 **Registry invariants**
   - [ ] 2.3.1 Implement auto ID generation (`srv_<slug>`) with collision-safe logic.

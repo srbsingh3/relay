@@ -1,19 +1,9 @@
-export type SupportedAgent = 'cursor' | 'claude' | 'codex';
+import type { RegistryServerRecord, RegistryFile } from '../registry/schema';
+import type { SupportedAgent } from '../types/agents';
 
-export interface RegistryServerEntry {
-  id: string;
-  label: string;
-  alias: string;
-  apps: Record<SupportedAgent, boolean>;
-  createdAt: string;
-  updatedAt: string;
-}
+export type RegistryServerEntry = RegistryServerRecord;
 
-export interface RegistrySnapshot {
-  version: number;
-  servers: RegistryServerEntry[];
-  lastUpdated: string;
-}
+export type RegistrySnapshot = RegistryFile;
 
 export interface RegistryWritePayload {
   snapshot: RegistrySnapshot;
@@ -93,3 +83,5 @@ export interface RendererBridge {
     status: () => Promise<SyncStatusSnapshot>;
   };
 }
+
+export type { SupportedAgent } from '../types/agents';

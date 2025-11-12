@@ -12,33 +12,14 @@ import {
   SyncInvocationResult,
   SyncStatusSnapshot
 } from './contracts';
-
-let registrySnapshot: RegistrySnapshot = {
-  version: 1,
-  lastUpdated: new Date().toISOString(),
-  servers: []
-};
+import { createEmptyRegistry } from '../registry/schema';
+import { loadRegistry, saveRegistry } from '../registry/service';
 
 let detectionSummary: DetectionSummary = buildDetectionSummary();
 let syncStatus: SyncStatusSnapshot = { state: 'idle', lastRun: null };
 let handlersRegistered = false;
 
 const fallbackAgents: SupportedAgent[] = ['cursor', 'claude', 'codex'];
-
-const normalizeRegistryPayload = (payload?: RegistryWritePayload): RegistrySnapshot => {
-  if (!payload?.snapshot) {
-    return registrySnapshot;
-  }
-
-  const nextSnapshot: RegistrySnapshot = {
-    ...payload.snapshot,
-    version: payload.snapshot.version ?? 1,
-    lastUpdated: new Date().toISOString(),
-    servers: Array.isArray(payload.snapshot.servers) ? payload.snapshot.servers : []
-  };
-
-  return nextSnapshot;
-};
 
 function buildDetectionSummary(): DetectionSummary {
   const now = new Date().toISOString();
@@ -49,11 +30,28 @@ function buildDetectionSummary(): DetectionSummary {
   };
 }
 
-const handleRegistryRead = () => registrySnapshot;
+const readRegistrySnapshot = async (): Promise<RegistrySnapshot> => {
+  try {
+    return await loadRegistry();
+  } catch (error) {
+    console.error('[relay] Failed to load registry:', error);
+    return createEmptyRegistry();
+  }
+};
 
-const handleRegistryWrite = (_event: Electron.IpcMainInvokeEvent, payload?: RegistryWritePayload) => {
-  registrySnapshot = normalizeRegistryPayload(payload);
-  return registrySnapshot;
+const handleRegistryRead = () => readRegistrySnapshot();
+
+const handleRegistryWrite = async (_event: Electron.IpcMainInvokeEvent, payload?: RegistryWritePayload) => {
+  if (!payload?.snapshot) {
+    return readRegistrySnapshot();
+  }
+
+  try {
+    return await saveRegistry(payload.snapshot);
+  } catch (error) {
+    console.error('[relay] Failed to save registry:', error);
+    return readRegistrySnapshot();
+  }
 };
 
 const handleKeychainLookup = (_event: Electron.IpcMainInvokeEvent, payload?: KeychainLookupPayload): KeychainLookupResult => {
