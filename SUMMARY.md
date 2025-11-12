@@ -13,5 +13,11 @@
 - Added guard rails for offline-only navigation by denying new windows + non-file navigations, while keeping `contextIsolation`, `nodeIntegration=false`, and `sandbox=true` in place.
 - Renderer landing view upgraded with a clearer Liquid Glass surface, status grid, and offline badges so design can iterate on the layout without extra wiring.
 
+## Milestone 1.3 Snapshot
+- Content Security Policy is enforced twice: the renderer `index.html` ships with `<meta http-equiv="Content-Security-Policy" content="default-src 'self'">`, and the main process now injects the same header for every request (`packages/main/src/main.ts`) so packed builds cannot be stripped of the policy.
+- The renderer bundle only references local assets (React entry + compiled CSS). No CDN fonts/scripts/styles are present, and a repo-wide search confirmed there are no `http(s)` asset references outside of npm tarball metadata.
+- Default `session` traffic is now filtered so `http/https/ws` requests are blocked at the Electron layer, ensuring the UI continues to work with the network disabled and preventing regressions if future code accidentally attempts to dial out.
+- Dependency audit: current runtime deps are only `react` and `react-dom`, and dev deps are build/test utilities (`vite`, `electron`, ESLint, TypeScript, Vitest, etc.). None ship telemetry hooks, and there are no analytics SDKs (`rg -n \"telemetry\"` / `rg -n \"analytics\"` returned no matches in source).
+
 ## Next Focus
-- Move into Milestone 1.3 (CSP/offline guardrails) to audit dependencies, lock CSP headers, and confirm the app is network silent before starting on preload/IPCs.
+- Start Milestone 1.4 by wiring the preload bridge + IPC contracts now that the shell security posture is locked down.

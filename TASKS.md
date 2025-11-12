@@ -28,11 +28,11 @@ Use it as the primary execution plan for the macOS MVP.
     - [x] 1.2.3.3 `sandbox = true`
   - [x] 1.2.4 Load UI via local `index.html` only (no remote URLs).
 
-- [ ] 1.3 **Content Security Policy / offline guardrails**
-  - [ ] 1.3.1 Add CSP: `default-src 'self'`.
-  - [ ] 1.3.2 Ensure no fonts/scripts/styles are loaded from remote CDNs.
-  - [ ] 1.3.3 Audit dependencies for telemetry/analytics and disable/remove them.
-  - [ ] 1.3.4 Confirm app functions with network disabled (no network calls made on launch).
+- [x] 1.3 **Content Security Policy / offline guardrails**
+  - [x] 1.3.1 Add CSP: `default-src 'self'`.
+  - [x] 1.3.2 Ensure no fonts/scripts/styles are loaded from remote CDNs.
+  - [x] 1.3.3 Audit dependencies for telemetry/analytics and disable/remove them.
+  - [x] 1.3.4 Confirm app functions with network disabled (no network calls made on launch).
 
 - [ ] 1.4 **Preload + IPC contract**
   - [ ] 1.4.1 Implement preload script exposing a minimal, typed IPC bridge.

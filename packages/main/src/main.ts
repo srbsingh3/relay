@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
-import { app, BrowserWindow, nativeTheme } from 'electron';
+import { app, BrowserWindow, nativeTheme, session } from 'electron';
 
 const isMac = process.platform === 'darwin';
 const rendererHtml = path.join(__dirname, '../../renderer/dist/index.html');
@@ -14,6 +14,42 @@ const ensureRendererBundle = () => {
   }
 
   return rendererHtml;
+};
+
+const applySecurityPolicies = () => {
+  if (!session.defaultSession) {
+    return;
+  }
+
+  const cspValue = "default-src 'self'";
+
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    const responseHeaders = {
+      ...(details.responseHeaders ?? {}),
+      'Content-Security-Policy': [cspValue]
+    };
+
+    // Chromium expects header keys in their original case, so keep both variants.
+    if (responseHeaders['content-security-policy']) {
+      responseHeaders['content-security-policy'] = [cspValue];
+    }
+
+    callback({ responseHeaders });
+  });
+
+  session.defaultSession.webRequest.onBeforeRequest({ urls: ['*://*/*'] }, (details, callback) => {
+    try {
+      const { protocol } = new URL(details.url);
+      if (protocol === 'file:' || protocol === 'devtools:') {
+        callback({ cancel: false });
+        return;
+      }
+    } catch {
+      // If the URL cannot be parsed, err on the side of blocking.
+    }
+
+    callback({ cancel: true });
+  });
 };
 
 const createWindow = () => {
@@ -50,6 +86,7 @@ const createWindow = () => {
 
 app.whenReady().then(() => {
   nativeTheme.themeSource = 'dark';
+  applySecurityPolicies();
   createWindow();
 
   app.on('activate', () => {

@@ -53,6 +53,7 @@ body::after {
   align-items: center;
   justify-content: center;
   padding: 2rem;
+  -webkit-app-region: drag;
 }
 
 .glass-card {
@@ -158,6 +159,13 @@ h1 {
   background: rgba(59, 130, 246, 0.15);
   border: 1px solid rgba(59, 130, 246, 0.3);
   color: #c7d2fe;
+}
+
+button,
+input,
+textarea,
+a {
+  -webkit-app-region: no-drag;
 }
 
 @media (max-width: 640px) {
