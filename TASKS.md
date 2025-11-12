@@ -12,353 +12,353 @@ Use it as the primary execution plan for the macOS MVP.
 
 ## Milestone 1 — Foundation & Shell
 
-- [ ] **Scaffold project**
-  - [ ] Create Electron + Vite monorepo / packages structure.
-  - [ ] Set up shared TypeScript config, linting, and testing baseline.
-  - [ ] Add `PRD.md`, `AGENTS.md`, and `TASKS.md` to the repo as living references.
+- [ ] 1.1 **Scaffold project**
+  - [ ] 1.1.1 Create Electron + Vite monorepo / packages structure.
+  - [ ] 1.1.2 Set up shared TypeScript config, linting, and testing baseline.
+  - [ ] 1.1.3 Add `PRD.md`, `AGENTS.md`, and `TASKS.md` to the repo as living references.
 
-- [ ] **Secure BrowserWindow shell**
-  - [ ] Create main Electron process entry.
-  - [ ] Configure a single BrowserWindow:
-    - [ ] Size: 900×600.
-    - [ ] Dark theme and base Liquid Glass aesthetic (can be basic initially).
-  - [ ] Enforce Electron security flags:
-    - [ ] `contextIsolation = true`
-    - [ ] `nodeIntegration = false`
-    - [ ] `sandbox = true`
-  - [ ] Load UI via local `index.html` only (no remote URLs).
+- [ ] 1.2 **Secure BrowserWindow shell**
+  - [ ] 1.2.1 Create main Electron process entry.
+  - [ ] 1.2.2 Configure a single BrowserWindow:
+    - [ ] 1.2.2.1 Size: 900×600.
+    - [ ] 1.2.2.2 Dark theme and base Liquid Glass aesthetic (can be basic initially).
+  - [ ] 1.2.3 Enforce Electron security flags:
+    - [ ] 1.2.3.1 `contextIsolation = true`
+    - [ ] 1.2.3.2 `nodeIntegration = false`
+    - [ ] 1.2.3.3 `sandbox = true`
+  - [ ] 1.2.4 Load UI via local `index.html` only (no remote URLs).
 
-- [ ] **Content Security Policy / offline guardrails**
-  - [ ] Add CSP: `default-src 'self'`.
-  - [ ] Ensure no fonts/scripts/styles are loaded from remote CDNs.
-  - [ ] Audit dependencies for telemetry/analytics and disable/remove them.
-  - [ ] Confirm app functions with network disabled (no network calls made on launch).
+- [ ] 1.3 **Content Security Policy / offline guardrails**
+  - [ ] 1.3.1 Add CSP: `default-src 'self'`.
+  - [ ] 1.3.2 Ensure no fonts/scripts/styles are loaded from remote CDNs.
+  - [ ] 1.3.3 Audit dependencies for telemetry/analytics and disable/remove them.
+  - [ ] 1.3.4 Confirm app functions with network disabled (no network calls made on launch).
 
-- [ ] **Preload + IPC contract**
-  - [ ] Implement preload script exposing a minimal, typed IPC bridge.
-  - [ ] Define IPC channels for:
-    - [ ] Registry read/write.
-    - [ ] Keychain lookups.
-    - [ ] Agent detection results.
-    - [ ] Sync invocation + status.
-  - [ ] Ensure preload never exposes Node primitives directly to the renderer.
+- [ ] 1.4 **Preload + IPC contract**
+  - [ ] 1.4.1 Implement preload script exposing a minimal, typed IPC bridge.
+  - [ ] 1.4.2 Define IPC channels for:
+    - [ ] 1.4.2.1 Registry read/write.
+    - [ ] 1.4.2.2 Keychain lookups.
+    - [ ] 1.4.2.3 Agent detection results.
+    - [ ] 1.4.2.4 Sync invocation + status.
+  - [ ] 1.4.3 Ensure preload never exposes Node primitives directly to the renderer.
 
-- [ ] **Tray menu**
-  - [ ] Add tray icon and menu with:
-    - [ ] “Open Relay”
-    - [ ] “Sync Now”
-    - [ ] “Quit”
-  - [ ] Wire “Open Relay” to show/focus BrowserWindow.
-  - [ ] Wire “Sync Now” to the same sync flow used by Settings.
-  - [ ] Ensure tray menu works correctly when app is hidden and on cold start.
+- [ ] 1.5 **Tray menu**
+  - [ ] 1.5.1 Add tray icon and menu with:
+    - [ ] 1.5.1.1 “Open Relay”
+    - [ ] 1.5.1.2 “Sync Now”
+    - [ ] 1.5.1.3 “Quit”
+  - [ ] 1.5.2 Wire “Open Relay” to show/focus BrowserWindow.
+  - [ ] 1.5.3 Wire “Sync Now” to the same sync flow used by Settings.
+  - [ ] 1.5.4 Ensure tray menu works correctly when app is hidden and on cold start.
 
-- [ ] **Milestone exit gate**
-  - [ ] BrowserWindow uses `contextIsolation=true`, `nodeIntegration=false`, `sandbox=true`, and only loads local assets.
-  - [ ] Tray menu (Open/Sync Now/Quit) works after a cold start with the network disabled.
+- [ ] 1.6 **Milestone exit gate**
+  - [ ] 1.6.1 BrowserWindow uses `contextIsolation=true`, `nodeIntegration=false`, `sandbox=true`, and only loads local assets.
+  - [ ] 1.6.2 Tray menu (Open/Sync Now/Quit) works after a cold start with the network disabled.
 
 ---
 
 ## Milestone 2 — Registry & Keychain Services
 
-- [ ] **Registry schema + file**
-  - [ ] Define TypeScript types mirroring `PRD.md` registry sample:
-    - [ ] `version`, `servers[]`, `launch`, `env`, `apps`, etc.
-  - [ ] Implement registry location:
-    - [ ] `~/Library/Application Support/Relay/registry.json`
-  - [ ] Implement registry service:
-    - [ ] `loadRegistry()`: validate schema, initialize with default structure if missing.
-    - [ ] `saveRegistry()`: deterministic writes, keep version field, maintain ordering.
-  - [ ] Implement version key and stub migration switchboard:
-    - [ ] Add `version` to file.
-    - [ ] Add migration hook invoked on load.
+- [ ] 2.1 **Registry schema + file**
+  - [ ] 2.1.1 Define TypeScript types mirroring `PRD.md` registry sample:
+    - [ ] 2.1.1.1 `version`, `servers[]`, `launch`, `env`, `apps`, etc.
+  - [ ] 2.1.2 Implement registry location:
+    - [ ] 2.1.2.1 `~/Library/Application Support/Relay/registry.json`
+  - [ ] 2.1.3 Implement registry service:
+    - [ ] 2.1.3.1 `loadRegistry()`: validate schema, initialize with default structure if missing.
+    - [ ] 2.1.3.2 `saveRegistry()`: deterministic writes, keep version field, maintain ordering.
+  - [ ] 2.1.4 Implement version key and stub migration switchboard:
+    - [ ] 2.1.4.1 Add `version` to file.
+    - [ ] 2.1.4.2 Add migration hook invoked on load.
 
-- [ ] **Deterministic IO helper**
-  - [ ] Implement `ensureDir(path)` helper.
-  - [ ] Implement shared `atomicWrite(filePath, content)`:
-    - [ ] Write to `*.tmp`.
-    - [ ] `fsync` the tmp file (if applicable in your implementation).
-    - [ ] Rename tmp → target.
-    - [ ] Clean up tmp in finally block.
-    - [ ] Create `.bak` copy of original file prior to overwrite.
-  - [ ] Add unit tests for `atomicWrite`:
-    - [ ] Overwriting existing files.
-    - [ ] Creating new files.
-    - [ ] Error handling / tmp cleanup.
+- [ ] 2.2 **Deterministic IO helper**
+  - [ ] 2.2.1 Implement `ensureDir(path)` helper.
+  - [ ] 2.2.2 Implement shared `atomicWrite(filePath, content)`:
+    - [ ] 2.2.2.1 Write to `*.tmp`.
+    - [ ] 2.2.2.2 `fsync` the tmp file (if applicable in your implementation).
+    - [ ] 2.2.2.3 Rename tmp → target.
+    - [ ] 2.2.2.4 Clean up tmp in finally block.
+    - [ ] 2.2.2.5 Create `.bak` copy of original file prior to overwrite.
+  - [ ] 2.2.3 Add unit tests for `atomicWrite`:
+    - [ ] 2.2.3.1 Overwriting existing files.
+    - [ ] 2.2.3.2 Creating new files.
+    - [ ] 2.2.3.3 Error handling / tmp cleanup.
 
-- [ ] **Registry invariants**
-  - [ ] Implement auto ID generation (`srv_<slug>`) with collision-safe logic.
-  - [ ] Ensure only `apps` overrides (false entries) are persisted.
-  - [ ] Implement `effectiveEnabled(agent)` helper:
-    - [ ] `enabled && (apps[agent] ?? true)`
-  - [ ] Add tests confirming overrides + defaults.
+- [ ] 2.3 **Registry invariants**
+  - [ ] 2.3.1 Implement auto ID generation (`srv_<slug>`) with collision-safe logic.
+  - [ ] 2.3.2 Ensure only `apps` overrides (false entries) are persisted.
+  - [ ] 2.3.3 Implement `effectiveEnabled(agent)` helper:
+    - [ ] 2.3.3.1 `enabled && (apps[agent] ?? true)`
+  - [ ] 2.3.4 Add tests confirming overrides + defaults.
 
-- [ ] **Keychain helper (security guardrail)**
-  - [ ] Integrate Keychain bindings (e.g., `keytar` or native module).
-  - [ ] Wrap with a `KeychainService`:
-    - [ ] `service = "com.relay.app"`.
-    - [ ] `account = "token:<alias>"`.
-  - [ ] Implement CRUD:
-    - [ ] `setSecret(alias, value)`
-    - [ ] `getSecret(alias)`
-    - [ ] `deleteSecret(alias)`
-  - [ ] Implement reference counting for aliases:
-    - [ ] Track alias usage across servers.
-    - [ ] Delete secrets only when no server references remain.
-  - [ ] Add tests for:
-    - [ ] Write, read, update, delete.
-    - [ ] Reference counting behavior.
+- [ ] 2.4 **Keychain helper (security guardrail)**
+  - [ ] 2.4.1 Integrate Keychain bindings (e.g., `keytar` or native module).
+  - [ ] 2.4.2 Wrap with a `KeychainService`:
+    - [ ] 2.4.2.1 `service = "com.relay.app"`.
+    - [ ] 2.4.2.2 `account = "token:<alias>"`.
+  - [ ] 2.4.3 Implement CRUD:
+    - [ ] 2.4.3.1 `setSecret(alias, value)`
+    - [ ] 2.4.3.2 `getSecret(alias)`
+    - [ ] 2.4.3.3 `deleteSecret(alias)`
+  - [ ] 2.4.4 Implement reference counting for aliases:
+    - [ ] 2.4.4.1 Track alias usage across servers.
+    - [ ] 2.4.4.2 Delete secrets only when no server references remain.
+  - [ ] 2.4.5 Add tests for:
+    - [ ] 2.4.5.1 Write, read, update, delete.
+    - [ ] 2.4.5.2 Reference counting behavior.
 
-- [ ] **Milestone exit gate**
-  - [ ] `registry.json` loads/saves deterministically with version key + migration hook and ID generation.
-  - [ ] `atomicWrite` + `ensureDir` helpers and Keychain service (service `com.relay.app`) are covered by unit tests, including alias reference counting.
+- [ ] 2.5 **Milestone exit gate**
+  - [ ] 2.5.1 `registry.json` loads/saves deterministically with version key + migration hook and ID generation.
+  - [ ] 2.5.2 `atomicWrite` + `ensureDir` helpers and Keychain service (service `com.relay.app`) are covered by unit tests, including alias reference counting.
 
 ---
 
 ## Milestone 3 — MCP Servers UI (CRUD)
 
-- [ ] **Base UI layout**
-  - [ ] Build main layout with:
-    - [ ] Left / main content area for servers list.
-    - [ ] Access to Settings (button or nav).
-  - [ ] Ensure dark theme visuals and basic Liquid Glass feel.
+- [ ] 3.1 **Base UI layout**
+  - [ ] 3.1.1 Build main layout with:
+    - [ ] 3.1.1.1 Left / main content area for servers list.
+    - [ ] 3.1.1.2 Access to Settings (button or nav).
+  - [ ] 3.1.2 Ensure dark theme visuals and basic Liquid Glass feel.
 
-- [ ] **Server list view**
-  - [ ] Display server rows with:
-    - [ ] Name.
-    - [ ] Endpoint/launch command summary.
-    - [ ] Enabled toggle.
-    - [ ] “All Apps” master switch.
-    - [ ] Per-app pills (Cursor / Claude / Codex) with toggles.
-  - [ ] Apply app detection state:
-    - [ ] Disable per-app toggles if that app is not detected.
-    - [ ] Reflect master switch state: On / Off / Custom.
+- [ ] 3.2 **Server list view**
+  - [ ] 3.2.1 Display server rows with:
+    - [ ] 3.2.1.1 Name.
+    - [ ] 3.2.1.2 Endpoint/launch command summary.
+    - [ ] 3.2.1.3 Enabled toggle.
+    - [ ] 3.2.1.4 “All Apps” master switch.
+    - [ ] 3.2.1.5 Per-app pills (Cursor / Claude / Codex) with toggles.
+  - [ ] 3.2.2 Apply app detection state:
+    - [ ] 3.2.2.1 Disable per-app toggles if that app is not detected.
+    - [ ] 3.2.2.2 Reflect master switch state: On / Off / Custom.
 
-- [ ] **All Apps logic**
-  - [ ] Implement master toggle behavior:
-    - [ ] ON → set every detected app to `true`.
-    - [ ] OFF → set every app to `false`.
-    - [ ] Custom state when individual toggles differ.
-  - [ ] Ensure changes propagate to registry:
-    - [ ] Only save overrides (false entries) into `apps` field.
+- [ ] 3.3 **All Apps logic**
+  - [ ] 3.3.1 Implement master toggle behavior:
+    - [ ] 3.3.1.1 ON → set every detected app to `true`.
+    - [ ] 3.3.1.2 OFF → set every app to `false`.
+    - [ ] 3.3.1.3 Custom state when individual toggles differ.
+  - [ ] 3.3.2 Ensure changes propagate to registry:
+    - [ ] 3.3.2.1 Only save overrides (false entries) into `apps` field.
 
-- [ ] **Add/Edit server modal**
-  - [ ] Build modal with fields:
-    - [ ] Name.
-    - [ ] Launch command + args.
-    - [ ] Env editor (key → alias string, e.g., `keychain:<alias>`).
-    - [ ] Keychain alias workflow (alias + secret for write/update).
-    - [ ] Enabled toggle.
-    - [ ] Per-app toggles (respect detection).
-  - [ ] Implement inline validation:
-    - [ ] Required fields (name, command, alias when secret is needed).
-    - [ ] Uniqueness constraints (ID/name collisions).
-  - [ ] Wire modal actions:
-    - [ ] “Save” updates registry + Keychain.
-    - [ ] “Cancel” discards changes.
+- [ ] 3.4 **Add/Edit server modal**
+  - [ ] 3.4.1 Build modal with fields:
+    - [ ] 3.4.1.1 Name.
+    - [ ] 3.4.1.2 Launch command + args.
+    - [ ] 3.4.1.3 Env editor (key → alias string, e.g., `keychain:<alias>`).
+    - [ ] 3.4.1.4 Keychain alias workflow (alias + secret for write/update).
+    - [ ] 3.4.1.5 Enabled toggle.
+    - [ ] 3.4.1.6 Per-app toggles (respect detection).
+  - [ ] 3.4.2 Implement inline validation:
+    - [ ] 3.4.2.1 Required fields (name, command, alias when secret is needed).
+    - [ ] 3.4.2.2 Uniqueness constraints (ID/name collisions).
+  - [ ] 3.4.3 Wire modal actions:
+    - [ ] 3.4.3.1 “Save” updates registry + Keychain.
+    - [ ] 3.4.3.2 “Cancel” discards changes.
 
-- [ ] **CRUD behaviors**
-  - [ ] **Add server**:
-    - [ ] Assign ID (`srv_<slug>`).
-    - [ ] Default `enabled = true`.
-    - [ ] Default All Apps ON (for detected agents).
-    - [ ] Write secrets to Keychain.
-  - [ ] **Edit server**:
-    - [ ] Update registry entry.
-    - [ ] Handle alias reassignment (including Keychain reference counting).
-    - [ ] Maintain `.bak` of registry before save.
-  - [ ] **Remove server**:
-    - [ ] Delete from registry.
-    - [ ] Delete Keychain secrets only when alias unused elsewhere.
-    - [ ] Confirm destructive action with user.
+- [ ] 3.5 **CRUD behaviors**
+  - [ ] 3.5.1 **Add server**:
+    - [ ] 3.5.1.1 Assign ID (`srv_<slug>`).
+    - [ ] 3.5.1.2 Default `enabled = true`.
+    - [ ] 3.5.1.3 Default All Apps ON (for detected agents).
+    - [ ] 3.5.1.4 Write secrets to Keychain.
+  - [ ] 3.5.2 **Edit server**:
+    - [ ] 3.5.2.1 Update registry entry.
+    - [ ] 3.5.2.2 Handle alias reassignment (including Keychain reference counting).
+    - [ ] 3.5.2.3 Maintain `.bak` of registry before save.
+  - [ ] 3.5.3 **Remove server**:
+    - [ ] 3.5.3.1 Delete from registry.
+    - [ ] 3.5.3.2 Delete Keychain secrets only when alias unused elsewhere.
+    - [ ] 3.5.3.3 Confirm destructive action with user.
 
-- [ ] **Milestone exit gate**
-  - [ ] Server list renders with All Apps master switch + per-app pills, reflecting detection state.
-  - [ ] Add/Edit modal saves to registry + Keychain with inline validation and respects alias reuse rules.
+- [ ] 3.6 **Milestone exit gate**
+  - [ ] 3.6.1 Server list renders with All Apps master switch + per-app pills, reflecting detection state.
+  - [ ] 3.6.2 Add/Edit modal saves to registry + Keychain with inline validation and respects alias reuse rules.
 
 ---
 
 ## Milestone 4 — Detection & Settings
 
-- [ ] **Agent detection logic**
-  - [ ] Cursor:
-    - [ ] Detect if `~/.cursor` directory exists OR `~/.cursor/mcp.json` file exists.
-  - [ ] Claude Code:
-    - [ ] Detect if `~/.claude.json` exists OR `which claude` succeeds.
-  - [ ] Codex:
-    - [ ] Detect if `~/.codex/config.toml` exists OR `which codex` succeeds.
-  - [ ] Implement a unified detection service:
-    - [ ] Resolve final config paths for each agent.
-    - [ ] Cache detection results for the renderer.
+- [ ] 4.1 **Agent detection logic**
+  - [ ] 4.1.1 Cursor:
+    - [ ] 4.1.1.1 Detect if `~/.cursor` directory exists OR `~/.cursor/mcp.json` file exists.
+  - [ ] 4.1.2 Claude Code:
+    - [ ] 4.1.2.1 Detect if `~/.claude.json` exists OR `which claude` succeeds.
+  - [ ] 4.1.3 Codex:
+    - [ ] 4.1.3.1 Detect if `~/.codex/config.toml` exists OR `which codex` succeeds.
+  - [ ] 4.1.4 Implement a unified detection service:
+    - [ ] 4.1.4.1 Resolve final config paths for each agent.
+    - [ ] 4.1.4.2 Cache detection results for the renderer.
 
-- [ ] **Settings view**
-  - [ ] Show detection cards per agent:
-    - [ ] Detection status (Detected / Not Detected).
-    - [ ] Resolved config path.
-    - [ ] Read-only project-scope paths (if surfaced).
-  - [ ] Display last sync timestamp.
-  - [ ] Provide `Sync Now` button.
-  - [ ] Reflect disabled state for non-detected app toggles.
+- [ ] 4.2 **Settings view**
+  - [ ] 4.2.1 Show detection cards per agent:
+    - [ ] 4.2.1.1 Detection status (Detected / Not Detected).
+    - [ ] 4.2.1.2 Resolved config path.
+    - [ ] 4.2.1.3 Read-only project-scope paths (if surfaced).
+  - [ ] 4.2.2 Display last sync timestamp.
+  - [ ] 4.2.3 Provide `Sync Now` button.
+  - [ ] 4.2.4 Reflect disabled state for non-detected app toggles.
 
-- [ ] **Guardrail checks**
-  - [ ] Ensure detection never writes to disk (read-only).
-  - [ ] Ensure project-scope configs are read-only in the UI (no edit actions).
-  - [ ] Confirm that settings do not introduce any network calls.
+- [ ] 4.3 **Guardrail checks**
+  - [ ] 4.3.1 Ensure detection never writes to disk (read-only).
+  - [ ] 4.3.2 Ensure project-scope configs are read-only in the UI (no edit actions).
+  - [ ] 4.3.3 Confirm that settings do not introduce any network calls.
 
-- [ ] **Milestone exit gate**
-  - [ ] Detection service returns status + paths for Cursor/Claude/Codex and disables undetected app toggles in UI.
-  - [ ] Settings view shows detection cards, last sync timestamp, and `Sync Now` entry point.
+- [ ] 4.4 **Milestone exit gate**
+  - [ ] 4.4.1 Detection service returns status + paths for Cursor/Claude/Codex and disables undetected app toggles in UI.
+  - [ ] 4.4.2 Settings view shows detection cards, last sync timestamp, and `Sync Now` entry point.
 
 ---
 
 ## Milestone 5 — Sync Engine & File IO
 
-- [ ] **Sync orchestration**
-  - [ ] Implement `syncNow()` in main process:
-    - [ ] For each server in registry:
-      - [ ] Compute effective per-app enablement with `effectiveEnabled(agent)`.
-    - [ ] For each detected app with at least one effective server:
-      - [ ] Build adapter-specific payload.
-      - [ ] Call adapter write with `atomicWrite`.
-    - [ ] Skip undetected apps; track them for partial success reporting.
-  - [ ] Ensure `Sync Now` runs at most once at a time (sync-in-flight lock).
+- [ ] 5.1 **Sync orchestration**
+  - [ ] 5.1.1 Implement `syncNow()` in main process:
+    - [ ] 5.1.1.1 For each server in registry:
+      - [ ] 5.1.1.1.1 Compute effective per-app enablement with `effectiveEnabled(agent)`.
+    - [ ] 5.1.1.2 For each detected app with at least one effective server:
+      - [ ] 5.1.1.2.1 Build adapter-specific payload.
+      - [ ] 5.1.1.2.2 Call adapter write with `atomicWrite`.
+    - [ ] 5.1.1.3 Skip undetected apps; track them for partial success reporting.
+  - [ ] 5.1.2 Ensure `Sync Now` runs at most once at a time (sync-in-flight lock).
 
-- [ ] **Secrets resolution (Keychain contract)**
-  - [ ] For each server env var referring to `keychain:<alias>`:
-    - [ ] Resolve secret via Keychain in memory.
-    - [ ] Never write plaintext secrets to registry.
-  - [ ] Handle missing secrets:
-    - [ ] Omit env var from generated config.
-    - [ ] Surface warning to user (toast or settings error).
-  - [ ] Purge secret values from memory buffers after sync completes.
+- [ ] 5.2 **Secrets resolution (Keychain contract)**
+  - [ ] 5.2.1 For each server env var referring to `keychain:<alias>`:
+    - [ ] 5.2.1.1 Resolve secret via Keychain in memory.
+    - [ ] 5.2.1.2 Never write plaintext secrets to registry.
+  - [ ] 5.2.2 Handle missing secrets:
+    - [ ] 5.2.2.1 Omit env var from generated config.
+    - [ ] 5.2.2.2 Surface warning to user (toast or settings error).
+  - [ ] 5.2.3 Purge secret values from memory buffers after sync completes.
 
-- [ ] **Cursor adapter (`~/.cursor/mcp.json`)**
-  - [ ] Load existing JSON (if present), handling invalid JSON gracefully.
-  - [ ] Ensure `mcpServers` map is present.
-  - [ ] For each Relay-managed server:
-    - [ ] Add/update `mcpServers[name]` with `command`, `args`, and resolved `env`.
-  - [ ] For disabled Relay-managed servers:
-    - [ ] Remove them from `mcpServers`.
-  - [ ] Preserve all unrelated top-level keys and non-Relay `mcpServers` entries.
-  - [ ] Use `atomicWrite` + `.bak` for final write.
-  - [ ] Add unit tests using fixtures.
+- [ ] 5.3 **Cursor adapter (`~/.cursor/mcp.json`)**
+  - [ ] 5.3.1 Load existing JSON (if present), handling invalid JSON gracefully.
+  - [ ] 5.3.2 Ensure `mcpServers` map is present.
+  - [ ] 5.3.3 For each Relay-managed server:
+    - [ ] 5.3.3.1 Add/update `mcpServers[name]` with `command`, `args`, and resolved `env`.
+  - [ ] 5.3.4 For disabled Relay-managed servers:
+    - [ ] 5.3.4.1 Remove them from `mcpServers`.
+  - [ ] 5.3.5 Preserve all unrelated top-level keys and non-Relay `mcpServers` entries.
+  - [ ] 5.3.6 Use `atomicWrite` + `.bak` for final write.
+  - [ ] 5.3.7 Add unit tests using fixtures.
 
-- [ ] **Claude Code adapter (`~/.claude.json`)**
-  - [ ] Same behavior as Cursor:
-    - [ ] Merge into `mcpServers`.
-    - [ ] Remove disabled Relay-managed entries.
-    - [ ] Preserve other top-level keys.
-    - [ ] Use `atomicWrite` + `.bak`.
-    - [ ] Add tests with representative fixtures.
+- [ ] 5.4 **Claude Code adapter (`~/.claude.json`)**
+  - [ ] 5.4.1 Same behavior as Cursor:
+    - [ ] 5.4.1.1 Merge into `mcpServers`.
+    - [ ] 5.4.1.2 Remove disabled Relay-managed entries.
+    - [ ] 5.4.1.3 Preserve other top-level keys.
+    - [ ] 5.4.1.4 Use `atomicWrite` + `.bak`.
+    - [ ] 5.4.1.5 Add tests with representative fixtures.
 
-- [ ] **Codex adapter (`~/.codex/config.toml`)**
-  - [ ] Load existing TOML; handle invalid syntax gracefully.
-  - [ ] For each Relay-managed server:
-    - [ ] Manage `[mcp_servers."<name>"]` tables.
-    - [ ] Populate `command`, `args`, and `env` (with resolved secrets).
-  - [ ] Remove tables for disabled Relay-managed servers.
-  - [ ] Preserve all non-Relay TOML blocks.
-  - [ ] Use `atomicWrite` + `.bak`.
-  - [ ] Add tests with TOML fixtures.
+- [ ] 5.5 **Codex adapter (`~/.codex/config.toml`)**
+  - [ ] 5.5.1 Load existing TOML; handle invalid syntax gracefully.
+  - [ ] 5.5.2 For each Relay-managed server:
+    - [ ] 5.5.2.1 Manage `[mcp_servers."<name>"]` tables.
+    - [ ] 5.5.2.2 Populate `command`, `args`, and `env` (with resolved secrets).
+  - [ ] 5.5.3 Remove tables for disabled Relay-managed servers.
+  - [ ] 5.5.4 Preserve all non-Relay TOML blocks.
+  - [ ] 5.5.5 Use `atomicWrite` + `.bak`.
+  - [ ] 5.5.6 Add tests with TOML fixtures.
 
-- [ ] **Error taxonomy & UX**
-  - [ ] Define basic error categories:
-    - [ ] `ERR_SECRET_MISSING`
-    - [ ] `ERR_PERMISSION_DENIED`
-    - [ ] `ERR_INVALID_CONFIG`
-    - [ ] `ERR_IO_FAILURE`
-  - [ ] Map errors to:
-    - [ ] Toast vs modal.
-    - [ ] Settings warnings.
-  - [ ] Implement `.bak` restore prompt for invalid JSON/TOML or permission issues:
-    - [ ] Options: “Open file”, “Restore backup”, “Skip app”.
+- [ ] 5.6 **Error taxonomy & UX**
+  - [ ] 5.6.1 Define basic error categories:
+    - [ ] 5.6.1.1 `ERR_SECRET_MISSING`
+    - [ ] 5.6.1.2 `ERR_PERMISSION_DENIED`
+    - [ ] 5.6.1.3 `ERR_INVALID_CONFIG`
+    - [ ] 5.6.1.4 `ERR_IO_FAILURE`
+  - [ ] 5.6.2 Map errors to:
+    - [ ] 5.6.2.1 Toast vs modal.
+    - [ ] 5.6.2.2 Settings warnings.
+  - [ ] 5.6.3 Implement `.bak` restore prompt for invalid JSON/TOML or permission issues:
+    - [ ] 5.6.3.1 Options: “Open file”, “Restore backup”, “Skip app”.
 
-- [ ] **User feedback**
-  - [ ] Implement toast on sync completion:
-    - [ ] `Synced (N apps)` when all detected apps succeeded.
-    - [ ] `Synced (N/3 apps)` when some apps were skipped or errored.
-  - [ ] Show partial failure reasons (e.g., missing secret, invalid config).
+- [ ] 5.7 **User feedback**
+  - [ ] 5.7.1 Implement toast on sync completion:
+    - [ ] 5.7.1.1 `Synced (N apps)` when all detected apps succeeded.
+    - [ ] 5.7.1.2 `Synced (N/3 apps)` when some apps were skipped or errored.
+  - [ ] 5.7.2 Show partial failure reasons (e.g., missing secret, invalid config).
 
-- [ ] **Milestone exit gate**
-  - [ ] `syncNow()` resolves Keychain secrets just-in-time, writes adapter outputs via `atomicWrite`, and surfaces error taxonomy + restore prompts.
-  - [ ] Toast and partial-success messaging reflect detection status (`Synced (N/3 apps)` when applicable).
+- [ ] 5.8 **Milestone exit gate**
+  - [ ] 5.8.1 `syncNow()` resolves Keychain secrets just-in-time, writes adapter outputs via `atomicWrite`, and surfaces error taxonomy + restore prompts.
+  - [ ] 5.8.2 Toast and partial-success messaging reflect detection status (`Synced (N/3 apps)` when applicable).
 
 ---
 
 ## Milestone 6 — User Flow Wiring
 
-- [ ] **Launch flow**
-  - [ ] On app start:
-    - [ ] Hydrate registry (initialize if missing).
-    - [ ] Run agent detection.
-    - [ ] Preload Keychain alias metadata for UI (e.g., which aliases exist).
-  - [ ] Propagate initial state to renderer via IPC.
+- [ ] 6.1 **Launch flow**
+  - [ ] 6.1.1 On app start:
+    - [ ] 6.1.1.1 Hydrate registry (initialize if missing).
+    - [ ] 6.1.1.2 Run agent detection.
+    - [ ] 6.1.1.3 Preload Keychain alias metadata for UI (e.g., which aliases exist).
+  - [ ] 6.1.2 Propagate initial state to renderer via IPC.
 
-- [ ] **Wire CRUD to services**
-  - [ ] Ensure UI CRUD operations:
-    - [ ] Call registry + Keychain services in main process.
-    - [ ] Broadcast updated registry state back to renderer.
-  - [ ] Guarantee deterministic writes on every CRUD action (registry `.bak` + atomic write).
+- [ ] 6.2 **Wire CRUD to services**
+  - [ ] 6.2.1 Ensure UI CRUD operations:
+    - [ ] 6.2.1.1 Call registry + Keychain services in main process.
+    - [ ] 6.2.1.2 Broadcast updated registry state back to renderer.
+  - [ ] 6.2.2 Guarantee deterministic writes on every CRUD action (registry `.bak` + atomic write).
 
-- [ ] **Sync wiring**
-  - [ ] Wire Settings `Sync Now` button to main process `syncNow()`.
-  - [ ] Wire tray `Sync Now` menu item to same pipeline.
-  - [ ] Disable sync controls while sync is in-flight.
-  - [ ] Surface sync-in-progress state in UI (spinner / subtle indicator).
+- [ ] 6.3 **Sync wiring**
+  - [ ] 6.3.1 Wire Settings `Sync Now` button to main process `syncNow()`.
+  - [ ] 6.3.2 Wire tray `Sync Now` menu item to same pipeline.
+  - [ ] 6.3.3 Disable sync controls while sync is in-flight.
+  - [ ] 6.3.4 Surface sync-in-progress state in UI (spinner / subtle indicator).
 
-- [ ] **Backup restore UX**
-  - [ ] On encountering invalid JSON/TOML:
-    - [ ] Prompt user with:
-      - [ ] “Open file”
-      - [ ] “Restore backup”
-      - [ ] “Skip app”
-    - [ ] Implement actions behind each choice.
-  - [ ] Ensure skipping one app doesn’t cancel other app syncs.
+- [ ] 6.4 **Backup restore UX**
+  - [ ] 6.4.1 On encountering invalid JSON/TOML:
+    - [ ] 6.4.1.1 Prompt user with:
+      - [ ] 6.4.1.1.1 “Open file”
+      - [ ] 6.4.1.1.2 “Restore backup”
+      - [ ] 6.4.1.1.3 “Skip app”
+    - [ ] 6.4.1.2 Implement actions behind each choice.
+  - [ ] 6.4.2 Ensure skipping one app doesn’t cancel other app syncs.
 
-- [ ] **Milestone exit gate**
-  - [ ] UI CRUD + tray actions all invoke the same registry/Keychain/sync pipeline with in-flight locking.
-  - [ ] `.bak` restore prompts (Open/Restore/Skip) are wired into the UI flow when adapters fail validation.
+- [ ] 6.5 **Milestone exit gate**
+  - [ ] 6.5.1 UI CRUD + tray actions all invoke the same registry/Keychain/sync pipeline with in-flight locking.
+  - [ ] 6.5.2 `.bak` restore prompts (Open/Restore/Skip) are wired into the UI flow when adapters fail validation.
 
 ---
 
 ## Milestone 7 — Packaging & QA
 
-- [ ] **Packaging**
-  - [ ] Configure macOS app metadata:
-    - [ ] App ID: `com.relay.app`
-    - [ ] Product Name: `Relay`
-    - [ ] Category: `Developer Tools`
-  - [ ] Configure packaging to produce a signed, hardened `.dmg`.
-  - [ ] Ensure sandbox is enabled in final build.
-  - [ ] Strip any auto-updater integration.
+- [ ] 7.1 **Packaging**
+  - [ ] 7.1.1 Configure macOS app metadata:
+    - [ ] 7.1.1.1 App ID: `com.relay.app`
+    - [ ] 7.1.1.2 Product Name: `Relay`
+    - [ ] 7.1.1.3 Category: `Developer Tools`
+  - [ ] 7.1.2 Configure packaging to produce a signed, hardened `.dmg`.
+  - [ ] 7.1.3 Ensure sandbox is enabled in final build.
+  - [ ] 7.1.4 Strip any auto-updater integration.
 
-- [ ] **Offline smoke tests**
-  - [ ] Test cold start with network disabled:
-    - [ ] App launches.
-    - [ ] No network attempts are made.
-  - [ ] Test sync with:
-    - [ ] All apps detected.
-    - [ ] Some apps undetected.
-    - [ ] Missing secrets in Keychain.
-    - [ ] Invalid existing configs (JSON/TOML).
-  - [ ] Verify `.bak` behavior:
-    - [ ] Backups are created on overwrite.
-    - [ ] Restore flow works and does not corrupt files.
+- [ ] 7.2 **Offline smoke tests**
+  - [ ] 7.2.1 Test cold start with network disabled:
+    - [ ] 7.2.1.1 App launches.
+    - [ ] 7.2.1.2 No network attempts are made.
+  - [ ] 7.2.2 Test sync with:
+    - [ ] 7.2.2.1 All apps detected.
+    - [ ] 7.2.2.2 Some apps undetected.
+    - [ ] 7.2.2.3 Missing secrets in Keychain.
+    - [ ] 7.2.2.4 Invalid existing configs (JSON/TOML).
+  - [ ] 7.2.3 Verify `.bak` behavior:
+    - [ ] 7.2.3.1 Backups are created on overwrite.
+    - [ ] 7.2.3.2 Restore flow works and does not corrupt files.
 
-- [ ] **Security checks**
-  - [ ] Confirm `contextIsolation=true`, `nodeIntegration=false`, `sandbox=true` in production build.
-  - [ ] Confirm no secrets are logged to console or written to disk outside Keychain.
-  - [ ] Confirm error paths don’t leak secrets.
+- [ ] 7.3 **Security checks**
+  - [ ] 7.3.1 Confirm `contextIsolation=true`, `nodeIntegration=false`, `sandbox=true` in production build.
+  - [ ] 7.3.2 Confirm no secrets are logged to console or written to disk outside Keychain.
+  - [ ] 7.3.3 Confirm error paths don’t leak secrets.
 
-- [ ] **Manual QA checklist**
-  - [ ] Document manual test cases for:
-    - [ ] Launch + tray flows.
-    - [ ] Add/Edit/Remove server.
-    - [ ] Per-app toggles and All Apps behavior.
-    - [ ] Settings, detection, and paths.
-    - [ ] Sync behavior for each adapter.
-  - [ ] Capture known limitations that are explicitly post-MVP (drift detection, project-scoped writes, cloud sync, etc.).
-  - [ ] Prepare basic release notes for the MVP `.dmg`.
+- [ ] 7.4 **Manual QA checklist**
+  - [ ] 7.4.1 Document manual test cases for:
+    - [ ] 7.4.1.1 Launch + tray flows.
+    - [ ] 7.4.1.2 Add/Edit/Remove server.
+    - [ ] 7.4.1.3 Per-app toggles and All Apps behavior.
+    - [ ] 7.4.1.4 Settings, detection, and paths.
+    - [ ] 7.4.1.5 Sync behavior for each adapter.
+  - [ ] 7.4.2 Capture known limitations that are explicitly post-MVP (drift detection, project-scoped writes, cloud sync, etc.).
+  - [ ] 7.4.3 Prepare basic release notes for the MVP `.dmg`.
 
-- [ ] **Milestone exit gate**
-  - [ ] Signed, hardened `.dmg` passes offline startup tests and enforces security flags in production.
-  - [ ] Manual QA checklist + release notes completed, documenting coverage of missing secrets, invalid configs, and disabled apps.
+- [ ] 7.5 **Milestone exit gate**
+  - [ ] 7.5.1 Signed, hardened `.dmg` passes offline startup tests and enforces security flags in production.
+  - [ ] 7.5.2 Manual QA checklist + release notes completed, documenting coverage of missing secrets, invalid configs, and disabled apps.
