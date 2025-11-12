@@ -43,14 +43,14 @@ Use it as the primary execution plan for the macOS MVP.
     - [x] 1.4.2.4 Sync invocation + status.
   - [x] 1.4.3 Ensure preload never exposes Node primitives directly to the renderer.
 
-- [ ] 1.5 **Tray menu**
-  - [ ] 1.5.1 Add tray icon and menu with:
-    - [ ] 1.5.1.1 “Open Relay”
-    - [ ] 1.5.1.2 “Sync Now”
-    - [ ] 1.5.1.3 “Quit”
-  - [ ] 1.5.2 Wire “Open Relay” to show/focus BrowserWindow.
-  - [ ] 1.5.3 Wire “Sync Now” to the same sync flow used by Settings.
-  - [ ] 1.5.4 Ensure tray menu works correctly when app is hidden and on cold start.
+- [x] 1.5 **Tray menu**
+  - [x] 1.5.1 Add tray icon and menu with:
+    - [x] 1.5.1.1 “Open Relay”
+    - [x] 1.5.1.2 “Sync Now”
+    - [x] 1.5.1.3 “Quit”
+  - [x] 1.5.2 Wire “Open Relay” to show/focus BrowserWindow.
+  - [x] 1.5.3 Wire “Sync Now” to the same sync flow used by Settings.
+  - [x] 1.5.4 Ensure tray menu works correctly when app is hidden and on cold start.
 
 - [ ] 1.6 **Milestone exit gate**
   - [ ] 1.6.1 BrowserWindow uses `contextIsolation=true`, `nodeIntegration=false`, `sandbox=true`, and only loads local assets.

@@ -75,9 +75,14 @@ const resolveSyncApps = (payload?: SyncInvocationPayload): SupportedAgent[] => {
   return fallbackAgents;
 };
 
-const handleSyncInvoke = (_event: Electron.IpcMainInvokeEvent, payload?: SyncInvocationPayload): SyncInvocationResult => {
+const performSync = (payload?: SyncInvocationPayload): SyncInvocationResult => {
+  const normalizedPayload: SyncInvocationPayload = {
+    source: payload?.source ?? 'user',
+    apps: payload?.apps?.length ? payload.apps : undefined
+  };
+
   const finishedAt = new Date().toISOString();
-  const syncedApps = resolveSyncApps(payload);
+  const syncedApps = resolveSyncApps(normalizedPayload);
 
   syncStatus = {
     state: 'idle',
@@ -88,8 +93,12 @@ const handleSyncInvoke = (_event: Electron.IpcMainInvokeEvent, payload?: SyncInv
     ok: true,
     finishedAt,
     syncedApps,
-    message: `Sync triggered via ${payload?.source ?? 'user'}`
+    message: `Sync triggered via ${normalizedPayload.source}`
   };
+};
+
+const handleSyncInvoke = (_event: Electron.IpcMainInvokeEvent, payload?: SyncInvocationPayload): SyncInvocationResult => {
+  return performSync(payload);
 };
 
 const handleSyncStatus = () => syncStatus;
@@ -108,5 +117,7 @@ export const registerIpcHandlers = () => {
 
   handlersRegistered = true;
 };
+
+export const triggerSyncFromMain = (payload?: SyncInvocationPayload) => performSync(payload);
 
 export type { RendererBridge } from './contracts';

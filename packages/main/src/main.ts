@@ -2,10 +2,12 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { app, BrowserWindow, nativeTheme, session } from 'electron';
 import { registerIpcHandlers } from './ipc/handlers';
+import { initializeTray } from './tray';
 
 const isMac = process.platform === 'darwin';
 const rendererHtml = path.join(__dirname, '../../renderer/dist/index.html');
 const preloadPath = path.join(__dirname, 'preload.js');
+let mainWindow: BrowserWindow | null = null;
 
 const ensureRendererBundle = () => {
   if (!existsSync(rendererHtml)) {
@@ -53,7 +55,11 @@ const applySecurityPolicies = () => {
   });
 };
 
-const createWindow = () => {
+const createWindow = (): BrowserWindow => {
+  if (mainWindow) {
+    return mainWindow;
+  }
+
   const window = new BrowserWindow({
     width: 900,
     height: 600,
@@ -83,6 +89,28 @@ const createWindow = () => {
 
   window.once('ready-to-show', () => window.show());
   window.loadFile(ensureRendererBundle());
+
+  window.on('closed', () => {
+    mainWindow = null;
+  });
+
+  mainWindow = window;
+  return window;
+};
+
+const showOrCreateWindow = (): BrowserWindow => {
+  const window = mainWindow ?? createWindow();
+
+  if (window.isMinimized()) {
+    window.restore();
+  }
+
+  if (!window.isVisible()) {
+    window.show();
+  }
+
+  window.focus();
+  return window;
 };
 
 app.whenReady().then(() => {
@@ -90,11 +118,10 @@ app.whenReady().then(() => {
   applySecurityPolicies();
   registerIpcHandlers();
   createWindow();
+  initializeTray({ showOrCreateWindow });
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
+    showOrCreateWindow();
   });
 });
 
