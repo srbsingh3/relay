@@ -17,16 +17,16 @@ Use it as the primary execution plan for the macOS MVP.
   - [x] 1.1.2 Set up shared TypeScript config, linting, and testing baseline.
   - [x] 1.1.3 Add `PRD.md`, `AGENTS.md`, and `TASKS.md` to the repo as living references.
 
-- [ ] 1.2 **Secure BrowserWindow shell**
-  - [ ] 1.2.1 Create main Electron process entry.
-  - [ ] 1.2.2 Configure a single BrowserWindow:
-    - [ ] 1.2.2.1 Size: 900×600.
-    - [ ] 1.2.2.2 Dark theme and base Liquid Glass aesthetic (can be basic initially).
-  - [ ] 1.2.3 Enforce Electron security flags:
-    - [ ] 1.2.3.1 `contextIsolation = true`
-    - [ ] 1.2.3.2 `nodeIntegration = false`
-    - [ ] 1.2.3.3 `sandbox = true`
-  - [ ] 1.2.4 Load UI via local `index.html` only (no remote URLs).
+- [x] 1.2 **Secure BrowserWindow shell**
+  - [x] 1.2.1 Create main Electron process entry.
+  - [x] 1.2.2 Configure a single BrowserWindow:
+    - [x] 1.2.2.1 Size: 900×600.
+    - [x] 1.2.2.2 Dark theme and base Liquid Glass aesthetic (can be basic initially).
+  - [x] 1.2.3 Enforce Electron security flags:
+    - [x] 1.2.3.1 `contextIsolation = true`
+    - [x] 1.2.3.2 `nodeIntegration = false`
+    - [x] 1.2.3.3 `sandbox = true`
+  - [x] 1.2.4 Load UI via local `index.html` only (no remote URLs).
 
 - [ ] 1.3 **Content Security Policy / offline guardrails**
   - [ ] 1.3.1 Add CSP: `default-src 'self'`.
