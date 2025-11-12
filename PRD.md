@@ -2,7 +2,7 @@
 
 ## Mission Snapshot
 - macOS-only Electron app that locally manages MCP servers shared by Cursor, Claude Code, and Codex.
-- Runs fully offline: no telemetry, no network calls, no remote sync.
+- Privacy-first networking: no telemetry, no data collection, and no remote sync. Relay performs only minimal, transparent, periodic update checks.
 - Prioritizes secure secret storage (macOS Keychain) and deterministic config writes for each supported agent.
 
 ## Success Criteria
@@ -13,7 +13,7 @@
 - Binary ships as signed, hardened macOS `.dmg` with sandbox, `contextIsolation`, and `nodeIntegration=false`.
 
 ## Scope Guardrails (Non-goals)
-- No Windows/Linux builds, no auto-update channel, no analytics.
+- No Windows/Linux builds, no telemetry or analytics. Auto-update installation is out of scope for MVP (but update checking is allowed).
 - No process management for MCP servers themselves.
 - Project-scoped agent configs are read-only for MVP.
 - Drift detection, diff previews, or cloud sync are explicitly post-MVP.
@@ -153,7 +153,7 @@ env = { CONTEXT7_API_KEY = "<resolved-from-keychain>" }
 - Electron `contextIsolation=true`, `nodeIntegration=false`, `sandbox=true`.
 - Strict Content Security Policy; load assets from local files only.
 - Keep secrets in-process only; purge buffers immediately after sync.
-- Sign + harden the macOS build; no network permissions requested.
+- Sign + harden the macOS build. All network usage limited strictly to update checks; no other network permissions used.
 
 ## Edge Cases & Error Handling
 - **Missing paths**: create parent directories and seed minimal config structures.
@@ -166,8 +166,14 @@ env = { CONTEXT7_API_KEY = "<resolved-from-keychain>" }
 
 ## Build & Distribution
 - Target macOS `.dmg`; App ID `com.relay.app`, Product Name `Relay`, Category `Developer Tools`.
-- No auto-updater; updates ship manually.
-- Bundle must work offline out of the box.
+- No auto-updater for MVP; Relay may perform minimal update checks and notify the user when a new version is available.
+
+## Network Policy
+- Relay operates with a privacy-first networking model.
+- No telemetry, analytics, usage reporting, or remote sync is ever performed.
+- Relay conducts a minimal, read-only network request to check for application updates (e.g., a small JSON manifest).
+- Update checks contain no user data, no secrets, and no MCP information.
+- Users may disable update checks in Settings (optional for MVP).
 
 ## Recommended Implementation Order (for AI agent)
 1. Scaffold Electron + Vite project with secure BrowserWindow defaults and tray menu.

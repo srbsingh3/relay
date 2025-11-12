@@ -198,15 +198,21 @@ Use it as the primary execution plan for the macOS MVP.
   - [ ] 4.2.2 Display last sync timestamp.
   - [ ] 4.2.3 Provide `Sync Now` button.
   - [ ] 4.2.4 Reflect disabled state for non-detected app toggles.
+  - [ ] 4.2.5 Present update-check card:
+    - [ ] 4.2.5.1 Show current version + last-checked timestamp.
+    - [ ] 4.2.5.2 Provide manual “Check for Updates” CTA wired to the main-process service.
+    - [ ] 4.2.5.3 Display result states (up to date, update available, offline, error).
+    - [ ] 4.2.5.4 (Optional for MVP) Add toggle to disable automatic checks and persist the preference.
 
 - [ ] 4.3 **Guardrail checks**
   - [ ] 4.3.1 Ensure detection never writes to disk (read-only).
   - [ ] 4.3.2 Ensure project-scope configs are read-only in the UI (no edit actions).
-  - [ ] 4.3.3 Confirm that settings do not introduce any network calls.
+  - [ ] 4.3.3 Confirm that Settings only triggers the update-check manifest fetch (no telemetry or data sharing) and surfaces the opt-out.
+  - [ ] 4.3.4 Ensure update-check responses never include or display secrets/registry data.
 
 - [ ] 4.4 **Milestone exit gate**
   - [ ] 4.4.1 Detection service returns status + paths for Cursor/Claude/Codex and disables undetected app toggles in UI.
-  - [ ] 4.4.2 Settings view shows detection cards, last sync timestamp, and `Sync Now` entry point.
+  - [ ] 4.4.2 Settings view shows detection cards, last sync timestamp, `Sync Now`, and the update-check card with manual CTA/status.
 
 ---
 
@@ -314,9 +320,17 @@ Use it as the primary execution plan for the macOS MVP.
     - [ ] 6.4.1.2 Implement actions behind each choice.
   - [ ] 6.4.2 Ensure skipping one app doesn’t cancel other app syncs.
 
-- [ ] 6.5 **Milestone exit gate**
-  - [ ] 6.5.1 UI CRUD + tray actions all invoke the same registry/Keychain/sync pipeline with in-flight locking.
-  - [ ] 6.5.2 `.bak` restore prompts (Open/Restore/Skip) are wired into the UI flow when adapters fail validation.
+- [ ] 6.5 **Update-check orchestration**
+  - [ ] 6.5.1 Implement `UpdateCheckService` in the main process that fetches a signed manifest via HTTPS without sending user data.
+  - [ ] 6.5.2 Compare manifest version to the running build and emit structured update events (up-to-date / update-available / offline / error).
+  - [ ] 6.5.3 Honor the Settings preference: skip scheduled checks when disabled, but allow manual "Check for Updates" invocations.
+  - [ ] 6.5.4 Schedule periodic checks (e.g., once every 24h) and reuse the same service for tray/UI notifications.
+  - [ ] 6.5.5 Cache last successful check timestamp/result for display in Settings.
+
+- [ ] 6.6 **Milestone exit gate**
+  - [ ] 6.6.1 UI CRUD + tray actions all invoke the same registry/Keychain/sync pipeline with in-flight locking.
+  - [ ] 6.6.2 `.bak` restore prompts (Open/Restore/Skip) are wired into the UI flow when adapters fail validation.
+  - [ ] 6.6.3 Update-check service runs only through the main process, surfaces results in Settings/tray, and respects the opt-out toggle.
 
 ---
 
@@ -330,11 +344,12 @@ Use it as the primary execution plan for the macOS MVP.
   - [ ] 7.1.2 Configure packaging to produce a signed, hardened `.dmg`.
   - [ ] 7.1.3 Ensure sandbox is enabled in final build.
   - [ ] 7.1.4 Strip any auto-updater integration.
+  - [ ] 7.1.5 Restrict network entitlements/permissions to the update-manifest endpoint only.
 
 - [ ] 7.2 **Offline smoke tests**
   - [ ] 7.2.1 Test cold start with network disabled:
     - [ ] 7.2.1.1 App launches.
-    - [ ] 7.2.1.2 No network attempts are made.
+    - [ ] 7.2.1.2 When auto-checks are disabled, no network attempts are made; when enabled, only the manifest fetch is attempted and fails gracefully offline.
   - [ ] 7.2.2 Test sync with:
     - [ ] 7.2.2.1 All apps detected.
     - [ ] 7.2.2.2 Some apps undetected.
@@ -343,11 +358,15 @@ Use it as the primary execution plan for the macOS MVP.
   - [ ] 7.2.3 Verify `.bak` behavior:
     - [ ] 7.2.3.1 Backups are created on overwrite.
     - [ ] 7.2.3.2 Restore flow works and does not corrupt files.
+  - [ ] 7.2.4 Validate update-check UX:
+    - [ ] 7.2.4.1 Manual “Check for Updates” works online/offline with clear toasts.
+    - [ ] 7.2.4.2 Auto-check schedule respects opt-out toggle and updates last-checked timestamp.
 
 - [ ] 7.3 **Security checks**
   - [ ] 7.3.1 Confirm `contextIsolation=true`, `nodeIntegration=false`, `sandbox=true` in production build.
   - [ ] 7.3.2 Confirm no secrets are logged to console or written to disk outside Keychain.
   - [ ] 7.3.3 Confirm error paths don’t leak secrets.
+  - [ ] 7.3.4 Capture network inspector output to prove update-check requests contain no identifiable data (method, headers, body).
 
 - [ ] 7.4 **Manual QA checklist**
   - [ ] 7.4.1 Document manual test cases for:
@@ -362,3 +381,4 @@ Use it as the primary execution plan for the macOS MVP.
 - [ ] 7.5 **Milestone exit gate**
   - [ ] 7.5.1 Signed, hardened `.dmg` passes offline startup tests and enforces security flags in production.
   - [ ] 7.5.2 Manual QA checklist + release notes completed, documenting coverage of missing secrets, invalid configs, and disabled apps.
+  - [ ] 7.5.3 Update-check workflow verified end-to-end: manifest fetch is the only network call, opt-out honored, and notifications surface without auto-installing.
