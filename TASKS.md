@@ -52,9 +52,9 @@ Use it as the primary execution plan for the macOS MVP.
   - [x] 1.5.3 Wire “Sync Now” to the same sync flow used by Settings.
   - [x] 1.5.4 Ensure tray menu works correctly when app is hidden and on cold start.
 
-- [ ] 1.6 **Milestone exit gate**
-  - [ ] 1.6.1 BrowserWindow uses `contextIsolation=true`, `nodeIntegration=false`, `sandbox=true`, and only loads local assets.
-  - [ ] 1.6.2 Tray menu (Open/Sync Now/Quit) works after a cold start with the network disabled.
+- [x] 1.6 **Milestone exit gate**
+  - [x] 1.6.1 BrowserWindow uses `contextIsolation=true`, `nodeIntegration=false`, `sandbox=true`, and only loads local assets.
+  - [x] 1.6.2 Tray menu (Open/Sync Now/Quit) works after a cold start with the network disabled.
 
 ---
 

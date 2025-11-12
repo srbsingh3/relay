@@ -3,6 +3,7 @@ import path from 'node:path';
 import { app, BrowserWindow, nativeTheme, session } from 'electron';
 import { registerIpcHandlers } from './ipc/handlers';
 import { initializeTray } from './tray';
+import { buildMainWindowOptions } from './window-options';
 
 const isMac = process.platform === 'darwin';
 const rendererHtml = path.join(__dirname, '../../renderer/dist/index.html');
@@ -60,32 +61,13 @@ const createWindow = (): BrowserWindow => {
     return mainWindow;
   }
 
-  const window = new BrowserWindow({
-    width: 900,
-    height: 600,
-    minWidth: 900,
-    minHeight: 600,
-    show: false,
-    title: 'Relay',
-    titleBarStyle: 'hiddenInset',
-    backgroundColor: '#050814cc',
-    transparent: true,
-    autoHideMenuBar: true,
-    ...(isMac
-      ? {
-          trafficLightPosition: { x: 16, y: 18 },
-          vibrancy: 'under-window',
-          visualEffectState: 'active'
-        }
-      : {}),
-    webPreferences: {
-      preload: preloadPath,
-      contextIsolation: true,
-      nodeIntegration: false,
-      sandbox: true,
-      devTools: !app.isPackaged
-    }
-  });
+  const window = new BrowserWindow(
+    buildMainWindowOptions({
+      preloadPath,
+      isMac,
+      allowDevTools: !app.isPackaged
+    })
+  );
 
   window.once('ready-to-show', () => window.show());
   window.loadFile(ensureRendererBundle());

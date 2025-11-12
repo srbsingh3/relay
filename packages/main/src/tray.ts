@@ -1,5 +1,6 @@
 import { BrowserWindow, Menu, Tray, nativeImage } from 'electron';
 import { triggerSyncFromMain } from './ipc/handlers';
+import { buildTrayMenuTemplate } from './tray-menu';
 
 interface TrayController {
   showOrCreateWindow: () => BrowserWindow;
@@ -15,7 +16,9 @@ export const initializeTray = ({ showOrCreateWindow }: TrayController) => {
   const trayIcon = buildTrayIcon();
   trayRef = new Tray(trayIcon);
   trayRef.setToolTip('Relay');
-  const contextMenu = Menu.buildFromTemplate(buildMenuTemplate(showOrCreateWindow));
+  const contextMenu = Menu.buildFromTemplate(
+    buildTrayMenuTemplate(showOrCreateWindow, () => handleSyncNow())
+  );
   trayRef.setContextMenu(contextMenu);
 
   const showMenu = () => {
@@ -30,24 +33,6 @@ export const initializeTray = ({ showOrCreateWindow }: TrayController) => {
 
   return trayRef;
 };
-
-const buildMenuTemplate = (
-  showOrCreateWindow: () => BrowserWindow
-): Electron.MenuItemConstructorOptions[] => [
-  {
-    label: 'Open Relay',
-    click: () => showOrCreateWindow()
-  },
-  {
-    label: 'Sync Now',
-    click: () => handleSyncNow()
-  },
-  { type: 'separator' },
-  {
-    label: 'Quit',
-    role: 'quit'
-  }
-];
 
 const handleSyncNow = () => {
   try {
