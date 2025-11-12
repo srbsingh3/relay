@@ -14,10 +14,12 @@ import {
 } from './contracts';
 import { createEmptyRegistry } from '../registry/schema';
 import { loadRegistry, saveRegistry } from '../registry/service';
+import { getKeychainService } from '../keychain/service';
 
 let detectionSummary: DetectionSummary = buildDetectionSummary();
 let syncStatus: SyncStatusSnapshot = { state: 'idle', lastRun: null };
 let handlersRegistered = false;
+const keychainService = getKeychainService();
 
 const fallbackAgents: SupportedAgent[] = ['cursor', 'claude', 'codex'];
 
@@ -54,12 +56,24 @@ const handleRegistryWrite = async (_event: Electron.IpcMainInvokeEvent, payload?
   }
 };
 
-const handleKeychainLookup = (_event: Electron.IpcMainInvokeEvent, payload?: KeychainLookupPayload): KeychainLookupResult => {
+const handleKeychainLookup = async (
+  _event: Electron.IpcMainInvokeEvent,
+  payload?: KeychainLookupPayload
+): Promise<KeychainLookupResult> => {
   const alias = payload?.alias?.trim() ?? '';
+  if (!alias) {
+    return {
+      alias: '',
+      hasSecret: false,
+      updatedAt: null
+    };
+  }
+
+  const hasSecret = await keychainService.hasSecret(alias);
   return {
     alias,
-    hasSecret: alias.length > 0,
-    updatedAt: alias.length > 0 ? new Date().toISOString() : null
+    hasSecret,
+    updatedAt: hasSecret ? new Date().toISOString() : null
   };
 };
 

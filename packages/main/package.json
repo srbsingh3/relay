@@ -8,5 +8,8 @@
   "files": ["dist"],
   "scripts": {
     "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "keytar": "^7.9.0"
   }
 }

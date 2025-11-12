@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { atomicWrite, ensureDir } from '../fs/io';
+import { getKeychainService } from '../keychain/service';
 import { SUPPORTED_AGENTS, type SupportedAgent } from '../types/agents';
 import {
   REGISTRY_VERSION,
@@ -303,6 +304,7 @@ export const loadRegistry = async (): Promise<RegistryFile> => {
     const fresh = createEmptyRegistry();
     await persistRegistry(fresh);
     cachedRegistry = fresh;
+    getKeychainService().syncAliasReferences(fresh);
     return fresh;
   }
 
@@ -318,6 +320,7 @@ export const loadRegistry = async (): Promise<RegistryFile> => {
   const normalized = normalizeRegistry(migrated);
 
   cachedRegistry = normalized;
+  getKeychainService().syncAliasReferences(normalized);
   return normalized;
 };
 
@@ -328,6 +331,7 @@ export const saveRegistry = async (registry: RegistryFile): Promise<RegistryFile
 
   await persistRegistry(normalized);
   cachedRegistry = normalized;
+  getKeychainService().syncAliasReferences(normalized);
   return normalized;
 };
 

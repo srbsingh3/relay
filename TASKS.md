@@ -92,21 +92,21 @@ Use it as the primary execution plan for the macOS MVP.
     - [x] 2.3.3.1 `enabled && (apps[agent] ?? true)`
   - [x] 2.3.4 Add tests confirming overrides + defaults.
 
-- [ ] 2.4 **Keychain helper (security guardrail)**
-  - [ ] 2.4.1 Integrate Keychain bindings (e.g., `keytar` or native module).
-  - [ ] 2.4.2 Wrap with a `KeychainService`:
-    - [ ] 2.4.2.1 `service = "com.relay.app"`.
-    - [ ] 2.4.2.2 `account = "token:<alias>"`.
-  - [ ] 2.4.3 Implement CRUD:
-    - [ ] 2.4.3.1 `setSecret(alias, value)`
-    - [ ] 2.4.3.2 `getSecret(alias)`
-    - [ ] 2.4.3.3 `deleteSecret(alias)`
-  - [ ] 2.4.4 Implement reference counting for aliases:
-    - [ ] 2.4.4.1 Track alias usage across servers.
-    - [ ] 2.4.4.2 Delete secrets only when no server references remain.
-  - [ ] 2.4.5 Add tests for:
-    - [ ] 2.4.5.1 Write, read, update, delete.
-    - [ ] 2.4.5.2 Reference counting behavior.
+- [x] 2.4 **Keychain helper (security guardrail)**
+  - [x] 2.4.1 Integrate Keychain bindings (e.g., `keytar` or native module).
+  - [x] 2.4.2 Wrap with a `KeychainService`:
+    - [x] 2.4.2.1 `service = "com.relay.app"`.
+    - [x] 2.4.2.2 `account = "token:<alias>"`.
+  - [x] 2.4.3 Implement CRUD:
+    - [x] 2.4.3.1 `setSecret(alias, value)`
+    - [x] 2.4.3.2 `getSecret(alias)`
+    - [x] 2.4.3.3 `deleteSecret(alias)`
+  - [x] 2.4.4 Implement reference counting for aliases:
+    - [x] 2.4.4.1 Track alias usage across servers.
+    - [x] 2.4.4.2 Delete secrets only when no server references remain.
+  - [x] 2.4.5 Add tests for:
+    - [x] 2.4.5.1 Write, read, update, delete.
+    - [x] 2.4.5.2 Reference counting behavior.
 
 - [ ] 2.5 **Milestone exit gate**
   - [ ] 2.5.1 `registry.json` loads/saves deterministically with version key + migration hook and ID generation.
