@@ -1,5 +1,11 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { RendererBridge, KeychainLookupPayload, RegistryWritePayload, SyncInvocationPayload } from './ipc/contracts';
+import type {
+  RendererBridge,
+  KeychainLookupPayload,
+  KeychainSavePayload,
+  RegistryWritePayload,
+  SyncInvocationPayload
+} from './ipc/contracts';
 import { IPC_CHANNELS } from './ipc/contracts';
 
 const relayBridge: RendererBridge = {
@@ -9,7 +15,8 @@ const relayBridge: RendererBridge = {
     write: (payload: RegistryWritePayload) => ipcRenderer.invoke(IPC_CHANNELS.registry.write, payload)
   },
   keychain: {
-    lookup: (payload: KeychainLookupPayload) => ipcRenderer.invoke(IPC_CHANNELS.keychain.lookup, payload)
+    lookup: (payload: KeychainLookupPayload) => ipcRenderer.invoke(IPC_CHANNELS.keychain.lookup, payload),
+    save: (payload: KeychainSavePayload) => ipcRenderer.invoke(IPC_CHANNELS.keychain.save, payload)
   },
   detection: {
     status: () => ipcRenderer.invoke(IPC_CHANNELS.detection.status)

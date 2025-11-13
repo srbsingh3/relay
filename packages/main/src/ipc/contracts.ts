@@ -19,6 +19,16 @@ export interface KeychainLookupResult {
   updatedAt: string | null;
 }
 
+export interface KeychainSavePayload {
+  alias: string;
+  secret: string;
+}
+
+export interface KeychainSaveResult {
+  ok: boolean;
+  error?: string;
+}
+
 export interface DetectionStatus {
   detected: boolean;
   path: string | null;
@@ -55,7 +65,8 @@ export const IPC_CHANNELS = {
     write: 'relay:registry:write'
   },
   keychain: {
-    lookup: 'relay:keychain:lookup'
+    lookup: 'relay:keychain:lookup',
+    save: 'relay:keychain:save'
   },
   detection: {
     status: 'relay:detection:status'
@@ -74,6 +85,7 @@ export interface RendererBridge {
   };
   keychain: {
     lookup: (payload: KeychainLookupPayload) => Promise<KeychainLookupResult>;
+    save: (payload: KeychainSavePayload) => Promise<KeychainSaveResult>;
   };
   detection: {
     status: () => Promise<DetectionSummary>;

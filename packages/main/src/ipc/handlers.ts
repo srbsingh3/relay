@@ -5,6 +5,8 @@ import {
   IPC_CHANNELS,
   KeychainLookupPayload,
   KeychainLookupResult,
+  KeychainSavePayload,
+  KeychainSaveResult,
   RegistrySnapshot,
   RegistryWritePayload,
   SupportedAgent,
@@ -77,6 +79,26 @@ const handleKeychainLookup = async (
   };
 };
 
+const handleKeychainSave = async (
+  _event: Electron.IpcMainInvokeEvent,
+  payload?: KeychainSavePayload
+): Promise<KeychainSaveResult> => {
+  const alias = payload?.alias?.trim() ?? '';
+  const secret = payload?.secret ?? '';
+
+  if (!alias || !secret) {
+    return { ok: false, error: 'Alias and secret are required.' };
+  }
+
+  try {
+    await keychainService.setSecret(alias, secret);
+    return { ok: true };
+  } catch (error) {
+    console.error('[relay] Failed to store secret:', error);
+    return { ok: false, error: 'Unable to store secret in Keychain.' };
+  }
+};
+
 const handleDetectionStatus = () => detectionSummary;
 
 const resolveSyncApps = (payload?: SyncInvocationPayload): SupportedAgent[] => {
@@ -123,6 +145,7 @@ export const registerIpcHandlers = () => {
   ipcMain.handle(IPC_CHANNELS.registry.read, handleRegistryRead);
   ipcMain.handle(IPC_CHANNELS.registry.write, handleRegistryWrite);
   ipcMain.handle(IPC_CHANNELS.keychain.lookup, handleKeychainLookup);
+  ipcMain.handle(IPC_CHANNELS.keychain.save, handleKeychainSave);
   ipcMain.handle(IPC_CHANNELS.detection.status, handleDetectionStatus);
   ipcMain.handle(IPC_CHANNELS.sync.invoke, handleSyncInvoke);
   ipcMain.handle(IPC_CHANNELS.sync.status, handleSyncStatus);

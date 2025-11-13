@@ -1,9 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import './styles.css';
-import type { DetectionStatus, DetectionSummary, RegistryServerEntry, RegistrySnapshot } from '../../main/src/ipc/contracts';
+import type {
+  DetectionStatus,
+  DetectionSummary,
+  RegistryServerEntry,
+  RegistrySnapshot
+} from '../../main/src/ipc/contracts';
 import { REGISTRY_VERSION } from '../../main/src/registry/schema';
 import type { SupportedAgent } from '../../main/src/types/agents';
 import { SUPPORTED_AGENTS } from '../../main/src/types/agents';
+import ServerModal, { type ServerFormSubmitPayload } from './components/ServerModal';
 
 const agentLabels: Record<SupportedAgent, string> = {
   cursor: 'Cursor',
@@ -70,8 +76,36 @@ const fallbackRegistrySnapshot: RegistrySnapshot = {
   servers: fallbackServers
 };
 
+const SERVER_ID_PREFIX = 'srv_';
+const DEFAULT_SERVER_SLUG = 'server';
+
+const slugifyServerName = (input: string): string =>
+  input
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/_{2,}/g, '_')
+    .replace(/^_+|_+$/g, '');
+
+const reserveUniqueId = (seed: string, used: Set<string>): string => {
+  let candidate = seed;
+  let counter = 2;
+  while (used.has(candidate)) {
+    candidate = `${seed}_${counter}`;
+    counter += 1;
+  }
+  used.add(candidate);
+  return candidate;
+};
+
+const generateServerId = (name: string, existing: RegistryServerEntry[]): string => {
+  const used = new Set(existing.map((server) => server.id));
+  const slug = slugifyServerName(name) || DEFAULT_SERVER_SLUG;
+  return reserveUniqueId(`${SERVER_ID_PREFIX}${slug}`, used);
+};
+
 type MasterState = 'on' | 'off' | 'custom';
 type MasterIntent = Extract<MasterState, 'on' | 'off'>;
+type ModalState = { mode: 'add' } | { mode: 'edit'; serverId: string } | null;
 
 const masterLabels: Record<MasterState, string> = {
   on: 'All detected apps enabled',
@@ -179,6 +213,7 @@ const App = () => {
   const [loading, setLoading] = useState(Boolean(bridge));
   const [loadError, setLoadError] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
+  const [modalState, setModalState] = useState<ModalState>(null);
 
   useEffect(() => {
     if (!bridge) {
@@ -224,9 +259,9 @@ const App = () => {
   }, [bridge]);
 
   const persistServers = useCallback(
-    async (nextServers: RegistryServerEntry[]) => {
+    async (nextServers: RegistryServerEntry[]): Promise<boolean> => {
       if (!bridge) {
-        return;
+        return true;
       }
 
       try {
@@ -239,13 +274,89 @@ const App = () => {
         setServers(snapshot.servers);
         setRegistryVersion(snapshot.version);
         setMutationError(null);
+        return true;
       } catch (error) {
         console.error('[relay] failed to save registry snapshot', error);
         setMutationError('Unable to save registry changes');
+        return false;
       }
     },
     [bridge, registryVersion]
   );
+
+  const handleServerModalSubmit = async (payload: ServerFormSubmitPayload) => {
+    const secrets = payload.secrets;
+    if (secrets.length > 0) {
+      try {
+        if (!bridge) {
+          throw new Error('Keychain access is unavailable in preview mode.');
+        }
+
+        for (const secret of secrets) {
+          const result = await bridge.keychain.save({ alias: secret.alias, secret: secret.secret });
+          if (!result?.ok) {
+            throw new Error(result?.error ?? 'Unable to store secret in Keychain.');
+          }
+        }
+      } finally {
+        secrets.forEach((entry) => {
+          entry.secret = '';
+        });
+      }
+    }
+
+    const nextServers =
+      payload.mode === 'add'
+        ? [
+            ...servers,
+            {
+              id: generateServerId(payload.data.name, servers),
+              name: payload.data.name,
+              enabled: payload.data.enabled,
+              launch: {
+                mode: 'command',
+                command: payload.data.launch.command,
+                args: payload.data.launch.args
+              },
+              env: payload.data.env,
+              ...(payload.data.apps ? { apps: payload.data.apps } : {})
+            }
+          ]
+        : servers.map((server) => {
+            if (server.id !== payload.serverId) {
+              return server;
+            }
+            const updated: RegistryServerEntry = {
+              ...server,
+              name: payload.data.name,
+              enabled: payload.data.enabled,
+              launch: {
+                ...server.launch,
+                mode: 'command',
+                command: payload.data.launch.command,
+                args: payload.data.launch.args
+              },
+              env: payload.data.env
+            };
+            if (payload.data.apps && Object.keys(payload.data.apps).length > 0) {
+              updated.apps = payload.data.apps;
+            } else {
+              delete updated.apps;
+            }
+          return updated;
+        });
+
+    setMutationError(null);
+    const previousServers = servers.slice();
+    setServers(nextServers);
+    const saved = await persistServers(nextServers);
+    if (!saved) {
+      setServers(previousServers);
+      throw new Error('Unable to save registry changes.');
+    }
+
+    setModalState(null);
+  };
 
   const handleMasterToggle = (serverId: string, targetState: MasterIntent) => {
     let changed = false;
@@ -304,7 +415,7 @@ const App = () => {
                   {detectedCount === 1 ? '' : 's'}
                 </p>
               </div>
-              <button className="ghost-button" type="button">
+              <button className="ghost-button" type="button" onClick={() => setModalState({ mode: 'add' })}>
                 Add server
               </button>
             </div>
@@ -328,13 +439,22 @@ const App = () => {
                           <p className="server-name">{server.name}</p>
                           <p className="server-command">{formatCommand(server)}</p>
                         </div>
-                        <button
-                          type="button"
-                          className={`switch ${server.enabled ? 'switch--on' : 'switch--off'}`}
-                          aria-pressed={server.enabled}
-                        >
-                          {server.enabled ? 'Enabled' : 'Disabled'}
-                        </button>
+                        <div className="server-card-actions">
+                          <button
+                            type="button"
+                            className="ghost-button ghost-button--compact"
+                            onClick={() => setModalState({ mode: 'edit', serverId: server.id })}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            className={`switch ${server.enabled ? 'switch--on' : 'switch--off'}`}
+                            aria-pressed={server.enabled}
+                          >
+                            {server.enabled ? 'Enabled' : 'Disabled'}
+                          </button>
+                        </div>
                       </div>
                       <div className="apps-summary">
                         <div>
@@ -420,6 +540,16 @@ const App = () => {
           <span className="tag">No telemetry</span>
         </footer>
       </div>
+      {modalState && (
+        <ServerModal
+          mode={modalState.mode}
+          server={modalState.mode === 'edit' ? servers.find((server) => server.id === modalState.serverId) : undefined}
+          detection={detection}
+          existingServers={servers}
+          onCancel={() => setModalState(null)}
+          onSubmit={handleServerModalSubmit}
+        />
+      )}
     </main>
   );
 };
