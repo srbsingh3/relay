@@ -144,20 +144,20 @@ Use it as the primary execution plan for the macOS MVP.
   - [x] 3.3.2 Ensure changes propagate to registry:
     - [x] 3.3.2.1 Only save overrides (false entries) into `apps` field.
 
-- [ ] 3.4 **Add/Edit server modal**
-  - [ ] 3.4.1 Build modal with fields:
-    - [ ] 3.4.1.1 Name.
-    - [ ] 3.4.1.2 Launch command + args.
-    - [ ] 3.4.1.3 Env editor (key → alias string, e.g., `keychain:<alias>`).
-    - [ ] 3.4.1.4 Keychain alias workflow (alias + secret for write/update).
-    - [ ] 3.4.1.5 Enabled toggle.
-    - [ ] 3.4.1.6 Per-app toggles (respect detection).
-  - [ ] 3.4.2 Implement inline validation:
-    - [ ] 3.4.2.1 Required fields (name, command, alias when secret is needed).
-    - [ ] 3.4.2.2 Uniqueness constraints (ID/name collisions).
-  - [ ] 3.4.3 Wire modal actions:
-    - [ ] 3.4.3.1 “Save” updates registry + Keychain.
-    - [ ] 3.4.3.2 “Cancel” discards changes.
+- [x] 3.4 **Add/Edit server modal**
+  - [x] 3.4.1 Build modal with fields:
+    - [x] 3.4.1.1 Name.
+    - [x] 3.4.1.2 Launch command + args.
+    - [x] 3.4.1.3 Env editor (key → alias string, e.g., `keychain:<alias>`).
+    - [x] 3.4.1.4 Keychain alias workflow (alias + secret for write/update).
+    - [x] 3.4.1.5 Enabled toggle.
+    - [x] 3.4.1.6 Per-app toggles (respect detection).
+  - [x] 3.4.2 Implement inline validation:
+    - [x] 3.4.2.1 Required fields (name, command, alias when secret is needed).
+    - [x] 3.4.2.2 Uniqueness constraints (ID/name collisions).
+  - [x] 3.4.3 Wire modal actions:
+    - [x] 3.4.3.1 “Save” updates registry + Keychain.
+    - [x] 3.4.3.2 “Cancel” discards changes.
 
 - [ ] 3.5 **CRUD behaviors**
   - [ ] 3.5.1 **Add server**:

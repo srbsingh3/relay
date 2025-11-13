@@ -3,6 +3,10 @@ import type { DetectionSummary, RegistryServerEntry } from '../../../main/src/ip
 import type { RegistryEnvironmentMap } from '../../../main/src/registry/schema';
 import type { SupportedAgent } from '../../../main/src/types/agents';
 import { SUPPORTED_AGENTS } from '../../../main/src/types/agents';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
+import { cn } from '../lib/utils';
 
 const KEYCHAIN_VALUE_PREFIX = 'keychain:';
 
@@ -318,145 +322,186 @@ const ServerModal = ({
   const title = mode === 'add' ? 'Add server' : `Edit ${server?.name ?? 'server'}`;
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="server-modal-title">
-      <div className="modal-panel">
-        <header className="modal-header">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 px-4 py-10 backdrop-blur"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="server-modal-title"
+    >
+      <div className="relative w-full max-w-4xl rounded-[32px] border border-white/10 bg-slate-950/95 p-6 shadow-[0_40px_80px_rgba(2,6,23,0.8)]">
+        <header className="flex flex-col gap-3 border-b border-white/5 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="section-eyebrow">Registry</p>
-            <h3 id="server-modal-title">{title}</h3>
+            <p className="text-xs uppercase tracking-[0.3em] text-sky-300">Registry</p>
+            <h3 className="text-2xl font-semibold text-white" id="server-modal-title">
+              {title}
+            </h3>
           </div>
-          <button className="ghost-button" type="button" onClick={onCancel}>
+          <Button variant="ghost" type="button" onClick={onCancel} className="text-sm uppercase tracking-[0.2em]">
             Cancel
-          </button>
+          </Button>
         </header>
-        <form className="modal-form" onSubmit={handleSubmit}>
-          <div className="field-group">
-            <label>
-              <span className="field-label">Server name</span>
-              <input
-                type="text"
-                value={state.name}
-                onChange={(event) => updateField('name', event.target.value)}
-                placeholder="Workspace Relay"
-              />
-            </label>
-            {errors.name && <p className="field-error">{errors.name}</p>}
+        <form className="mt-6 flex flex-col gap-6" onSubmit={handleSubmit}>
+          <div className="space-y-2">
+            <label className="text-[0.7rem] uppercase tracking-[0.25em] text-slate-400">Server name</label>
+            <Input
+              value={state.name}
+              onChange={(event) => updateField('name', event.target.value)}
+              placeholder="Workspace Relay"
+            />
+            {errors.name && <p className="text-xs text-rose-300">{errors.name}</p>}
           </div>
-          <div className="command-grid">
-            <label>
-              <span className="field-label">Launch command</span>
-              <input
-                type="text"
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-[0.7rem] uppercase tracking-[0.25em] text-slate-400">Launch command</label>
+              <Input
                 value={state.command}
                 onChange={(event) => updateField('command', event.target.value)}
                 placeholder="uvx relay serve workspace"
               />
-            </label>
-            <label>
-              <span className="field-label">Args (one per line)</span>
-              <textarea
+            </div>
+            <div className="space-y-2">
+              <label className="text-[0.7rem] uppercase tracking-[0.25em] text-slate-400">Args (one per line)</label>
+              <Textarea
                 value={state.argsText}
                 onChange={(event) => updateField('argsText', event.target.value)}
                 placeholder="--watch&#10;--json"
-                rows={4}
               />
-            </label>
+            </div>
           </div>
-          {errors.command && <p className="field-error">{errors.command}</p>}
-          <div className="toggle-cluster">
-            <span className="field-label">Enabled</span>
-            <button
-              type="button"
-              className={`switch ${state.enabled ? 'switch--on' : 'switch--off'}`}
-              onClick={() => updateField('enabled', !state.enabled)}
-              aria-pressed={state.enabled}
-            >
-              {state.enabled ? 'Enabled' : 'Disabled'}
-            </button>
-          </div>
-          <div className="apps-row modal-apps" role="group" aria-label="App scope toggles">
-            {SUPPORTED_AGENTS.map((agent) => {
-              const detected = Boolean(detection[agent]?.detected);
-              const disabled = !detected;
-              const on = state.appStates[agent];
-              return (
-                <button
-                  key={agent}
-                  type="button"
-                  className={`app-pill ${on ? 'app-pill--on' : 'app-pill--off'} ${disabled ? 'app-pill--disabled' : ''}`}
-                  disabled={disabled}
-                  onClick={() => toggleApp(agent)}
-                  aria-pressed={on}
-                >
-                  <span className="pill-label">{agent.charAt(0).toUpperCase() + agent.slice(1)}</span>
-                  <span className="pill-state">{detected ? (on ? 'On' : 'Off') : 'Not detected'}</span>
-                </button>
-              );
-            })}
-          </div>
-          <section className="env-section">
-            <div className="env-header">
+          {errors.command && <p className="text-xs text-rose-300">{errors.command}</p>}
+          <div className="rounded-2xl border border-white/10 bg-slate-900/40 px-4 py-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="field-label">Keychain env aliases</p>
-                <p className="field-hint">Provide env key + alias; secrets stay in Keychain.</p>
+                <p className="text-[0.7rem] uppercase tracking-[0.25em] text-slate-400">Enabled</p>
+                <p className="text-sm text-slate-300">
+                  {state.enabled ? 'Server participates in sync.' : 'Server stays disabled until re-enabled.'}
+                </p>
               </div>
-              <button type="button" className="ghost-button" onClick={addEnvRow}>
-                Add alias
+              <button
+                type="button"
+                className={cn(
+                  'rounded-full border px-5 py-2 text-xs font-semibold uppercase tracking-[0.3em]',
+                  state.enabled
+                    ? 'border-emerald-400/70 bg-emerald-500/10 text-emerald-100'
+                    : 'border-slate-600/70 bg-slate-800/70 text-slate-300'
+                )}
+                aria-pressed={state.enabled}
+                onClick={() => updateField('enabled', !state.enabled)}
+              >
+                {state.enabled ? 'Enabled' : 'Disabled'}
               </button>
             </div>
-            <div className="env-rows">
+          </div>
+          <div className="rounded-3xl border border-white/10 bg-slate-900/30 px-4 py-4" role="group" aria-label="App scope toggles">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-[0.7rem] uppercase tracking-[0.25em] text-slate-400">Per-app scope</p>
+                <p className="text-sm text-slate-300">Detected agents can be disabled per app.</p>
+              </div>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-3">
+              {SUPPORTED_AGENTS.map((agent) => {
+                const detected = Boolean(detection[agent]?.detected);
+                const on = state.appStates[agent];
+                const disabled = !detected;
+                return (
+                  <button
+                    key={agent}
+                    type="button"
+                    className={cn(
+                      'flex min-w-[140px] flex-col rounded-2xl border px-4 py-3 text-left text-xs uppercase tracking-[0.25em] transition',
+                      on ? 'border-emerald-400/60 bg-emerald-500/10 text-emerald-100' : 'border-white/10 bg-slate-900/40 text-slate-200',
+                      disabled ? 'cursor-not-allowed opacity-40' : 'hover:border-white/40'
+                    )}
+                    disabled={disabled}
+                    aria-pressed={on}
+                    onClick={() => toggleApp(agent)}
+                  >
+                    <span className="text-[0.65rem]">{agent.charAt(0).toUpperCase() + agent.slice(1)}</span>
+                    <span className="text-base font-semibold tracking-normal text-white">
+                      {!detected ? 'Not detected' : on ? 'On' : 'Off'}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <section className="space-y-4 rounded-3xl border border-white/10 bg-slate-900/30 px-4 py-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-[0.7rem] uppercase tracking-[0.25em] text-slate-400">Keychain env aliases</p>
+                <p className="text-sm text-slate-400">Env key + alias (Keychain holds the secret).</p>
+              </div>
+              <Button variant="outline" size="sm" type="button" onClick={addEnvRow} className="rounded-full border-white/20 text-xs uppercase tracking-[0.2em]">
+                Add alias
+              </Button>
+            </div>
+            <div className="space-y-3">
               {state.envRows.map((row) => {
                 const rowErrors = errors.envRows[row.id];
                 return (
-                  <div className="env-row" key={row.id}>
-                    <label>
-                      <span className="field-label">Env key</span>
-                      <input
-                        type="text"
-                        value={row.key}
-                        onChange={(event) => updateEnvRow(row.id, { key: event.target.value })}
-                        placeholder="MCP_TOKEN"
-                      />
-                      {rowErrors?.key && <span className="field-error">{rowErrors.key}</span>}
-                    </label>
-                    <label>
-                      <span className="field-label">Alias</span>
-                      <input
-                        type="text"
-                        value={row.alias}
-                        onChange={(event) => updateEnvRow(row.id, { alias: event.target.value })}
-                        placeholder="workspace"
-                      />
-                      {rowErrors?.alias && <span className="field-error">{rowErrors.alias}</span>}
-                    </label>
-                    <label>
-                      <span className="field-label">Secret (optional)</span>
-                      <input
-                        type="password"
-                        value={row.secret}
-                        onChange={(event) => updateEnvRow(row.id, { secret: event.target.value })}
-                        placeholder="•••••••"
-                      />
-                      {rowErrors?.secret && <span className="field-error">{rowErrors.secret}</span>}
-                    </label>
-                    <button
-                      type="button"
-                      className="icon-button"
-                      aria-label="Remove alias row"
-                      onClick={() => removeEnvRow(row.id)}
-                    >
-                      ✕
-                    </button>
+                  <div
+                    key={row.id}
+                    className="rounded-2xl border border-white/10 bg-slate-950/40 p-4"
+                    aria-label="Env alias row"
+                  >
+                    <div className="grid gap-3 md:grid-cols-[1.1fr_1fr_1fr_auto]">
+                      <div className="space-y-2">
+                        <label className="text-[0.65rem] uppercase tracking-[0.25em] text-slate-400">Env key</label>
+                        <Input
+                          value={row.key}
+                          onChange={(event) => updateEnvRow(row.id, { key: event.target.value })}
+                          placeholder="MCP_TOKEN"
+                        />
+                        {rowErrors?.key && <p className="text-xs text-rose-300">{rowErrors.key}</p>}
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[0.65rem] uppercase tracking-[0.25em] text-slate-400">Alias</label>
+                        <Input
+                          value={row.alias}
+                          onChange={(event) => updateEnvRow(row.id, { alias: event.target.value })}
+                          placeholder="workspace"
+                        />
+                        {rowErrors?.alias && <p className="text-xs text-rose-300">{rowErrors.alias}</p>}
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[0.65rem] uppercase tracking-[0.25em] text-slate-400">Secret (optional)</label>
+                        <Input
+                          type="password"
+                          value={row.secret}
+                          onChange={(event) => updateEnvRow(row.id, { secret: event.target.value })}
+                          placeholder="•••••••"
+                        />
+                        {rowErrors?.secret && <p className="text-xs text-rose-300">{rowErrors.secret}</p>}
+                      </div>
+                      <div className="flex items-start justify-end">
+                        <button
+                          type="button"
+                          className="rounded-full border border-white/15 px-3 py-2 text-sm text-rose-200 transition hover:border-rose-300 hover:text-rose-100"
+                          aria-label="Remove alias row"
+                          onClick={() => removeEnvRow(row.id)}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 );
               })}
             </div>
           </section>
-          {submissionError && <p className="inline-error">{submissionError}</p>}
-          <div className="modal-actions">
-            <button type="submit" className="primary-button" disabled={hasErrors || submitting}>
-              {submitting ? 'Saving...' : 'Save'}
-            </button>
+          {submissionError && (
+            <div className="rounded-2xl border border-rose-400/40 bg-rose-950/40 px-4 py-3 text-sm text-rose-200">
+              {submissionError}
+            </div>
+          )}
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" type="button" onClick={onCancel} className="rounded-full border-white/15 text-xs uppercase tracking-[0.2em]">
+              Cancel
+            </Button>
+            <Button type="submit" disabled={hasErrors || submitting}>
+              {submitting ? 'Saving…' : 'Save'}
+            </Button>
           </div>
         </form>
       </div>
