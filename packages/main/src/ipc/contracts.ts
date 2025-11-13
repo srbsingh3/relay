@@ -102,6 +102,8 @@ export const IPC_CHANNELS = {
   }
 } as const;
 
+export type IpcChannels = typeof IPC_CHANNELS;
+
 export interface RendererBridge {
   version: string;
   registry: {

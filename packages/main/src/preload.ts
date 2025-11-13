@@ -6,32 +6,56 @@ import type {
   RegistryWritePayload,
   SyncInvocationPayload,
   UpdateCheckPayload,
-  UpdatePreferencePayload
+  UpdatePreferencePayload,
+  IpcChannels
 } from './ipc/contracts';
-import { IPC_CHANNELS } from './ipc/contracts';
+
+const CHANNELS: IpcChannels = {
+  registry: {
+    read: 'relay:registry:read',
+    write: 'relay:registry:write'
+  },
+  keychain: {
+    lookup: 'relay:keychain:lookup',
+    save: 'relay:keychain:save'
+  },
+  detection: {
+    status: 'relay:detection:status',
+    refresh: 'relay:detection:refresh'
+  },
+  sync: {
+    invoke: 'relay:sync:invoke',
+    status: 'relay:sync:status'
+  },
+  updates: {
+    status: 'relay:updates:status',
+    check: 'relay:updates:check',
+    preference: 'relay:updates:preference'
+  }
+};
 
 const relayBridge: RendererBridge = {
   version: appVersion(),
   registry: {
-    read: () => ipcRenderer.invoke(IPC_CHANNELS.registry.read),
-    write: (payload: RegistryWritePayload) => ipcRenderer.invoke(IPC_CHANNELS.registry.write, payload)
+    read: () => ipcRenderer.invoke(CHANNELS.registry.read),
+    write: (payload: RegistryWritePayload) => ipcRenderer.invoke(CHANNELS.registry.write, payload)
   },
   keychain: {
-    lookup: (payload: KeychainLookupPayload) => ipcRenderer.invoke(IPC_CHANNELS.keychain.lookup, payload),
-    save: (payload: KeychainSavePayload) => ipcRenderer.invoke(IPC_CHANNELS.keychain.save, payload)
+    lookup: (payload: KeychainLookupPayload) => ipcRenderer.invoke(CHANNELS.keychain.lookup, payload),
+    save: (payload: KeychainSavePayload) => ipcRenderer.invoke(CHANNELS.keychain.save, payload)
   },
   detection: {
-    status: () => ipcRenderer.invoke(IPC_CHANNELS.detection.status),
-    refresh: () => ipcRenderer.invoke(IPC_CHANNELS.detection.refresh)
+    status: () => ipcRenderer.invoke(CHANNELS.detection.status),
+    refresh: () => ipcRenderer.invoke(CHANNELS.detection.refresh)
   },
   sync: {
-    invoke: (payload: SyncInvocationPayload) => ipcRenderer.invoke(IPC_CHANNELS.sync.invoke, payload),
-    status: () => ipcRenderer.invoke(IPC_CHANNELS.sync.status)
+    invoke: (payload: SyncInvocationPayload) => ipcRenderer.invoke(CHANNELS.sync.invoke, payload),
+    status: () => ipcRenderer.invoke(CHANNELS.sync.status)
   },
   updates: {
-    status: () => ipcRenderer.invoke(IPC_CHANNELS.updates.status),
-    check: (payload: UpdateCheckPayload) => ipcRenderer.invoke(IPC_CHANNELS.updates.check, payload),
-    preference: (payload: UpdatePreferencePayload) => ipcRenderer.invoke(IPC_CHANNELS.updates.preference, payload)
+    status: () => ipcRenderer.invoke(CHANNELS.updates.status),
+    check: (payload: UpdateCheckPayload) => ipcRenderer.invoke(CHANNELS.updates.check, payload),
+    preference: (payload: UpdatePreferencePayload) => ipcRenderer.invoke(CHANNELS.updates.preference, payload)
   }
 };
 
