@@ -136,13 +136,13 @@ Use it as the primary execution plan for the macOS MVP.
     - [x] 3.2.2.1 Disable per-app toggles if that app is not detected.
     - [x] 3.2.2.2 Reflect master switch state: On / Off / Custom.
 
-- [ ] 3.3 **All Apps logic**
-  - [ ] 3.3.1 Implement master toggle behavior:
-    - [ ] 3.3.1.1 ON → set every detected app to `true`.
-    - [ ] 3.3.1.2 OFF → set every app to `false`.
-    - [ ] 3.3.1.3 Custom state when individual toggles differ.
-  - [ ] 3.3.2 Ensure changes propagate to registry:
-    - [ ] 3.3.2.1 Only save overrides (false entries) into `apps` field.
+- [x] 3.3 **All Apps logic**
+  - [x] 3.3.1 Implement master toggle behavior:
+    - [x] 3.3.1.1 ON → set every detected app to `true`.
+    - [x] 3.3.1.2 OFF → set every app to `false`.
+    - [x] 3.3.1.3 Custom state when individual toggles differ.
+  - [x] 3.3.2 Ensure changes propagate to registry:
+    - [x] 3.3.2.1 Only save overrides (false entries) into `apps` field.
 
 - [ ] 3.4 **Add/Edit server modal**
   - [ ] 3.4.1 Build modal with fields:

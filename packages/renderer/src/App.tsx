@@ -398,6 +398,50 @@ const App = () => {
     void persistServers(nextServers);
   };
 
+  const handleAgentToggle = (serverId: string, agent: SupportedAgent) => {
+    const agentDetected = Boolean(detection[agent]?.detected);
+    if (!agentDetected) {
+      return;
+    }
+
+    let changed = false;
+    const nextServers = servers.map((server) => {
+      if (server.id !== serverId || !server.enabled) {
+        return server;
+      }
+
+      const overrides = { ...(server.apps ?? {}) };
+      const currentlyDisabled = server.apps?.[agent] === false;
+
+      if (currentlyDisabled) {
+        delete overrides[agent];
+      } else {
+        overrides[agent] = false;
+      }
+
+      const normalized = normalizeAppOverrides(overrides);
+      if (areAppOverridesEqual(server.apps, normalized)) {
+        return server;
+      }
+
+      changed = true;
+      if (normalized) {
+        return { ...server, apps: normalized };
+      }
+      const nextServer = { ...server };
+      delete nextServer.apps;
+      return nextServer;
+    });
+
+    if (!changed) {
+      return;
+    }
+
+    setMutationError(null);
+    setServers(nextServers);
+    void persistServers(nextServers);
+  };
+
   const detectedCount = useMemo(
     () => SUPPORTED_AGENTS.filter((agent) => detection[agent]?.detected).length,
     [detection]
@@ -550,6 +594,7 @@ const App = () => {
                                   disabled={disabled}
                                   aria-pressed={effectiveEnabled}
                                   data-agent={agent}
+                                  onClick={() => handleAgentToggle(server.id, agent)}
                                 >
                                   <span className="text-[0.65rem]">{agentLabels[agent]}</span>
                                   <span className="text-base font-semibold tracking-normal text-white">
