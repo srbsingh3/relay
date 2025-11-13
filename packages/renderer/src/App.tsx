@@ -1,24 +1,161 @@
+import { useEffect, useMemo, useState } from 'react';
 import './styles.css';
+import type { DetectionStatus, DetectionSummary, RegistryServerEntry } from '../../main/src/ipc/contracts';
+import type { SupportedAgent } from '../../main/src/types/agents';
+import { SUPPORTED_AGENTS } from '../../main/src/types/agents';
 
-const placeholderServers = [
+const agentLabels: Record<SupportedAgent, string> = {
+  cursor: 'Cursor',
+  claude: 'Claude',
+  codex: 'Codex'
+};
+
+const buildDetectionSnapshot = (
+  overrides?: Partial<Record<SupportedAgent, Partial<DetectionStatus>>>
+): DetectionSummary => {
+  const timestamp = new Date().toISOString();
+  return SUPPORTED_AGENTS.reduce<DetectionSummary>((acc, agent) => {
+    const override = overrides?.[agent];
+    acc[agent] = {
+      detected: override?.detected ?? false,
+      path: override?.path ?? null,
+      lastChecked: override?.lastChecked ?? timestamp
+    };
+    return acc;
+  }, {} as DetectionSummary);
+};
+
+const fallbackServers: RegistryServerEntry[] = [
   {
     id: 'srv_workspace',
     name: 'Workspace Relay',
-    command: 'uvx relay serve workspace',
-    apps: ['Cursor', 'Claude', 'Codex'],
-    state: 'running'
+    enabled: true,
+    launch: {
+      mode: 'command',
+      command: 'uvx relay serve workspace',
+      args: ['--watch']
+    },
+    env: {},
+    apps: {
+      codex: false
+    }
   },
   {
     id: 'srv_research',
     name: 'Research Drafts',
-    command: 'bun relay sync research',
-    apps: ['Cursor', 'Claude'],
-    state: 'idle'
+    enabled: true,
+    launch: {
+      mode: 'command',
+      command: 'bun relay sync research',
+      args: ['--json']
+    },
+    env: {
+      RELAY_ENV: 'research'
+    },
+    apps: {
+      claude: false
+    }
   }
 ];
 
+const fallbackDetection = buildDetectionSnapshot({
+  cursor: { detected: true, path: '/Applications/Cursor.app' },
+  claude: { detected: true, path: '/Applications/Claude.app' },
+  codex: { detected: false }
+});
+
+type MasterState = 'on' | 'off' | 'custom';
+
+const masterLabels: Record<MasterState, string> = {
+  on: 'All detected apps enabled',
+  off: 'Disabled for every app',
+  custom: 'Mix of enabled/disabled apps'
+};
+
+const formatCommand = (server: RegistryServerEntry) => {
+  const args = server.launch.args?.length ? ` ${server.launch.args.join(' ')}` : '';
+  return `${server.launch.command}${args}`;
+};
+
+const resolveBridge = () => (typeof window !== 'undefined' ? window.relay : undefined);
+
+const computeMasterState = (server: RegistryServerEntry, detection: DetectionSummary): MasterState => {
+  if (!server.enabled) {
+    return 'off';
+  }
+
+  const detectedAgents = SUPPORTED_AGENTS.filter((agent) => detection[agent]?.detected);
+  if (detectedAgents.length === 0) {
+    return 'off';
+  }
+
+  const allOn = detectedAgents.every((agent) => server.apps?.[agent] !== false);
+  const allOff = detectedAgents.every((agent) => server.apps?.[agent] === false);
+
+  if (allOn) {
+    return 'on';
+  }
+
+  if (allOff) {
+    return 'off';
+  }
+
+  return 'custom';
+};
+
 const App = () => {
+  const bridge = resolveBridge();
   const versionLabel = typeof window !== 'undefined' ? window.relay?.version ?? 'dev' : 'dev';
+  const [servers, setServers] = useState<RegistryServerEntry[]>(() => (bridge ? [] : fallbackServers));
+  const [detection, setDetection] = useState<DetectionSummary>(() => (bridge ? buildDetectionSnapshot() : fallbackDetection));
+  const [loading, setLoading] = useState(Boolean(bridge));
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!bridge) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const hydrate = async () => {
+      setLoading(true);
+      try {
+        const [registrySnapshot, detectionSnapshot] = await Promise.all([
+          bridge.registry.read(),
+          bridge.detection.status()
+        ]);
+
+        if (cancelled) {
+          return;
+        }
+
+        setServers(registrySnapshot.servers);
+        setDetection(detectionSnapshot);
+        setLoadError(null);
+      } catch (error) {
+        console.error('[relay] failed to load registry/detection snapshot', error);
+        if (!cancelled) {
+          setLoadError('Unable to load registry snapshot');
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    hydrate();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [bridge]);
+
+  const detectedCount = useMemo(
+    () => SUPPORTED_AGENTS.filter((agent) => detection[agent]?.detected).length,
+    [detection]
+  );
 
   return (
     <main className="app-shell">
@@ -42,33 +179,86 @@ const App = () => {
               <div>
                 <p className="section-eyebrow">Servers</p>
                 <h2 id="servers-heading">Workspace registry</h2>
+                <p className="section-subcopy">
+                  {servers.length} server{servers.length === 1 ? '' : 's'} • {detectedCount} detected app
+                  {detectedCount === 1 ? '' : 's'}
+                </p>
               </div>
               <button className="ghost-button" type="button">
                 Add server
               </button>
             </div>
-            <ul className="server-list">
-              {placeholderServers.map((server) => (
-                <li className="server-card" key={server.id}>
-                  <div className="server-card-head">
-                    <div>
-                      <p className="server-name">{server.name}</p>
-                      <p className="server-command">{server.command}</p>
-                    </div>
-                    <span className={`server-status server-status--${server.state}`}>
-                      {server.state === 'running' ? 'Live' : 'Idle'}
-                    </span>
-                  </div>
-                  <div className="apps-row" aria-label="Enabled apps">
-                    {server.apps.map((app) => (
-                      <span className="app-pill" key={`${server.id}-${app}`}>
-                        {app}
-                      </span>
-                    ))}
-                  </div>
-                </li>
-              ))}
-            </ul>
+            {loadError && <p className="inline-error">{loadError}</p>}
+            {loading ? (
+              <p className="inline-hint">Loading servers…</p>
+            ) : servers.length === 0 ? (
+              <div className="empty-state">
+                <p>No servers yet</p>
+                <span>Use Add server to register your first shared MCP endpoint.</span>
+              </div>
+            ) : (
+              <ul className="server-list">
+                {servers.map((server) => {
+                  const masterState = computeMasterState(server, detection);
+                  return (
+                    <li className="server-card" key={server.id}>
+                      <div className="server-card-head">
+                        <div>
+                          <p className="server-name">{server.name}</p>
+                          <p className="server-command">{formatCommand(server)}</p>
+                        </div>
+                        <button
+                          type="button"
+                          className={`switch ${server.enabled ? 'switch--on' : 'switch--off'}`}
+                          aria-pressed={server.enabled}
+                        >
+                          {server.enabled ? 'Enabled' : 'Disabled'}
+                        </button>
+                      </div>
+                      <div className="apps-summary">
+                        <div>
+                          <p className="server-label">All apps</p>
+                          <p className="server-hint">{masterLabels[masterState]}</p>
+                        </div>
+                        <button
+                          type="button"
+                          className={`switch switch--${masterState}`}
+                          aria-pressed={masterState === 'on'}
+                        >
+                          {masterState === 'custom' ? 'Custom' : masterState === 'on' ? 'On' : 'Off'}
+                        </button>
+                      </div>
+                      <div className="apps-row" role="group" aria-label="Per-app toggles">
+                        {SUPPORTED_AGENTS.map((agent) => {
+                          const status = detection[agent];
+                          const detected = Boolean(status?.detected);
+                          const effectiveEnabled = Boolean(server.enabled) && server.apps?.[agent] !== false;
+                          const disabled = !detected || !server.enabled;
+
+                          return (
+                            <button
+                              key={`${server.id}-${agent}`}
+                              type="button"
+                              className={`app-pill ${
+                                effectiveEnabled ? 'app-pill--on' : 'app-pill--off'
+                              } ${disabled ? 'app-pill--disabled' : ''}`}
+                              disabled={disabled}
+                              aria-pressed={effectiveEnabled}
+                              data-agent={agent}
+                            >
+                              <span className="pill-label">{agentLabels[agent]}</span>
+                              <span className="pill-state">
+                                {!detected ? 'Not detected' : effectiveEnabled ? 'On' : 'Off'}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </section>
           <section className="pane detail-pane" aria-labelledby="overview-heading">
             <div className="section-header">

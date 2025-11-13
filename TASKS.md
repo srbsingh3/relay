@@ -122,16 +122,16 @@ Use it as the primary execution plan for the macOS MVP.
     - [x] 3.1.1.2 Access to Settings (button or nav).
   - [x] 3.1.2 Ensure dark theme visuals and basic Liquid Glass feel.
 
-- [ ] 3.2 **Server list view**
-  - [ ] 3.2.1 Display server rows with:
-    - [ ] 3.2.1.1 Name.
-    - [ ] 3.2.1.2 Endpoint/launch command summary.
-    - [ ] 3.2.1.3 Enabled toggle.
-    - [ ] 3.2.1.4 “All Apps” master switch.
-    - [ ] 3.2.1.5 Per-app pills (Cursor / Claude / Codex) with toggles.
-  - [ ] 3.2.2 Apply app detection state:
-    - [ ] 3.2.2.1 Disable per-app toggles if that app is not detected.
-    - [ ] 3.2.2.2 Reflect master switch state: On / Off / Custom.
+- [x] 3.2 **Server list view**
+  - [x] 3.2.1 Display server rows with:
+    - [x] 3.2.1.1 Name.
+    - [x] 3.2.1.2 Endpoint/launch command summary.
+    - [x] 3.2.1.3 Enabled toggle.
+    - [x] 3.2.1.4 “All Apps” master switch.
+    - [x] 3.2.1.5 Per-app pills (Cursor / Claude / Codex) with toggles.
+  - [x] 3.2.2 Apply app detection state:
+    - [x] 3.2.2.1 Disable per-app toggles if that app is not detected.
+    - [x] 3.2.2.2 Reflect master switch state: On / Off / Custom.
 
 - [ ] 3.3 **All Apps logic**
   - [ ] 3.3.1 Implement master toggle behavior:
