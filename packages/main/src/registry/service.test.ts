@@ -15,7 +15,7 @@ vi.mock('electron', () => ({
   }
 }));
 
-import { createEmptyRegistry, type RegistryServerRecord } from './schema';
+import { REGISTRY_VERSION, createEmptyRegistry, type RegistryServerRecord } from './schema';
 import {
   clearRegistryCache,
   effectiveEnabled,
@@ -175,5 +175,40 @@ describe('registry/service', () => {
 
     expect(generateServerId('Context7 Primary', existing)).toBe('srv_context7_primary_3');
     expect(generateServerId('  $$$New%% Server   ', existing)).toBe('srv_new_server');
+  });
+
+  it('migrates legacy registry files and regenerates IDs when missing', async () => {
+    const registryPath = getRegistryFilePath();
+    await mkdir(path.dirname(registryPath), { recursive: true });
+
+    await writeFile(
+      registryPath,
+      JSON.stringify(
+        {
+          version: 0,
+          servers: [
+            {
+              id: '',
+              name: 'Migrated Server',
+              enabled: true,
+              launch: {
+                mode: 'command',
+                command: '/usr/bin/env',
+                args: []
+              },
+              env: {}
+            }
+          ]
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const registry = await loadRegistry();
+    expect(registry.version).toBe(REGISTRY_VERSION);
+    expect(registry.servers).toHaveLength(1);
+    expect(registry.servers[0]?.id).toBe('srv_migrated_server');
   });
 });

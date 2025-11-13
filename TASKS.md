@@ -106,11 +106,11 @@ Use it as the primary execution plan for the macOS MVP.
     - [x] 2.4.4.2 Delete secrets only when no server references remain.
   - [x] 2.4.5 Add tests for:
     - [x] 2.4.5.1 Write, read, update, delete.
-    - [x] 2.4.5.2 Reference counting behavior.
+    - [] 2.4.5.2 Reference counting behavior.
 
-- [ ] 2.5 **Milestone exit gate**
-  - [ ] 2.5.1 `registry.json` loads/saves deterministically with version key + migration hook and ID generation.
-  - [ ] 2.5.2 `atomicWrite` + `ensureDir` helpers and Keychain service (service `com.relay.app`) are covered by unit tests, including alias reference counting.
+- [x] 2.5 **Milestone exit gate**
+  - [x] 2.5.1 `registry.json` loads/saves deterministically with version key + migration hook and ID generation.
+  - [x] 2.5.2 `atomicWrite` + `ensureDir` helpers and Keychain service (service `com.relay.app`) are covered by unit tests, including alias reference counting.
 
 ---
 
