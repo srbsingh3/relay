@@ -10,6 +10,9 @@ import { REGISTRY_VERSION } from '../../main/src/registry/schema';
 import type { SupportedAgent } from '../../main/src/types/agents';
 import { SUPPORTED_AGENTS } from '../../main/src/types/agents';
 import ServerModal, { type ServerFormSubmitPayload } from './components/ServerModal';
+import { Badge } from './components/ui/badge';
+import { Button } from './components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card';
 
 const agentLabels: Record<SupportedAgent, string> = {
   cursor: 'Cursor',
@@ -389,156 +392,195 @@ const App = () => {
   );
 
   return (
-    <main className="app-shell">
-      <div className="app-layout">
-        <header className="app-header">
-          <div className="brand-cluster">
-            <p className="eyebrow">Relay</p>
-            <h1>Shared MCP Orchestrator</h1>
-            <p className="subcopy">
-              macOS-only shell keeps Cursor, Claude, and Codex servers in sync with deterministic IO, Keychain secrets, and
-              offline defaults.
-            </p>
-          </div>
-          <button className="settings-button" type="button" aria-label="Open settings panel">
-            Settings
-          </button>
-        </header>
-        <div className="content-grid">
-          <section className="pane servers-pane" aria-labelledby="servers-heading">
-            <div className="section-header">
-              <div>
-                <p className="section-eyebrow">Servers</p>
-                <h2 id="servers-heading">Workspace registry</h2>
-                <p className="section-subcopy">
-                  {servers.length} server{servers.length === 1 ? '' : 's'} • {detectedCount} detected app
-                  {detectedCount === 1 ? '' : 's'}
-                </p>
-              </div>
-              <button className="ghost-button" type="button" onClick={() => setModalState({ mode: 'add' })}>
-                Add server
-              </button>
+    <main className="relative min-h-screen bg-slate-950 font-sans text-slate-100 antialiased">
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute left-10 top-[-10%] h-64 w-64 rounded-full bg-sky-500/30 blur-[140px]" />
+        <div className="absolute right-20 top-0 h-72 w-72 rounded-full bg-fuchsia-500/25 blur-[160px]" />
+        <div className="absolute bottom-[-10%] left-1/3 h-80 w-96 rounded-full bg-emerald-500/25 blur-[200px]" />
+      </div>
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-10 sm:px-6 lg:px-8">
+        <div className="flex flex-1 flex-col gap-8 rounded-[34px] border border-white/10 bg-slate-950/80 p-6 shadow-[0_30px_80px_rgba(2,6,23,0.85)] backdrop-blur-3xl md:p-10">
+          <header
+            className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between"
+            style={{ WebkitAppRegion: 'drag' }}
+          >
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-300">Relay</p>
+              <h1 className="text-3xl font-semibold sm:text-4xl">Shared MCP Orchestrator</h1>
+              <p className="max-w-2xl text-base text-slate-400">
+                macOS-only shell keeps Cursor, Claude, and Codex servers in sync with deterministic IO, Keychain secrets, and
+                offline defaults.
+              </p>
             </div>
-            {loadError && <p className="inline-error">{loadError}</p>}
-            {mutationError && <p className="inline-error">{mutationError}</p>}
-            {loading ? (
-              <p className="inline-hint">Loading servers…</p>
-            ) : servers.length === 0 ? (
-              <div className="empty-state">
-                <p>No servers yet</p>
-                <span>Use Add server to register your first shared MCP endpoint.</span>
-              </div>
-            ) : (
-              <ul className="server-list">
-                {servers.map((server) => {
-                  const masterState = computeMasterState(server, detection);
-                  return (
-                    <li className="server-card" key={server.id}>
-                      <div className="server-card-head">
-                        <div>
-                          <p className="server-name">{server.name}</p>
-                          <p className="server-command">{formatCommand(server)}</p>
-                        </div>
-                        <div className="server-card-actions">
-                          <button
-                            type="button"
-                            className="ghost-button ghost-button--compact"
-                            onClick={() => setModalState({ mode: 'edit', serverId: server.id })}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            className={`switch ${server.enabled ? 'switch--on' : 'switch--off'}`}
-                            aria-pressed={server.enabled}
-                          >
-                            {server.enabled ? 'Enabled' : 'Disabled'}
-                          </button>
-                        </div>
-                      </div>
-                      <div className="apps-summary">
-                        <div>
-                          <p className="server-label">All apps</p>
-                          <p className="server-hint">{masterLabels[masterState]}</p>
-                        </div>
-                        <button
-                          type="button"
-                          className={`switch switch--${masterState}`}
-                          aria-pressed={masterState === 'on'}
-                          onClick={() => handleMasterToggle(server.id, masterState === 'on' ? 'off' : 'on')}
-                        >
-                          {masterState === 'custom' ? 'Custom' : masterState === 'on' ? 'On' : 'Off'}
-                        </button>
-                      </div>
-                      <div className="apps-row" role="group" aria-label="Per-app toggles">
-                        {SUPPORTED_AGENTS.map((agent) => {
-                          const status = detection[agent];
-                          const detected = Boolean(status?.detected);
-                          const effectiveEnabled = Boolean(server.enabled) && server.apps?.[agent] !== false;
-                          const disabled = !detected || !server.enabled;
-
-                          return (
+            <Button
+              variant="outline"
+              className="self-start rounded-full border-white/15 text-xs uppercase tracking-[0.2em]"
+              style={{ WebkitAppRegion: 'no-drag' }}
+              type="button"
+              aria-label="Open settings panel"
+            >
+              Settings
+            </Button>
+          </header>
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <Card
+              className="p-6"
+              aria-labelledby="servers-heading"
+            >
+              <CardHeader className="flex flex-col gap-4 pb-2 md:flex-row md:items-start md:justify-between">
+                <div className="space-y-1.5">
+                  <p className="text-xs uppercase tracking-[0.24em] text-sky-300">Servers</p>
+                  <CardTitle id="servers-heading" className="text-2xl">
+                    Workspace registry
+                  </CardTitle>
+                  <CardDescription>
+                    {servers.length} server{servers.length === 1 ? '' : 's'} • {detectedCount} detected app
+                    {detectedCount === 1 ? '' : 's'}
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full border-white/15 text-xs uppercase tracking-[0.2em]"
+                  onClick={() => setModalState({ mode: 'add' })}
+                  type="button"
+                >
+                  Add server
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {loadError && <p className="text-sm text-rose-300">{loadError}</p>}
+                {mutationError && <p className="text-sm text-rose-300">{mutationError}</p>}
+                {loading ? (
+                  <p className="text-sm text-slate-400">Loading servers…</p>
+                ) : servers.length === 0 ? (
+                  <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-6 text-center text-sm text-slate-400">
+                    <p className="text-base font-medium text-slate-200">No servers yet</p>
+                    <span>Use Add server to register your first shared MCP endpoint.</span>
+                  </div>
+                ) : (
+                  <ul className="server-list">
+                    {servers.map((server) => {
+                      const masterState = computeMasterState(server, detection);
+                      return (
+                        <li className="server-card" key={server.id}>
+                          <div className="server-card-head">
+                            <div>
+                              <p className="server-name">{server.name}</p>
+                              <p className="server-command">{formatCommand(server)}</p>
+                            </div>
+                            <div className="server-card-actions">
+                              <button
+                                type="button"
+                                className="ghost-button ghost-button--compact"
+                                onClick={() => setModalState({ mode: 'edit', serverId: server.id })}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                className={`switch ${server.enabled ? 'switch--on' : 'switch--off'}`}
+                                aria-pressed={server.enabled}
+                              >
+                                {server.enabled ? 'Enabled' : 'Disabled'}
+                              </button>
+                            </div>
+                          </div>
+                          <div className="apps-summary">
+                            <div>
+                              <p className="server-label">All apps</p>
+                              <p className="server-hint">{masterLabels[masterState]}</p>
+                            </div>
                             <button
-                              key={`${server.id}-${agent}`}
                               type="button"
-                              className={`app-pill ${
-                                effectiveEnabled ? 'app-pill--on' : 'app-pill--off'
-                              } ${disabled ? 'app-pill--disabled' : ''}`}
-                              disabled={disabled}
-                              aria-pressed={effectiveEnabled}
-                              data-agent={agent}
+                              className={`switch switch--${masterState}`}
+                              aria-pressed={masterState === 'on'}
+                              onClick={() => handleMasterToggle(server.id, masterState === 'on' ? 'off' : 'on')}
                             >
-                              <span className="pill-label">{agentLabels[agent]}</span>
-                              <span className="pill-state">
-                                {!detected ? 'Not detected' : effectiveEnabled ? 'On' : 'Off'}
-                              </span>
+                              {masterState === 'custom' ? 'Custom' : masterState === 'on' ? 'On' : 'Off'}
                             </button>
-                          );
-                        })}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </section>
-          <section className="pane detail-pane" aria-labelledby="overview-heading">
-            <div className="section-header">
-              <div>
-                <p className="section-eyebrow">Overview</p>
-                <h2 id="overview-heading">Relay status</h2>
-              </div>
-              <span className="badge">Offline-first</span>
-            </div>
-            <p className="detail-copy">
-              Every UI action, tray entry, and scheduled sync routes through the same hardened services so registry, Keychain,
-              and detection state stay deterministic even without a network connection.
-            </p>
-            <dl className="status-grid compact">
-              <div>
-                <dt>Version</dt>
-                <dd>{versionLabel}</dd>
-              </div>
-              <div>
-                <dt>Window</dt>
-                <dd>900×600 | Liquid Glass</dd>
-              </div>
-              <div>
-                <dt>Security</dt>
-                <dd>Isolation + sandbox enforced</dd>
-              </div>
-              <div>
-                <dt>Assets</dt>
-                <dd>Local bundle • CSP locked</dd>
-              </div>
-            </dl>
-          </section>
+                          </div>
+                          <div className="apps-row" role="group" aria-label="Per-app toggles">
+                            {SUPPORTED_AGENTS.map((agent) => {
+                              const status = detection[agent];
+                              const detected = Boolean(status?.detected);
+                              const effectiveEnabled = Boolean(server.enabled) && server.apps?.[agent] !== false;
+                              const disabled = !detected || !server.enabled;
+
+                              return (
+                                <button
+                                  key={`${server.id}-${agent}`}
+                                  type="button"
+                                  className={`app-pill ${
+                                    effectiveEnabled ? 'app-pill--on' : 'app-pill--off'
+                                  } ${disabled ? 'app-pill--disabled' : ''}`}
+                                  disabled={disabled}
+                                  aria-pressed={effectiveEnabled}
+                                  data-agent={agent}
+                                >
+                                  <span className="pill-label">{agentLabels[agent]}</span>
+                                  <span className="pill-state">
+                                    {!detected ? 'Not detected' : effectiveEnabled ? 'On' : 'Off'}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+            <Card className="p-6" aria-labelledby="overview-heading">
+              <CardHeader className="flex items-start justify-between gap-4 pb-3">
+                <div className="space-y-1.5">
+                  <p className="text-xs uppercase tracking-[0.24em] text-sky-300">Overview</p>
+                  <CardTitle id="overview-heading">Relay status</CardTitle>
+                </div>
+                <Badge variant="sky" className="text-[0.65rem] uppercase tracking-[0.3em]">
+                  Offline-first
+                </Badge>
+              </CardHeader>
+              <CardContent className="space-y-6 text-sm text-slate-300">
+                <p>
+                  Every UI action, tray entry, and scheduled sync routes through the same hardened services so registry,
+                  Keychain, and detection state stay deterministic even without a network connection.
+                </p>
+                <dl className="grid grid-cols-1 gap-4 text-sm text-slate-200 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-4">
+                    <dt className="text-xs uppercase tracking-wide text-slate-500">Version</dt>
+                    <dd className="text-base font-medium text-white">{versionLabel}</dd>
+                  </div>
+                  <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-4">
+                    <dt className="text-xs uppercase tracking-wide text-slate-500">Window</dt>
+                    <dd className="text-base font-medium text-white">900×600 | Liquid Glass</dd>
+                  </div>
+                  <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-4">
+                    <dt className="text-xs uppercase tracking-wide text-slate-500">Security</dt>
+                    <dd className="text-base font-medium text-white">Isolation + sandbox enforced</dd>
+                  </div>
+                  <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-4">
+                    <dt className="text-xs uppercase tracking-wide text-slate-500">Assets</dt>
+                    <dd className="text-base font-medium text-white">Local bundle • CSP locked</dd>
+                  </div>
+                </dl>
+              </CardContent>
+            </Card>
+          </div>
+          <footer className="flex flex-wrap gap-2 text-xs uppercase tracking-[0.25em] text-slate-400">
+            <Badge variant="outline" className="border-white/10 bg-transparent px-4 py-2 text-[0.7rem]">
+              Deterministic IO
+            </Badge>
+            <Badge variant="outline" className="border-white/10 bg-transparent px-4 py-2 text-[0.7rem]">
+              Keychain-only secrets
+            </Badge>
+            <Badge variant="outline" className="border-white/10 bg-transparent px-4 py-2 text-[0.7rem]">
+              No telemetry
+            </Badge>
+          </footer>
         </div>
-        <footer className="app-footer">
-          <span className="tag">Deterministic IO</span>
-          <span className="tag">Keychain-only secrets</span>
-          <span className="tag">No telemetry</span>
-        </footer>
       </div>
       {modalState && (
         <ServerModal

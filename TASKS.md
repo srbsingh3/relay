@@ -117,11 +117,11 @@ Use it as the primary execution plan for the macOS MVP.
 
 ## Milestone 3 — MCP Servers UI (CRUD)
 
-- [ ] 3.1 **Base UI layout**
-  - [ ] 3.1.1 Build main layout with:
-    - [ ] 3.1.1.1 Left / main content area for servers list.
-    - [ ] 3.1.1.2 Access to Settings (button or nav).
-  - [ ] 3.1.2 Ensure dark theme visuals using Tailwind utility classes and shadcn/ui components.
+- [x] 3.1 **Base UI layout**
+  - [x] 3.1.1 Build main layout with:
+    - [x] 3.1.1.1 Left / main content area for servers list.
+    - [x] 3.1.1.2 Access to Settings (button or nav).
+  - [x] 3.1.2 Ensure dark theme visuals using Tailwind utility classes and shadcn/ui components.
     All styling must use Tailwind utilities + shadcn/ui primitives; avoid custom CSS unless absolutely necessary.
 
 - [ ] 3.2 **Server list view**
