@@ -117,47 +117,47 @@ Use it as the primary execution plan for the macOS MVP.
 
 ## Milestone 3 — MCP Servers UI (CRUD)
 
-- [x] 3.1 **Base UI layout**
-  - [x] 3.1.1 Build main layout with:
-    - [x] 3.1.1.1 Left / main content area for servers list.
-    - [x] 3.1.1.2 Access to Settings (button or nav).
-  - [x] 3.1.2 Ensure dark theme visuals using Tailwind utility classes and shadcn/ui components.
+- [ ] 3.1 **Base UI layout**
+  - [ ] 3.1.1 Build main layout with:
+    - [ ] 3.1.1.1 Left / main content area for servers list.
+    - [ ] 3.1.1.2 Access to Settings (button or nav).
+  - [ ] 3.1.2 Ensure dark theme visuals using Tailwind utility classes and shadcn/ui components.
     All styling must use Tailwind utilities + shadcn/ui primitives; avoid custom CSS unless absolutely necessary.
 
-- [x] 3.2 **Server list view**
-  - [x] 3.2.1 Display server rows with:
-    - [x] 3.2.1.1 Name.
-    - [x] 3.2.1.2 Endpoint/launch command summary.
-    - [x] 3.2.1.3 Enabled toggle.
-    - [x] 3.2.1.4 “All Apps” master switch.
-    - [x] 3.2.1.5 Per-app pills (Cursor / Claude / Codex) with toggles.
+- [ ] 3.2 **Server list view**
+  - [ ] 3.2.1 Display server rows with:
+    - [ ] 3.2.1.1 Name.
+    - [ ] 3.2.1.2 Endpoint/launch command summary.
+    - [ ] 3.2.1.3 Enabled toggle.
+    - [ ] 3.2.1.4 “All Apps” master switch.
+    - [ ] 3.2.1.5 Per-app pills (Cursor / Claude / Codex) with toggles.
     - [ ] Use Lucide icons only when necessary; avoid decorative or non-essential icon usage.
-  - [x] 3.2.2 Apply app detection state:
-    - [x] 3.2.2.1 Disable per-app toggles if that app is not detected.
-    - [x] 3.2.2.2 Reflect master switch state: On / Off / Custom.
+  - [ ] 3.2.2 Apply app detection state:
+    - [ ] 3.2.2.1 Disable per-app toggles if that app is not detected.
+    - [ ] 3.2.2.2 Reflect master switch state: On / Off / Custom.
 
-- [x] 3.3 **All Apps logic**
-  - [x] 3.3.1 Implement master toggle behavior:
-    - [x] 3.3.1.1 ON → set every detected app to `true`.
-    - [x] 3.3.1.2 OFF → set every app to `false`.
-    - [x] 3.3.1.3 Custom state when individual toggles differ.
-  - [x] 3.3.2 Ensure changes propagate to registry:
-    - [x] 3.3.2.1 Only save overrides (false entries) into `apps` field.
+- [ ] 3.3 **All Apps logic**
+  - [ ] 3.3.1 Implement master toggle behavior:
+    - [ ] 3.3.1.1 ON → set every detected app to `true`.
+    - [ ] 3.3.1.2 OFF → set every app to `false`.
+    - [ ] 3.3.1.3 Custom state when individual toggles differ.
+  - [ ] 3.3.2 Ensure changes propagate to registry:
+    - [ ] 3.3.2.1 Only save overrides (false entries) into `apps` field.
 
-- [x] 3.4 **Add/Edit server modal**
-  - [x] 3.4.1 Build modal with fields:
-    - [x] 3.4.1.1 Name.
-    - [x] 3.4.1.2 Launch command + args.
-    - [x] 3.4.1.3 Env editor (key → alias string, e.g., `keychain:<alias>`).
-    - [x] 3.4.1.4 Keychain alias workflow (alias + secret for write/update).
-    - [x] 3.4.1.5 Enabled toggle.
-    - [x] 3.4.1.6 Per-app toggles (respect detection).
-  - [x] 3.4.2 Implement inline validation:
-    - [x] 3.4.2.1 Required fields (name, command, alias when secret is needed).
-    - [x] 3.4.2.2 Uniqueness constraints (ID/name collisions).
-  - [x] 3.4.3 Wire modal actions:
-    - [x] 3.4.3.1 “Save” updates registry + Keychain.
-    - [x] 3.4.3.2 “Cancel” discards changes.
+- [ ] 3.4 **Add/Edit server modal**
+  - [ ] 3.4.1 Build modal with fields:
+    - [ ] 3.4.1.1 Name.
+    - [ ] 3.4.1.2 Launch command + args.
+    - [ ] 3.4.1.3 Env editor (key → alias string, e.g., `keychain:<alias>`).
+    - [ ] 3.4.1.4 Keychain alias workflow (alias + secret for write/update).
+    - [ ] 3.4.1.5 Enabled toggle.
+    - [ ] 3.4.1.6 Per-app toggles (respect detection).
+  - [ ] 3.4.2 Implement inline validation:
+    - [ ] 3.4.2.1 Required fields (name, command, alias when secret is needed).
+    - [ ] 3.4.2.2 Uniqueness constraints (ID/name collisions).
+  - [ ] 3.4.3 Wire modal actions:
+    - [ ] 3.4.3.1 “Save” updates registry + Keychain.
+    - [ ] 3.4.3.2 “Cancel” discards changes.
 
 - [ ] 3.5 **CRUD behaviors**
   - [ ] 3.5.1 **Add server**:
