@@ -4,6 +4,18 @@ import path from 'node:path';
 
 export type AtomicWriteContent = string | NodeJS.ArrayBufferView;
 
+const normalizeContent = (input: AtomicWriteContent): string | Uint8Array => {
+  if (typeof input === 'string') {
+    return input;
+  }
+
+  if (input instanceof Uint8Array) {
+    return input;
+  }
+
+  return Buffer.from(input.buffer, input.byteOffset, input.byteLength);
+};
+
 export const ensureDir = async (dirPath: string) => {
   await fs.mkdir(dirPath, { recursive: true });
 };
@@ -37,7 +49,7 @@ export const atomicWrite = async (filePath: string, content: AtomicWriteContent)
 
   try {
     tmpHandle = await fs.open(tmpPath, 'w');
-    await tmpHandle.writeFile(content);
+    await tmpHandle.writeFile(normalizeContent(content));
     await tmpHandle.sync();
     await tmpHandle.close();
     tmpHandle = null;

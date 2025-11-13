@@ -60,7 +60,7 @@ describe('UpdateService', () => {
     expect(status.state).toBe('update_available');
     expect(status.latestVersion).toBe('0.2.5');
     expect(status.message).toBe('New build ready');
-    expect('servers' in (status as Record<string, unknown>)).toBe(false);
+    expect(Object.prototype.hasOwnProperty.call(status, 'servers')).toBe(false);
   });
 
   it('updates the auto-check preference', () => {

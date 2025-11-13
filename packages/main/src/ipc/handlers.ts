@@ -95,9 +95,9 @@ const handleKeychainSave = async (
   }
 };
 
-const handleDetectionStatus = async () => {
-  return detectionService.getSummary();
-};
+const handleDetectionStatus = async () => detectionService.getSummary();
+
+const handleDetectionRefresh = async () => detectionService.refresh();
 
 const resolveSyncApps = (payload?: SyncInvocationPayload): SupportedAgent[] => {
   if (payload?.apps && payload.apps.length > 0) {
@@ -164,6 +164,7 @@ export const registerIpcHandlers = () => {
   ipcMain.handle(IPC_CHANNELS.keychain.lookup, handleKeychainLookup);
   ipcMain.handle(IPC_CHANNELS.keychain.save, handleKeychainSave);
   ipcMain.handle(IPC_CHANNELS.detection.status, handleDetectionStatus);
+  ipcMain.handle(IPC_CHANNELS.detection.refresh, handleDetectionRefresh);
   ipcMain.handle(IPC_CHANNELS.sync.invoke, handleSyncInvoke);
   ipcMain.handle(IPC_CHANNELS.sync.status, handleSyncStatus);
   ipcMain.handle(IPC_CHANNELS.updates.status, handleUpdateStatus);

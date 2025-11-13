@@ -134,20 +134,21 @@ const sanitizeEnvironment = (value: unknown): RegistryEnvironmentMap => {
 const isSupportedAgentKey = (key: string): key is SupportedAgent =>
   SUPPORTED_AGENTS.includes(key as SupportedAgent);
 
+const isFalseAgentEntry = (entry: [string, unknown]): entry is [SupportedAgent, false] =>
+  entry[1] === false && isSupportedAgentKey(entry[0]);
+
 const sanitizeApps = (value: unknown): RegistryAppOverrides | undefined => {
   if (!isRecord(value)) {
     return undefined;
   }
 
-  const entries = Object.entries(value).filter(
-    ([key, val]) => val === false && isSupportedAgentKey(key)
-  );
+  const entries = Object.entries(value).filter(isFalseAgentEntry);
   if (entries.length === 0) {
     return undefined;
   }
 
-  return entries.reduce<RegistryAppOverrides>((acc, [key, val]) => {
-    acc[key as SupportedAgent] = val;
+  return entries.reduce<RegistryAppOverrides>((acc, [key]) => {
+    acc[key] = false;
     return acc;
   }, {});
 };
@@ -230,9 +231,7 @@ const normalizeApps = (apps?: RegistryAppOverrides): RegistryAppOverrides | unde
     return undefined;
   }
 
-  const sortedEntries = Object.entries(apps).filter(
-    ([key, value]) => value === false && isSupportedAgentKey(key)
-  );
+  const sortedEntries = Object.entries(apps).filter(isFalseAgentEntry);
   if (sortedEntries.length === 0) {
     return undefined;
   }
@@ -240,7 +239,7 @@ const normalizeApps = (apps?: RegistryAppOverrides): RegistryAppOverrides | unde
   sortedEntries.sort(([a], [b]) => a.localeCompare(b));
 
   return sortedEntries.reduce<RegistryAppOverrides>((acc, [key, value]) => {
-    acc[key as SupportedAgent] = value;
+    acc[key] = value;
     return acc;
   }, {});
 };

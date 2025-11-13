@@ -88,7 +88,8 @@ export const IPC_CHANNELS = {
     save: 'relay:keychain:save'
   },
   detection: {
-    status: 'relay:detection:status'
+    status: 'relay:detection:status',
+    refresh: 'relay:detection:refresh'
   },
   sync: {
     invoke: 'relay:sync:invoke',
@@ -113,6 +114,7 @@ export interface RendererBridge {
   };
   detection: {
     status: () => Promise<DetectionSummary>;
+    refresh: () => Promise<DetectionSummary>;
   };
   sync: {
     invoke: (payload: SyncInvocationPayload) => Promise<SyncInvocationResult>;

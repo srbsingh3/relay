@@ -284,6 +284,8 @@ const App = () => {
     bridge ? { state: 'idle', lastRun: null } : buildFallbackSyncStatus()
   );
   const [syncBusy, setSyncBusy] = useState(false);
+  const [detectionBusy, setDetectionBusy] = useState(false);
+  const [detectionError, setDetectionError] = useState<string | null>(null);
   const [updateStatus, setUpdateStatus] = useState<UpdateStatusSnapshot>(() =>
     buildFallbackUpdateStatus(versionLabel)
   );
@@ -323,6 +325,7 @@ const App = () => {
         setLoadError(null);
         setMutationError(null);
         setUpdateError(null);
+        setDetectionError(null);
       } catch (error) {
         console.error('[relay] failed to load registry/detection snapshot', error);
         if (!cancelled) {
@@ -386,6 +389,24 @@ const App = () => {
       setSyncBusy(false);
     }
   }, [bridge, syncBusy]);
+
+  const handleDetectionRefresh = useCallback(async () => {
+    if (!bridge || detectionBusy) {
+      return;
+    }
+
+    setDetectionBusy(true);
+    setDetectionError(null);
+    try {
+      const snapshot = await bridge.detection.refresh();
+      setDetection(snapshot);
+    } catch (error) {
+      console.error('[relay] failed to refresh detection snapshot', error);
+      setDetectionError('Unable to refresh agent detection.');
+    } finally {
+      setDetectionBusy(false);
+    }
+  }, [bridge, detectionBusy]);
 
   const handleUpdateCheck = useCallback(async () => {
     if (updateBusy) {
@@ -835,12 +856,27 @@ const App = () => {
             </Card>
             <div id={SETTINGS_SECTION_ID} className="flex flex-col gap-6">
               <Card className="p-6" aria-labelledby="detection-heading">
-                <CardHeader className="flex flex-col gap-1.5 pb-3">
-                  <p className="text-xs uppercase tracking-[0.24em] text-sky-300">Settings</p>
-                  <CardTitle id="detection-heading">Agent detection</CardTitle>
-                  <CardDescription>Resolved config paths are read-only and shared across Cursor, Claude, and Codex.</CardDescription>
+                <CardHeader className="flex flex-col gap-3 pb-3 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.24em] text-sky-300">Settings</p>
+                    <CardTitle id="detection-heading">Agent detection</CardTitle>
+                    <CardDescription>Resolved config paths are read-only and shared across Cursor, Claude, and Codex.</CardDescription>
+                  </div>
+                  {bridge && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full border-white/20 text-[0.65rem] uppercase tracking-[0.25em]"
+                      type="button"
+                      disabled={detectionBusy}
+                      onClick={handleDetectionRefresh}
+                    >
+                      {detectionBusy ? 'Scanning…' : 'Re-scan'}
+                    </Button>
+                  )}
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {detectionError && <p className="text-sm text-rose-300">{detectionError}</p>}
                   <ul className="space-y-3">
                     {SUPPORTED_AGENTS.map((agent) => {
                       const status = detection[agent];

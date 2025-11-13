@@ -21,7 +21,8 @@ const relayBridge: RendererBridge = {
     save: (payload: KeychainSavePayload) => ipcRenderer.invoke(IPC_CHANNELS.keychain.save, payload)
   },
   detection: {
-    status: () => ipcRenderer.invoke(IPC_CHANNELS.detection.status)
+    status: () => ipcRenderer.invoke(IPC_CHANNELS.detection.status),
+    refresh: () => ipcRenderer.invoke(IPC_CHANNELS.detection.refresh)
   },
   sync: {
     invoke: (payload: SyncInvocationPayload) => ipcRenderer.invoke(IPC_CHANNELS.sync.invoke, payload),
@@ -37,7 +38,11 @@ const relayBridge: RendererBridge = {
 contextBridge.exposeInMainWorld('relay', relayBridge);
 
 function appVersion() {
-  return process.env.npm_package_version ?? '0.0.0';
+  if (typeof process === 'undefined') {
+    return '0.0.0';
+  }
+
+  return process.env?.npm_package_version ?? '0.0.0';
 }
 
 declare global {
