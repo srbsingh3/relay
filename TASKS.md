@@ -16,7 +16,7 @@ Use it as the primary execution plan for the macOS MVP.
   - [x] 1.1.1 Create Electron + Vite monorepo / packages structure.
   - [x] 1.1.2 Set up shared TypeScript config, linting, and testing baseline.
   - [x] 1.1.3 Add `PRD.md`, `AGENTS.md`, and `TASKS.md` to the repo as living references.
-  - [ ] 1.1.4 Configure Tailwind CSS and shadcn/ui in the renderer app (Vite/React).
+  - [ ] 1.1.4 Finalize Tailwind CSS + shadcn/ui setup in the renderer app, ensuring global theme/tokens are complete.
 
 - [x] 1.2 **Secure BrowserWindow shell**
   - [x] 1.2.1 Create main Electron process entry.
@@ -122,6 +122,7 @@ Use it as the primary execution plan for the macOS MVP.
     - [x] 3.1.1.1 Left / main content area for servers list.
     - [x] 3.1.1.2 Access to Settings (button or nav).
   - [x] 3.1.2 Ensure dark theme visuals using Tailwind utility classes and shadcn/ui components.
+    All styling must use Tailwind utilities + shadcn/ui primitives; avoid custom CSS unless absolutely necessary.
 
 - [x] 3.2 **Server list view**
   - [x] 3.2.1 Display server rows with:
@@ -130,6 +131,7 @@ Use it as the primary execution plan for the macOS MVP.
     - [x] 3.2.1.3 Enabled toggle.
     - [x] 3.2.1.4 “All Apps” master switch.
     - [x] 3.2.1.5 Per-app pills (Cursor / Claude / Codex) with toggles.
+    - [ ] Use Lucide icons only when necessary; avoid decorative or non-essential icon usage.
   - [x] 3.2.2 Apply app detection state:
     - [x] 3.2.2.1 Disable per-app toggles if that app is not detected.
     - [x] 3.2.2.2 Reflect master switch state: On / Off / Custom.

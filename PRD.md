@@ -66,7 +66,6 @@
 - Codex detected if `~/.codex/config.toml` exists or `which codex` succeeds.
 - Surface detection status + resolved config paths inside Settings; non-detected app toggles are disabled.
 
-## UX & Behavior
 - **Servers list:** rows show name, endpoint summary, enable toggle, All Apps master switch, and per-app pill toggles (Cursor / Claude / Codex). Icons optional but recommended.
 - **All Apps switch:** ON sets every detected app to true. Turning OFF sets all to false. Changing any individual toggle sets master to `Custom`. Toggling master back ON sets all detected apps to true again.
 - **Add/Edit modal:** fields for Name, Endpoint/Launch command + args, token alias (with Keychain write), optional env vars, enable toggle, and per-app toggles (disabled for undetected apps). Validation happens inline.
