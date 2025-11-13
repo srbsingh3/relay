@@ -323,12 +323,13 @@ const ServerModal = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 px-4 py-10 backdrop-blur"
+      className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 px-4 py-10 backdrop-blur"
       role="dialog"
       aria-modal="true"
       aria-labelledby="server-modal-title"
     >
-      <div className="relative w-full max-w-4xl rounded-[32px] border border-white/10 bg-slate-950/95 p-6 shadow-[0_40px_80px_rgba(2,6,23,0.8)]">
+      <div className="mx-auto flex min-h-full w-full max-w-4xl items-start justify-center">
+        <div className="relative w-full rounded-[32px] border border-white/10 bg-slate-950/95 p-6 shadow-[0_40px_80px_rgba(2,6,23,0.8)]">
         <header className="flex flex-col gap-3 border-b border-white/5 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-sky-300">Registry</p>
@@ -506,7 +507,8 @@ const ServerModal = ({
         </form>
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default ServerModal;
