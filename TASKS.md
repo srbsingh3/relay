@@ -159,20 +159,20 @@ Use it as the primary execution plan for the macOS MVP.
     - [x] 3.4.3.1 “Save” updates registry + Keychain.
     - [x] 3.4.3.2 “Cancel” discards changes.
 
-- [ ] 3.5 **CRUD behaviors**
-  - [ ] 3.5.1 **Add server**:
-    - [ ] 3.5.1.1 Assign ID (`srv_<slug>`).
-    - [ ] 3.5.1.2 Default `enabled = true`.
-    - [ ] 3.5.1.3 Default All Apps ON (for detected agents).
-    - [ ] 3.5.1.4 Write secrets to Keychain.
-  - [ ] 3.5.2 **Edit server**:
-    - [ ] 3.5.2.1 Update registry entry.
-    - [ ] 3.5.2.2 Handle alias reassignment (including Keychain reference counting).
-    - [ ] 3.5.2.3 Maintain `.bak` of registry before save.
-  - [ ] 3.5.3 **Remove server**:
-    - [ ] 3.5.3.1 Delete from registry.
-    - [ ] 3.5.3.2 Delete Keychain secrets only when alias unused elsewhere.
-    - [ ] 3.5.3.3 Confirm destructive action with user.
+- [x] 3.5 **CRUD behaviors**
+  - [x] 3.5.1 **Add server**:
+    - [x] 3.5.1.1 Assign ID (`srv_<slug>`).
+    - [x] 3.5.1.2 Default `enabled = true`.
+    - [x] 3.5.1.3 Default All Apps ON (for detected agents).
+    - [x] 3.5.1.4 Write secrets to Keychain.
+  - [x] 3.5.2 **Edit server**:
+    - [x] 3.5.2.1 Update registry entry.
+    - [x] 3.5.2.2 Handle alias reassignment (including Keychain reference counting).
+    - [x] 3.5.2.3 Maintain `.bak` of registry before save.
+  - [x] 3.5.3 **Remove server**:
+    - [x] 3.5.3.1 Delete from registry.
+    - [x] 3.5.3.2 Delete Keychain secrets only when alias unused elsewhere.
+    - [x] 3.5.3.3 Confirm destructive action with user.
 
 - [ ] 3.6 **Milestone exit gate**
   - [ ] 3.6.1 Server list renders with All Apps master switch + per-app pills, reflecting detection state.

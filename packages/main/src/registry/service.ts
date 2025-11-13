@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { atomicWrite, ensureDir } from '../fs/io';
-import { getKeychainService } from '../keychain/service';
+import { collectAliasReferences, getKeychainService } from '../keychain/service';
 import { SUPPORTED_AGENTS, type SupportedAgent } from '../types/agents';
 import {
   REGISTRY_VERSION,
@@ -278,6 +278,38 @@ const persistRegistry = async (registry: RegistryFile) => {
   await atomicWrite(getRegistryFilePath(), serializeRegistry(registry));
 };
 
+const findRemovedAliases = (previous: RegistryFile | null, next: RegistryFile): string[] => {
+  if (!previous) {
+    return [];
+  }
+
+  const previousAliases = collectAliasReferences(previous);
+  const nextAliases = collectAliasReferences(next);
+
+  return Array.from(previousAliases.entries())
+    .filter(([alias, count]) => count > 0 && (nextAliases.get(alias) ?? 0) === 0)
+    .map(([alias]) => alias);
+};
+
+const deleteUnusedAliases = async (
+  aliases: string[],
+  keychainService: ReturnType<typeof getKeychainService>
+) => {
+  if (aliases.length === 0) {
+    return;
+  }
+
+  await Promise.all(
+    aliases.map(async (alias) => {
+      try {
+        await keychainService.deleteSecret(alias);
+      } catch (error) {
+        console.error(`[relay] Failed to delete unused Keychain alias "${alias}"`, error);
+      }
+    })
+  );
+};
+
 export const loadRegistry = async (): Promise<RegistryFile> => {
   if (cachedRegistry) {
     return cachedRegistry;
@@ -325,13 +357,17 @@ export const loadRegistry = async (): Promise<RegistryFile> => {
 };
 
 export const saveRegistry = async (registry: RegistryFile): Promise<RegistryFile> => {
+  const previousRegistry = cachedRegistry;
   const sanitized = sanitizeRegistryFile(registry);
   const migrated = migrateRegistry(sanitized);
   const normalized = normalizeRegistry(migrated);
 
   await persistRegistry(normalized);
   cachedRegistry = normalized;
-  getKeychainService().syncAliasReferences(normalized);
+  const keychainService = getKeychainService();
+  keychainService.syncAliasReferences(normalized);
+  const removedAliases = findRemovedAliases(previousRegistry, normalized);
+  await deleteUnusedAliases(removedAliases, keychainService);
   return normalized;
 };
 

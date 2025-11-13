@@ -9,11 +9,34 @@ const electronMock = vi.hoisted(() => {
   return { state, getPathMock };
 });
 
+const keychainMock = vi.hoisted(() => {
+  const service = {
+    syncAliasReferences: vi.fn(),
+    deleteSecret: vi.fn(async () => true)
+  };
+
+  return {
+    service,
+    reset: () => {
+      service.syncAliasReferences.mockClear();
+      service.deleteSecret.mockClear();
+    }
+  };
+});
+
 vi.mock('electron', () => ({
   app: {
     getPath: electronMock.getPathMock
   }
 }));
+
+vi.mock('../keychain/service', async () => {
+  const actual = await vi.importActual<typeof import('../keychain/service')>('../keychain/service');
+  return {
+    ...actual,
+    getKeychainService: () => keychainMock.service
+  };
+});
 
 import { REGISTRY_VERSION, createEmptyRegistry, type RegistryServerRecord } from './schema';
 import {
@@ -49,6 +72,7 @@ const createServerRecord = (overrides: Partial<RegistryServerRecord> = {}): Regi
 describe('registry/service', () => {
   beforeEach(async () => {
     await createWorkspace();
+    keychainMock.reset();
   });
 
   it('initializes registry file when missing', async () => {
@@ -210,5 +234,28 @@ describe('registry/service', () => {
     expect(registry.version).toBe(REGISTRY_VERSION);
     expect(registry.servers).toHaveLength(1);
     expect(registry.servers[0]?.id).toBe('srv_migrated_server');
+  });
+
+  it('deletes unused Keychain aliases when servers are removed', async () => {
+    await saveRegistry({
+      version: 1,
+      servers: [
+        createServerRecord({
+          env: {
+            RELAY_TOKEN: 'keychain:shared_alias'
+          }
+        })
+      ]
+    });
+
+    expect(keychainMock.service.deleteSecret).not.toHaveBeenCalled();
+
+    await saveRegistry({
+      version: 1,
+      servers: []
+    });
+
+    expect(keychainMock.service.deleteSecret).toHaveBeenCalledTimes(1);
+    expect(keychainMock.service.deleteSecret).toHaveBeenCalledWith('shared_alias');
   });
 });

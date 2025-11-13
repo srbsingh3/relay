@@ -442,6 +442,36 @@ const App = () => {
     void persistServers(nextServers);
   };
 
+  const handleRemoveServer = async (serverId: string) => {
+    const target = servers.find((server) => server.id === serverId);
+    if (!target) {
+      return;
+    }
+
+    const confirmed =
+      typeof window === 'undefined'
+        ? true
+        : window.confirm(
+            `Remove "${target.name}"? This deletes the registry entry and lets Keychain drop unused secrets.`
+          );
+    if (!confirmed) {
+      return;
+    }
+
+    const nextServers = servers.filter((server) => server.id !== serverId);
+    if (nextServers.length === servers.length) {
+      return;
+    }
+
+    setMutationError(null);
+    const previousServers = servers.slice();
+    setServers(nextServers);
+    const saved = await persistServers(nextServers);
+    if (!saved) {
+      setServers(previousServers);
+    }
+  };
+
   const detectedCount = useMemo(
     () => SUPPORTED_AGENTS.filter((agent) => detection[agent]?.detected).length,
     [detection]
@@ -541,6 +571,15 @@ const App = () => {
                                 type="button"
                               >
                                 Edit
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="rounded-full border border-rose-400/40 text-[0.7rem] uppercase tracking-[0.2em] text-rose-200 transition hover:border-rose-300 hover:text-rose-100"
+                                onClick={() => void handleRemoveServer(server.id)}
+                                type="button"
+                              >
+                                Remove
                               </Button>
                               <button
                                 type="button"
