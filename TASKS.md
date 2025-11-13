@@ -116,11 +116,11 @@ Use it as the primary execution plan for the macOS MVP.
 
 ## Milestone 3 — MCP Servers UI (CRUD)
 
-- [ ] 3.1 **Base UI layout**
-  - [ ] 3.1.1 Build main layout with:
-    - [ ] 3.1.1.1 Left / main content area for servers list.
-    - [ ] 3.1.1.2 Access to Settings (button or nav).
-  - [ ] 3.1.2 Ensure dark theme visuals and basic Liquid Glass feel.
+- [x] 3.1 **Base UI layout**
+  - [x] 3.1.1 Build main layout with:
+    - [x] 3.1.1.1 Left / main content area for servers list.
+    - [x] 3.1.1.2 Access to Settings (button or nav).
+  - [x] 3.1.2 Ensure dark theme visuals and basic Liquid Glass feel.
 
 - [ ] 3.2 **Server list view**
   - [ ] 3.2.1 Display server rows with:
