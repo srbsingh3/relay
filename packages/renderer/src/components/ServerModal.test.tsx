@@ -43,4 +43,18 @@ describe('ServerModal', () => {
     expect(result.env).toEqual({ MCP_TOKEN: 'keychain:workspace' });
     expect(result.secrets).toEqual([{ alias: 'workspace', secret: 's3cr3t' }]);
   });
+
+  it('deduplicates secrets for aliases reused across env rows', () => {
+    const rows: EnvRow[] = [
+      { id: '1', key: 'PRIMARY', alias: 'shared', secret: 'alpha' },
+      { id: '2', key: 'SECONDARY', alias: 'shared', secret: 'beta' }
+    ];
+
+    const result = serializeEnvRows(rows);
+    expect(result.env).toEqual({
+      PRIMARY: 'keychain:shared',
+      SECONDARY: 'keychain:shared'
+    });
+    expect(result.secrets).toEqual([{ alias: 'shared', secret: 'beta' }]);
+  });
 });

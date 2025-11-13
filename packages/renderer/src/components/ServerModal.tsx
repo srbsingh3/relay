@@ -85,7 +85,7 @@ const buildInitialAppStates = (
 
 const normalizeEnvRows = (rows: EnvRow[]) => {
   const env: RegistryEnvironmentMap = {};
-  const secrets: { alias: string; secret: string }[] = [];
+  const secretMap = new Map<string, string>();
 
   rows.forEach((row) => {
     const key = row.key.trim();
@@ -96,13 +96,20 @@ const normalizeEnvRows = (rows: EnvRow[]) => {
       return;
     }
 
-    if (key && alias) {
-      env[key] = `${KEYCHAIN_VALUE_PREFIX}${alias}`;
-      if (secret) {
-        secrets.push({ alias, secret });
-      }
+    if (!key || !alias) {
+      return;
+    }
+
+    env[key] = `${KEYCHAIN_VALUE_PREFIX}${alias}`;
+    if (secret) {
+      secretMap.set(alias, secret);
     }
   });
+
+  const secrets = Array.from(secretMap.entries()).map(([alias, secret]) => ({
+    alias,
+    secret
+  }));
 
   return { env, secrets };
 };

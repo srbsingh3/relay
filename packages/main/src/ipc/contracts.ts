@@ -59,6 +59,25 @@ export interface SyncStatusSnapshot {
   lastError?: string;
 }
 
+export type UpdateState = 'idle' | 'checking' | 'up_to_date' | 'update_available' | 'offline' | 'error';
+
+export interface UpdateStatusSnapshot {
+  state: UpdateState;
+  currentVersion: string;
+  latestVersion: string | null;
+  checkedAt: string | null;
+  message: string | null;
+  autoCheckEnabled: boolean;
+}
+
+export interface UpdateCheckPayload {
+  source: 'manual' | 'auto';
+}
+
+export interface UpdatePreferencePayload {
+  autoCheckEnabled: boolean;
+}
+
 export const IPC_CHANNELS = {
   registry: {
     read: 'relay:registry:read',
@@ -74,6 +93,11 @@ export const IPC_CHANNELS = {
   sync: {
     invoke: 'relay:sync:invoke',
     status: 'relay:sync:status'
+  },
+  updates: {
+    status: 'relay:updates:status',
+    check: 'relay:updates:check',
+    preference: 'relay:updates:preference'
   }
 } as const;
 
@@ -93,6 +117,11 @@ export interface RendererBridge {
   sync: {
     invoke: (payload: SyncInvocationPayload) => Promise<SyncInvocationResult>;
     status: () => Promise<SyncStatusSnapshot>;
+  };
+  updates: {
+    status: () => Promise<UpdateStatusSnapshot>;
+    check: (payload: UpdateCheckPayload) => Promise<UpdateStatusSnapshot>;
+    preference: (payload: UpdatePreferencePayload) => Promise<UpdateStatusSnapshot>;
   };
 }
 

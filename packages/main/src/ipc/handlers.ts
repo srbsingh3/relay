@@ -1,7 +1,6 @@
 import { ipcMain } from 'electron';
 
 import {
-  DetectionSummary,
   IPC_CHANNELS,
   KeychainLookupPayload,
   KeychainLookupResult,
@@ -12,27 +11,24 @@ import {
   SupportedAgent,
   SyncInvocationPayload,
   SyncInvocationResult,
-  SyncStatusSnapshot
+  SyncStatusSnapshot,
+  UpdateCheckPayload,
+  UpdatePreferencePayload,
+  UpdateStatusSnapshot
 } from './contracts';
 import { createEmptyRegistry } from '../registry/schema';
 import { loadRegistry, saveRegistry } from '../registry/service';
 import { getKeychainService } from '../keychain/service';
+import { getDetectionService } from '../detection/service';
+import { getUpdateService } from '../update/service';
 
-let detectionSummary: DetectionSummary = buildDetectionSummary();
 let syncStatus: SyncStatusSnapshot = { state: 'idle', lastRun: null };
 let handlersRegistered = false;
 const keychainService = getKeychainService();
+const detectionService = getDetectionService();
+const updateService = getUpdateService();
 
 const fallbackAgents: SupportedAgent[] = ['cursor', 'claude', 'codex'];
-
-function buildDetectionSummary(): DetectionSummary {
-  const now = new Date().toISOString();
-  return {
-    cursor: { detected: false, path: null, lastChecked: now },
-    claude: { detected: false, path: null, lastChecked: now },
-    codex: { detected: false, path: null, lastChecked: now }
-  };
-}
 
 const readRegistrySnapshot = async (): Promise<RegistrySnapshot> => {
   try {
@@ -99,7 +95,9 @@ const handleKeychainSave = async (
   }
 };
 
-const handleDetectionStatus = () => detectionSummary;
+const handleDetectionStatus = async () => {
+  return detectionService.getSummary();
+};
 
 const resolveSyncApps = (payload?: SyncInvocationPayload): SupportedAgent[] => {
   if (payload?.apps && payload.apps.length > 0) {
@@ -137,6 +135,25 @@ const handleSyncInvoke = (_event: Electron.IpcMainInvokeEvent, payload?: SyncInv
 
 const handleSyncStatus = () => syncStatus;
 
+const handleUpdateStatus = (): UpdateStatusSnapshot => {
+  return updateService.getStatus();
+};
+
+const handleUpdateCheck = (
+  _event: Electron.IpcMainInvokeEvent,
+  payload?: UpdateCheckPayload
+): Promise<UpdateStatusSnapshot> => {
+  return updateService.checkForUpdates(payload);
+};
+
+const handleUpdatePreference = (
+  _event: Electron.IpcMainInvokeEvent,
+  payload?: UpdatePreferencePayload
+): UpdateStatusSnapshot => {
+  const enabled = payload?.autoCheckEnabled ?? true;
+  return updateService.setAutoCheckEnabled(enabled);
+};
+
 export const registerIpcHandlers = () => {
   if (handlersRegistered) {
     return;
@@ -149,6 +166,13 @@ export const registerIpcHandlers = () => {
   ipcMain.handle(IPC_CHANNELS.detection.status, handleDetectionStatus);
   ipcMain.handle(IPC_CHANNELS.sync.invoke, handleSyncInvoke);
   ipcMain.handle(IPC_CHANNELS.sync.status, handleSyncStatus);
+  ipcMain.handle(IPC_CHANNELS.updates.status, handleUpdateStatus);
+  ipcMain.handle(IPC_CHANNELS.updates.check, handleUpdateCheck);
+  ipcMain.handle(IPC_CHANNELS.updates.preference, handleUpdatePreference);
+
+  void detectionService.refresh().catch((error) => {
+    console.error('[relay] Failed to run initial agent detection:', error);
+  });
 
   handlersRegistered = true;
 };

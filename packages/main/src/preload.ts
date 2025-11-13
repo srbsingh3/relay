@@ -4,7 +4,9 @@ import type {
   KeychainLookupPayload,
   KeychainSavePayload,
   RegistryWritePayload,
-  SyncInvocationPayload
+  SyncInvocationPayload,
+  UpdateCheckPayload,
+  UpdatePreferencePayload
 } from './ipc/contracts';
 import { IPC_CHANNELS } from './ipc/contracts';
 
@@ -24,6 +26,11 @@ const relayBridge: RendererBridge = {
   sync: {
     invoke: (payload: SyncInvocationPayload) => ipcRenderer.invoke(IPC_CHANNELS.sync.invoke, payload),
     status: () => ipcRenderer.invoke(IPC_CHANNELS.sync.status)
+  },
+  updates: {
+    status: () => ipcRenderer.invoke(IPC_CHANNELS.updates.status),
+    check: (payload: UpdateCheckPayload) => ipcRenderer.invoke(IPC_CHANNELS.updates.check, payload),
+    preference: (payload: UpdatePreferencePayload) => ipcRenderer.invoke(IPC_CHANNELS.updates.preference, payload)
   }
 };
 

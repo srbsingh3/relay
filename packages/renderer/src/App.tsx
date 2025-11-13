@@ -4,7 +4,10 @@ import type {
   DetectionStatus,
   DetectionSummary,
   RegistryServerEntry,
-  RegistrySnapshot
+  RegistrySnapshot,
+  SyncStatusSnapshot,
+  UpdateState,
+  UpdateStatusSnapshot
 } from '../../main/src/ipc/contracts';
 import { REGISTRY_VERSION } from '../../main/src/registry/schema';
 import type { SupportedAgent } from '../../main/src/types/agents';
@@ -14,6 +17,8 @@ import { Badge } from './components/ui/badge';
 import { Button } from './components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card';
 import { cn } from './lib/utils';
+
+const SETTINGS_SECTION_ID = 'settings-panel';
 
 const agentLabels: Record<SupportedAgent, string> = {
   cursor: 'Cursor',
@@ -80,6 +85,20 @@ const fallbackRegistrySnapshot: RegistrySnapshot = {
   servers: fallbackServers
 };
 
+const buildFallbackSyncStatus = (): SyncStatusSnapshot => ({
+  state: 'idle',
+  lastRun: new Date(Date.now() - 1000 * 60 * 30).toISOString()
+});
+
+const buildFallbackUpdateStatus = (version: string): UpdateStatusSnapshot => ({
+  state: 'up_to_date',
+  currentVersion: version,
+  latestVersion: version,
+  checkedAt: new Date().toISOString(),
+  message: 'Preview mode: updates are mocked.',
+  autoCheckEnabled: true
+});
+
 const SERVER_ID_PREFIX = 'srv_';
 const DEFAULT_SERVER_SLUG = 'server';
 
@@ -126,6 +145,42 @@ const masterStateStyles: Record<MasterState, string> = {
 const appToggleStyles = {
   on: 'border-emerald-400/60 bg-emerald-500/10 text-emerald-50',
   off: 'border-white/10 bg-slate-900/40 text-slate-200'
+};
+
+const detectionStatusStyles = {
+  detected: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-100',
+  missing: 'border-slate-600/60 bg-slate-900/60 text-slate-300'
+};
+
+const updateStateStyles: Record<
+  UpdateState,
+  {
+    label: string;
+    className: string;
+  }
+> = {
+  idle: { label: 'Idle', className: 'border-slate-600/70 text-slate-200' },
+  checking: { label: 'Checking…', className: 'border-sky-500/60 text-sky-200' },
+  up_to_date: { label: 'Up to date', className: 'border-emerald-400/70 text-emerald-100' },
+  update_available: { label: 'Update available', className: 'border-amber-400/70 text-amber-100' },
+  offline: { label: 'Offline', className: 'border-slate-600/70 text-slate-300' },
+  error: { label: 'Error', className: 'border-rose-500/70 text-rose-200' }
+};
+
+const formatTimestamp = (isoValue?: string | null): string => {
+  if (!isoValue) {
+    return 'Never';
+  }
+
+  const value = new Date(isoValue);
+  if (Number.isNaN(value.getTime())) {
+    return 'Never';
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  }).format(value);
 };
 
 const normalizeAppOverrides = (overrides?: RegistryServerEntry['apps']): RegistryServerEntry['apps'] | undefined => {
@@ -225,6 +280,15 @@ const App = () => {
     bridge ? REGISTRY_VERSION : fallbackRegistrySnapshot.version
   );
   const [detection, setDetection] = useState<DetectionSummary>(() => (bridge ? buildDetectionSnapshot() : fallbackDetection));
+  const [syncStatus, setSyncStatus] = useState<SyncStatusSnapshot>(() =>
+    bridge ? { state: 'idle', lastRun: null } : buildFallbackSyncStatus()
+  );
+  const [syncBusy, setSyncBusy] = useState(false);
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatusSnapshot>(() =>
+    buildFallbackUpdateStatus(versionLabel)
+  );
+  const [updateBusy, setUpdateBusy] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
   const [loading, setLoading] = useState(Boolean(bridge));
   const [loadError, setLoadError] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
@@ -240,9 +304,11 @@ const App = () => {
     const hydrate = async () => {
       setLoading(true);
       try {
-        const [registrySnapshot, detectionSnapshot] = await Promise.all([
+        const [registrySnapshot, detectionSnapshot, syncSnapshot, updateSnapshot] = await Promise.all([
           bridge.registry.read(),
-          bridge.detection.status()
+          bridge.detection.status(),
+          bridge.sync.status(),
+          bridge.updates.status()
         ]);
 
         if (cancelled) {
@@ -252,8 +318,11 @@ const App = () => {
         setServers(registrySnapshot.servers);
         setRegistryVersion(registrySnapshot.version);
         setDetection(detectionSnapshot);
+        setSyncStatus(syncSnapshot);
+        setUpdateStatus(updateSnapshot);
         setLoadError(null);
         setMutationError(null);
+        setUpdateError(null);
       } catch (error) {
         console.error('[relay] failed to load registry/detection snapshot', error);
         if (!cancelled) {
@@ -272,6 +341,110 @@ const App = () => {
       cancelled = true;
     };
   }, [bridge]);
+
+  const scrollToSettings = useCallback(() => {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    const target = document.getElementById(SETTINGS_SECTION_ID);
+    target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
+  const handleSyncNow = useCallback(async () => {
+    if (syncBusy) {
+      return;
+    }
+
+    setSyncBusy(true);
+    setSyncStatus((prev) => ({ ...prev, state: 'running', lastError: undefined }));
+
+    try {
+      if (!bridge) {
+        await new Promise((resolve) => setTimeout(resolve, 250));
+        setSyncStatus({
+          state: 'idle',
+          lastRun: new Date().toISOString()
+        });
+        return;
+      }
+
+      const result = await bridge.sync.invoke({ source: 'user' });
+      setSyncStatus({
+        state: 'idle',
+        lastRun: result.finishedAt,
+        lastError: undefined
+      });
+    } catch (error) {
+      console.error('[relay] sync failed', error);
+      setSyncStatus((prev) => ({
+        ...prev,
+        state: 'error',
+        lastError: 'Unable to run sync.'
+      }));
+    } finally {
+      setSyncBusy(false);
+    }
+  }, [bridge, syncBusy]);
+
+  const handleUpdateCheck = useCallback(async () => {
+    if (updateBusy) {
+      return;
+    }
+
+    setUpdateBusy(true);
+    setUpdateError(null);
+    setUpdateStatus((prev) => ({ ...prev, state: 'checking' }));
+
+    try {
+      if (!bridge) {
+        await new Promise((resolve) => setTimeout(resolve, 250));
+        setUpdateStatus((prev) => ({
+          ...prev,
+          state: 'up_to_date',
+          latestVersion: prev.currentVersion,
+          checkedAt: new Date().toISOString(),
+          message: 'Preview mode: updates are mocked.'
+        }));
+        return;
+      }
+
+      const snapshot = await bridge.updates.check({ source: 'manual' });
+      setUpdateStatus(snapshot);
+    } catch (error) {
+      console.error('[relay] update check failed', error);
+      setUpdateStatus((prev) => ({
+        ...prev,
+        state: 'error',
+        checkedAt: new Date().toISOString(),
+        message: 'Unable to check for updates.'
+      }));
+      setUpdateError('Unable to check for updates.');
+    } finally {
+      setUpdateBusy(false);
+    }
+  }, [bridge, updateBusy]);
+
+  const handleUpdatePreferenceToggle = useCallback(async () => {
+    const nextEnabled = !updateStatus.autoCheckEnabled;
+
+    try {
+      if (!bridge) {
+        setUpdateStatus((prev) => ({
+          ...prev,
+          autoCheckEnabled: nextEnabled
+        }));
+        return;
+      }
+
+      const snapshot = await bridge.updates.preference({ autoCheckEnabled: nextEnabled });
+      setUpdateStatus(snapshot);
+      setUpdateError(null);
+    } catch (error) {
+      console.error('[relay] failed to store update preference', error);
+      setUpdateError('Unable to update preference.');
+    }
+  }, [bridge, updateStatus.autoCheckEnabled]);
 
   const persistServers = useCallback(
     async (nextServers: RegistryServerEntry[]): Promise<boolean> => {
@@ -504,11 +677,12 @@ const App = () => {
               style={{ WebkitAppRegion: 'no-drag' }}
               type="button"
               aria-label="Open settings panel"
+              onClick={scrollToSettings}
             >
               Settings
             </Button>
           </header>
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
             <Card
               className="p-6"
               aria-labelledby="servers-heading"
@@ -650,41 +824,148 @@ const App = () => {
                 )}
               </CardContent>
             </Card>
-            <Card className="p-6" aria-labelledby="overview-heading">
-              <CardHeader className="flex items-start justify-between gap-4 pb-3">
-                <div className="space-y-1.5">
-                  <p className="text-xs uppercase tracking-[0.24em] text-sky-300">Overview</p>
-                  <CardTitle id="overview-heading">Relay status</CardTitle>
-                </div>
-                <Badge variant="sky" className="text-[0.65rem] uppercase tracking-[0.3em]">
-                  Offline-first
-                </Badge>
-              </CardHeader>
-              <CardContent className="space-y-6 text-sm text-slate-300">
-                <p>
-                  Every UI action, tray entry, and scheduled sync routes through the same hardened services so registry,
-                  Keychain, and detection state stay deterministic even without a network connection.
-                </p>
-                <dl className="grid grid-cols-1 gap-4 text-sm text-slate-200 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-4">
-                    <dt className="text-xs uppercase tracking-wide text-slate-500">Version</dt>
-                    <dd className="text-base font-medium text-white">{versionLabel}</dd>
+            <div id={SETTINGS_SECTION_ID} className="flex flex-col gap-6">
+              <Card className="p-6" aria-labelledby="detection-heading">
+                <CardHeader className="flex flex-col gap-1.5 pb-3">
+                  <p className="text-xs uppercase tracking-[0.24em] text-sky-300">Settings</p>
+                  <CardTitle id="detection-heading">Agent detection</CardTitle>
+                  <CardDescription>Resolved config paths are read-only and shared across Cursor, Claude, and Codex.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <ul className="space-y-3">
+                    {SUPPORTED_AGENTS.map((agent) => {
+                      const status = detection[agent];
+                      const detected = Boolean(status?.detected);
+                      const badgeStyle = detected ? detectionStatusStyles.detected : detectionStatusStyles.missing;
+                      return (
+                        <li
+                          key={`detection-${agent}`}
+                          className="rounded-2xl border border-white/5 bg-slate-900/40 p-4"
+                        >
+                          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                              <p className="text-sm font-semibold text-white">{agentLabels[agent]}</p>
+                              <p className="text-xs text-slate-400">Read-only config path</p>
+                            </div>
+                            <Badge
+                              variant="outline"
+                              className={cn('rounded-full px-3 py-1 text-[0.65rem] uppercase tracking-[0.3em]', badgeStyle)}
+                            >
+                              {detected ? 'Detected' : 'Not detected'}
+                            </Badge>
+                          </div>
+                          <p className="mt-3 truncate font-mono text-sm text-slate-200">{status?.path ?? 'Unknown path'}</p>
+                          <p className="mt-1 text-xs text-slate-500">Last checked {formatTimestamp(status?.lastChecked)}</p>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </CardContent>
+              </Card>
+              <Card className="p-6" aria-labelledby="sync-heading">
+                <CardHeader className="flex items-start justify-between gap-4 pb-3">
+                  <div className="space-y-1">
+                    <p className="text-xs uppercase tracking-[0.24em] text-sky-300">Sync</p>
+                    <CardTitle id="sync-heading">Deterministic writes</CardTitle>
+                    <CardDescription>Invokes the same locked-down main-process service used by the tray and schedule.</CardDescription>
                   </div>
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      'text-[0.65rem] uppercase tracking-[0.3em]',
+                      syncStatus.state === 'running'
+                        ? 'border-sky-400/70 text-sky-200'
+                        : syncStatus.state === 'error'
+                          ? 'border-rose-500/70 text-rose-200'
+                          : 'border-emerald-400/70 text-emerald-100'
+                    )}
+                  >
+                    {syncStatus.state === 'running' ? 'Syncing' : syncStatus.state === 'error' ? 'Error' : 'Ready'}
+                  </Badge>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-4">
-                    <dt className="text-xs uppercase tracking-wide text-slate-500">Window</dt>
-                    <dd className="text-base font-medium text-white">900×600 | Liquid Glass</dd>
+                    <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Last sync</p>
+                    <p className="mt-1 text-lg font-semibold text-white">{formatTimestamp(syncStatus.lastRun)}</p>
+                    {syncStatus.lastError ? (
+                      <p className="mt-1 text-sm text-rose-300">{syncStatus.lastError}</p>
+                    ) : (
+                      <p className="mt-1 text-sm text-slate-400">Every detected agent uses this timestamp.</p>
+                    )}
                   </div>
-                  <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-4">
-                    <dt className="text-xs uppercase tracking-wide text-slate-500">Security</dt>
-                    <dd className="text-base font-medium text-white">Isolation + sandbox enforced</dd>
+                  <Button
+                    type="button"
+                    onClick={handleSyncNow}
+                    disabled={syncBusy}
+                    className="w-full rounded-full text-xs uppercase tracking-[0.3em]"
+                  >
+                    {syncStatus.state === 'running' ? 'Syncing…' : 'Sync Now'}
+                  </Button>
+                </CardContent>
+              </Card>
+              <Card className="p-6" aria-labelledby="updates-heading">
+                <CardHeader className="flex items-start justify-between gap-4 pb-3">
+                  <div className="space-y-1">
+                    <p className="text-xs uppercase tracking-[0.24em] text-sky-300">Updates</p>
+                    <CardTitle id="updates-heading">Manifest checks</CardTitle>
+                    <CardDescription>Manual checks stay in the main process and never include registry or secret data.</CardDescription>
                   </div>
-                  <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-4">
-                    <dt className="text-xs uppercase tracking-wide text-slate-500">Assets</dt>
-                    <dd className="text-base font-medium text-white">Local bundle • CSP locked</dd>
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      'text-[0.65rem] uppercase tracking-[0.3em]',
+                      updateStateStyles[updateStatus.state].className
+                    )}
+                  >
+                    {updateStateStyles[updateStatus.state].label}
+                  </Badge>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm text-slate-200">
+                  <dl className="grid grid-cols-1 gap-3 text-sm text-slate-200">
+                    <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-4">
+                      <dt className="text-xs uppercase tracking-wide text-slate-500">Current build</dt>
+                      <dd className="text-base font-medium text-white">{updateStatus.currentVersion}</dd>
+                    </div>
+                    <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-4">
+                      <dt className="text-xs uppercase tracking-wide text-slate-500">Latest manifest</dt>
+                      <dd className="text-base font-medium text-white">{updateStatus.latestVersion ?? '—'}</dd>
+                    </div>
+                    <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-4">
+                      <dt className="text-xs uppercase tracking-wide text-slate-500">Last checked</dt>
+                      <dd className="text-base font-medium text-white">{formatTimestamp(updateStatus.checkedAt)}</dd>
+                    </div>
+                  </dl>
+                  <p className="text-xs text-slate-400">{updateStatus.message ?? 'No update checks have run yet.'}</p>
+                  {updateError && <p className="text-xs text-rose-300">{updateError}</p>}
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleUpdateCheck}
+                      disabled={updateBusy}
+                      className="flex-1 rounded-full text-xs uppercase tracking-[0.3em]"
+                    >
+                      {updateStatus.state === 'checking' ? 'Checking…' : 'Check for updates'}
+                    </Button>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={updateStatus.autoCheckEnabled}
+                      onClick={handleUpdatePreferenceToggle}
+                      disabled={updateBusy}
+                      className={cn(
+                        'w-full rounded-full border px-4 py-2 text-center text-[0.65rem] font-semibold uppercase tracking-[0.3em] transition sm:w-auto',
+                        updateStatus.autoCheckEnabled
+                          ? 'border-emerald-400/70 text-emerald-100'
+                          : 'border-slate-600/70 text-slate-300'
+                      )}
+                    >
+                      {updateStatus.autoCheckEnabled ? 'Auto checks on' : 'Auto checks off'}
+                    </button>
                   </div>
-                </dl>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           </div>
           <footer className="flex flex-wrap gap-2 text-xs uppercase tracking-[0.25em] text-slate-400">
             <Badge variant="outline" className="border-white/10 bg-transparent px-4 py-2 text-[0.7rem]">

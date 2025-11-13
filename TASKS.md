@@ -174,38 +174,38 @@ Use it as the primary execution plan for the macOS MVP.
     - [x] 3.5.3.2 Delete Keychain secrets only when alias unused elsewhere.
     - [x] 3.5.3.3 Confirm destructive action with user.
 
-- [ ] 3.6 **Milestone exit gate**
-  - [ ] 3.6.1 Server list renders with All Apps master switch + per-app pills, reflecting detection state.
-  - [ ] 3.6.2 Add/Edit modal saves to registry + Keychain with inline validation and respects alias reuse rules.
+- [x] 3.6 **Milestone exit gate**
+  - [x] 3.6.1 Server list renders with All Apps master switch + per-app pills, reflecting detection state.
+  - [x] 3.6.2 Add/Edit modal saves to registry + Keychain with inline validation and respects alias reuse rules.
 
 ---
 
 ## Milestone 4 — Detection & Settings
 
-- [ ] 4.1 **Agent detection logic**
-  - [ ] 4.1.1 Cursor:
-    - [ ] 4.1.1.1 Detect if `~/.cursor` directory exists OR `~/.cursor/mcp.json` file exists.
-  - [ ] 4.1.2 Claude Code:
-    - [ ] 4.1.2.1 Detect if `~/.claude.json` exists OR `which claude` succeeds.
-  - [ ] 4.1.3 Codex:
-    - [ ] 4.1.3.1 Detect if `~/.codex/config.toml` exists OR `which codex` succeeds.
-  - [ ] 4.1.4 Implement a unified detection service:
-    - [ ] 4.1.4.1 Resolve final config paths for each agent.
-    - [ ] 4.1.4.2 Cache detection results for the renderer.
+- [x] 4.1 **Agent detection logic**
+  - [x] 4.1.1 Cursor:
+    - [x] 4.1.1.1 Detect if `~/.cursor` directory exists OR `~/.cursor/mcp.json` file exists.
+  - [x] 4.1.2 Claude Code:
+    - [x] 4.1.2.1 Detect if `~/.claude.json` exists OR `which claude` succeeds.
+  - [x] 4.1.3 Codex:
+    - [x] 4.1.3.1 Detect if `~/.codex/config.toml` exists OR `which codex` succeeds.
+  - [x] 4.1.4 Implement a unified detection service:
+    - [x] 4.1.4.1 Resolve final config paths for each agent.
+    - [x] 4.1.4.2 Cache detection results for the renderer.
 
-- [ ] 4.2 **Settings view**
-  - [ ] 4.2.1 Show detection cards per agent:
-    - [ ] 4.2.1.1 Detection status (Detected / Not Detected).
-    - [ ] 4.2.1.2 Resolved config path.
-    - [ ] 4.2.1.3 Read-only project-scope paths (if surfaced).
-  - [ ] 4.2.2 Display last sync timestamp.
-  - [ ] 4.2.3 Provide `Sync Now` button.
-  - [ ] 4.2.4 Reflect disabled state for non-detected app toggles.
-  - [ ] 4.2.5 Present update-check card:
-    - [ ] 4.2.5.1 Show current version + last-checked timestamp.
-    - [ ] 4.2.5.2 Provide manual “Check for Updates” CTA wired to the main-process service.
-    - [ ] 4.2.5.3 Display result states (up to date, update available, offline, error).
-    - [ ] 4.2.5.4 (Optional for MVP) Add toggle to disable automatic checks and persist the preference.
+- [x] 4.2 **Settings view**
+  - [x] 4.2.1 Show detection cards per agent:
+    - [x] 4.2.1.1 Detection status (Detected / Not Detected).
+    - [x] 4.2.1.2 Resolved config path.
+    - [x] 4.2.1.3 Read-only project-scope paths (if surfaced).
+  - [x] 4.2.2 Display last sync timestamp.
+  - [x] 4.2.3 Provide `Sync Now` button.
+  - [x] 4.2.4 Reflect disabled state for non-detected app toggles.
+  - [x] 4.2.5 Present update-check card:
+    - [x] 4.2.5.1 Show current version + last-checked timestamp.
+    - [x] 4.2.5.2 Provide manual “Check for Updates” CTA wired to the main-process service.
+    - [x] 4.2.5.3 Display result states (up to date, update available, offline, error).
+    - [x] 4.2.5.4 (Optional for MVP) Add toggle to disable automatic checks and persist the preference.
 
 - [ ] 4.3 **Guardrail checks**
   - [ ] 4.3.1 Ensure detection never writes to disk (read-only).

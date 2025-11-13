@@ -10,11 +10,21 @@ describe('App layout', () => {
     const html = renderToStaticMarkup(<App />);
     expect(html).toContain('Workspace registry');
     expect(html).toContain('Settings');
-    expect(html).toContain('Relay status');
+    expect(html).toContain('Agent detection');
+    expect(html).toContain('Manifest checks');
     expect(html).toContain('All apps');
     expect(html).toContain('aria-label="Per-app toggles"');
     expect(html).toContain('Not detected');
     expect(html).toContain('Custom');
+  });
+
+  it('reflects detection state for master and per-app toggles', () => {
+    const html = renderToStaticMarkup(<App />);
+    expect(html).toContain('All detected apps enabled');
+    const codexButton = html.match(/<button[^>]+data-agent="codex"[^>]*>/);
+    expect(codexButton).not.toBeNull();
+    expect(codexButton?.[0]).toMatch(/\bdisabled\b/);
+    expect(html).toContain('Not detected');
   });
 });
 
