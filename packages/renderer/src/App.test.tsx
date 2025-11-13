@@ -12,8 +12,9 @@ describe('App layout', () => {
     expect(html).toContain('Settings');
     expect(html).toContain('Relay status');
     expect(html).toContain('All apps');
-    expect(html).toContain('app-pill--disabled');
-    expect(html).toContain('switch--custom');
+    expect(html).toContain('aria-label="Per-app toggles"');
+    expect(html).toContain('Not detected');
+    expect(html).toContain('Custom');
   });
 });
 

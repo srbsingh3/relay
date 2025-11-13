@@ -13,6 +13,7 @@ import ServerModal, { type ServerFormSubmitPayload } from './components/ServerMo
 import { Badge } from './components/ui/badge';
 import { Button } from './components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card';
+import { cn } from './lib/utils';
 
 const agentLabels: Record<SupportedAgent, string> = {
   cursor: 'Cursor',
@@ -114,6 +115,17 @@ const masterLabels: Record<MasterState, string> = {
   on: 'All detected apps enabled',
   off: 'Disabled for every app',
   custom: 'Mix of enabled/disabled apps'
+};
+
+const masterStateStyles: Record<MasterState, string> = {
+  on: 'border-emerald-400/60 bg-emerald-500/10 text-emerald-100',
+  off: 'border-slate-600/70 bg-slate-800/60 text-slate-300',
+  custom: 'border-sky-400/60 bg-sky-500/10 text-sky-100'
+};
+
+const appToggleStyles = {
+  on: 'border-emerald-400/60 bg-emerald-500/10 text-emerald-50',
+  off: 'border-white/10 bg-slate-900/40 text-slate-200'
 };
 
 const normalizeAppOverrides = (overrides?: RegistryServerEntry['apps']): RegistryServerEntry['apps'] | undefined => {
@@ -459,48 +471,67 @@ const App = () => {
                     <span>Use Add server to register your first shared MCP endpoint.</span>
                   </div>
                 ) : (
-                  <ul className="server-list">
+                  <ul className="space-y-4">
                     {servers.map((server) => {
                       const masterState = computeMasterState(server, detection);
                       return (
-                        <li className="server-card" key={server.id}>
-                          <div className="server-card-head">
+                        <li
+                          key={server.id}
+                          className="rounded-[26px] border border-white/10 bg-slate-950/60 p-5 shadow-[0_15px_45px_rgba(2,6,23,0.55)] backdrop-blur-xl"
+                        >
+                          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                             <div>
-                              <p className="server-name">{server.name}</p>
-                              <p className="server-command">{formatCommand(server)}</p>
+                              <p className="text-lg font-semibold text-white">{server.name}</p>
+                              <p className="mt-2 text-xs text-slate-400">
+                                <code className="rounded-lg bg-slate-900/60 px-3 py-1 font-mono text-sm text-slate-100">
+                                  {formatCommand(server)}
+                                </code>
+                              </p>
                             </div>
-                            <div className="server-card-actions">
-                              <button
-                                type="button"
-                                className="ghost-button ghost-button--compact"
+                            <div className="flex flex-wrap items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="rounded-full border border-white/15 text-[0.7rem] uppercase tracking-[0.2em]"
                                 onClick={() => setModalState({ mode: 'edit', serverId: server.id })}
+                                type="button"
                               >
                                 Edit
-                              </button>
+                              </Button>
                               <button
                                 type="button"
-                                className={`switch ${server.enabled ? 'switch--on' : 'switch--off'}`}
                                 aria-pressed={server.enabled}
+                                className={cn(
+                                  'rounded-full border px-4 py-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.25em]',
+                                  server.enabled
+                                    ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100'
+                                    : 'border-slate-700/70 bg-slate-900/60 text-slate-300'
+                                )}
                               >
                                 {server.enabled ? 'Enabled' : 'Disabled'}
                               </button>
                             </div>
                           </div>
-                          <div className="apps-summary">
-                            <div>
-                              <p className="server-label">All apps</p>
-                              <p className="server-hint">{masterLabels[masterState]}</p>
+                          <div className="mt-4 rounded-2xl border border-white/5 bg-slate-900/40 px-4 py-3 md:mt-3">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                              <div>
+                                <p className="text-[0.65rem] uppercase tracking-[0.3em] text-slate-400">All apps</p>
+                                <p className="text-sm text-slate-200">{masterLabels[masterState]}</p>
+                              </div>
+                              <button
+                                type="button"
+                                className={cn(
+                                  'rounded-full border px-5 py-2 text-xs font-semibold uppercase tracking-[0.3em] transition',
+                                  masterStateStyles[masterState]
+                                )}
+                                aria-pressed={masterState === 'on'}
+                                onClick={() => handleMasterToggle(server.id, masterState === 'on' ? 'off' : 'on')}
+                              >
+                                {masterState === 'custom' ? 'Custom' : masterState === 'on' ? 'On' : 'Off'}
+                              </button>
                             </div>
-                            <button
-                              type="button"
-                              className={`switch switch--${masterState}`}
-                              aria-pressed={masterState === 'on'}
-                              onClick={() => handleMasterToggle(server.id, masterState === 'on' ? 'off' : 'on')}
-                            >
-                              {masterState === 'custom' ? 'Custom' : masterState === 'on' ? 'On' : 'Off'}
-                            </button>
                           </div>
-                          <div className="apps-row" role="group" aria-label="Per-app toggles">
+                          <div className="mt-4 flex flex-wrap gap-3" role="group" aria-label="Per-app toggles">
                             {SUPPORTED_AGENTS.map((agent) => {
                               const status = detection[agent];
                               const detected = Boolean(status?.detected);
@@ -511,15 +542,17 @@ const App = () => {
                                 <button
                                   key={`${server.id}-${agent}`}
                                   type="button"
-                                  className={`app-pill ${
-                                    effectiveEnabled ? 'app-pill--on' : 'app-pill--off'
-                                  } ${disabled ? 'app-pill--disabled' : ''}`}
+                                  className={cn(
+                                    'flex min-w-[130px] flex-col rounded-2xl border px-4 py-3 text-left text-xs uppercase tracking-[0.25em] transition',
+                                    effectiveEnabled ? appToggleStyles.on : appToggleStyles.off,
+                                    disabled ? 'cursor-not-allowed opacity-40' : 'hover:border-white/40'
+                                  )}
                                   disabled={disabled}
                                   aria-pressed={effectiveEnabled}
                                   data-agent={agent}
                                 >
-                                  <span className="pill-label">{agentLabels[agent]}</span>
-                                  <span className="pill-state">
+                                  <span className="text-[0.65rem]">{agentLabels[agent]}</span>
+                                  <span className="text-base font-semibold tracking-normal text-white">
                                     {!detected ? 'Not detected' : effectiveEnabled ? 'On' : 'Off'}
                                   </span>
                                 </button>
