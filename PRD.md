@@ -19,7 +19,7 @@
 - Drift detection, diff previews, or cloud sync are explicitly post-MVP.
 
 ## System Blueprint
-- **Frontend:** React + Vite rendered inside Electron BrowserWindow (900×600, dark theme, Liquid Glass aesthetic).
+- **Frontend:** React + Vite + Tailwind CSS with shadcn/ui components rendered inside Electron BrowserWindow (900×600, dark theme).
 - **Backend:** Electron main process handles IPC, filesystem IO, Keychain calls, and tray menu.
 - **Registry:** `~/Library/Application Support/Relay/registry.json` (canonical server list + metadata).
 - **Keychain:** macOS Keychain item service `com.relay.app`; account format `token:<alias>`.

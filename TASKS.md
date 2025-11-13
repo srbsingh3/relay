@@ -16,12 +16,13 @@ Use it as the primary execution plan for the macOS MVP.
   - [x] 1.1.1 Create Electron + Vite monorepo / packages structure.
   - [x] 1.1.2 Set up shared TypeScript config, linting, and testing baseline.
   - [x] 1.1.3 Add `PRD.md`, `AGENTS.md`, and `TASKS.md` to the repo as living references.
+  - [ ] 1.1.4 Configure Tailwind CSS and shadcn/ui in the renderer app (Vite/React).
 
 - [x] 1.2 **Secure BrowserWindow shell**
   - [x] 1.2.1 Create main Electron process entry.
   - [x] 1.2.2 Configure a single BrowserWindow:
     - [x] 1.2.2.1 Size: 900×600.
-    - [x] 1.2.2.2 Dark theme and base Liquid Glass aesthetic (can be basic initially).
+    - [x] 1.2.2.2 Dark theme using Tailwind CSS and shadcn/ui primitives (can be basic initially).
   - [x] 1.2.3 Enforce Electron security flags:
     - [x] 1.2.3.1 `contextIsolation = true`
     - [x] 1.2.3.2 `nodeIntegration = false`
@@ -120,7 +121,7 @@ Use it as the primary execution plan for the macOS MVP.
   - [x] 3.1.1 Build main layout with:
     - [x] 3.1.1.1 Left / main content area for servers list.
     - [x] 3.1.1.2 Access to Settings (button or nav).
-  - [x] 3.1.2 Ensure dark theme visuals and basic Liquid Glass feel.
+  - [x] 3.1.2 Ensure dark theme visuals using Tailwind utility classes and shadcn/ui components.
 
 - [x] 3.2 **Server list view**
   - [x] 3.2.1 Display server rows with:

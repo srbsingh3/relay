@@ -46,7 +46,8 @@ Keep PRD untouched, update this playbook only when guardrails shift, and let TAS
 7. **Packaging & QA** – produce signed/hardened `.dmg`, verify offline startup, run adapter edge-case tests (missing secrets, invalid files, disabled apps), and document manual QA.
 
 ## Working With Design
-- Share data contracts (server row fields, modal states, detection cards, toast copy) before implementation so the Liquid Glass styling can land once.
+- Share data contracts (server row fields, modal states, detection cards, toast copy) before implementation so Tailwind utility classes and shadcn/ui primitives can be applied once and reused across screens.
+- Prefer Tailwind + shadcn/ui over ad-hoc CSS; if a layout or interaction can’t be expressed cleanly with the existing primitives, sync with design before introducing custom styling or one-off components.
 - Confirm All Apps vs Custom logic and disabled toggle behavior in design reviews before merging UI changes.
 - Align on update-check card copy (status text, last-checked timestamp, disable toggle, CTA) so the UX stays transparent and privacy expectations are clear.
 - Surface blockers early: missing assets, copy, or interaction changes should be resolved with design before code freeze on each milestone.
