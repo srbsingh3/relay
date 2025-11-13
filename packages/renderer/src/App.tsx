@@ -854,7 +854,13 @@ const App = () => {
                               {detected ? 'Detected' : 'Not detected'}
                             </Badge>
                           </div>
-                          <p className="mt-3 truncate font-mono text-sm text-slate-200">{status?.path ?? 'Unknown path'}</p>
+                          <p
+                            className="mt-3 truncate font-mono text-sm text-slate-200"
+                            data-readonly="config-path"
+                            title="Relay displays project-scoped configs in read-only mode."
+                          >
+                            {status?.path ?? 'Unknown path'}
+                          </p>
                           <p className="mt-1 text-xs text-slate-500">Last checked {formatTimestamp(status?.lastChecked)}</p>
                         </li>
                       );

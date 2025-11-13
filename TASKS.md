@@ -207,15 +207,15 @@ Use it as the primary execution plan for the macOS MVP.
     - [x] 4.2.5.3 Display result states (up to date, update available, offline, error).
     - [x] 4.2.5.4 (Optional for MVP) Add toggle to disable automatic checks and persist the preference.
 
-- [ ] 4.3 **Guardrail checks**
-  - [ ] 4.3.1 Ensure detection never writes to disk (read-only).
-  - [ ] 4.3.2 Ensure project-scope configs are read-only in the UI (no edit actions).
-  - [ ] 4.3.3 Confirm that Settings only triggers the update-check manifest fetch (no telemetry or data sharing) and surfaces the opt-out.
-  - [ ] 4.3.4 Ensure update-check responses never include or display secrets/registry data.
+- [x] 4.3 **Guardrail checks**
+  - [x] 4.3.1 Ensure detection never writes to disk (read-only).
+  - [x] 4.3.2 Ensure project-scope configs are read-only in the UI (no edit actions).
+  - [x] 4.3.3 Confirm that Settings only triggers the update-check manifest fetch (no telemetry or data sharing) and surfaces the opt-out.
+  - [x] 4.3.4 Ensure update-check responses never include or display secrets/registry data.
 
-- [ ] 4.4 **Milestone exit gate**
-  - [ ] 4.4.1 Detection service returns status + paths for Cursor/Claude/Codex and disables undetected app toggles in UI.
-  - [ ] 4.4.2 Settings view shows detection cards, last sync timestamp, `Sync Now`, and the update-check card with manual CTA/status.
+- [x] 4.4 **Milestone exit gate**
+  - [x] 4.4.1 Detection service returns status + paths for Cursor/Claude/Codex and disables undetected app toggles in UI.
+  - [x] 4.4.2 Settings view shows detection cards, last sync timestamp, `Sync Now`, and the update-check card with manual CTA/status.
 
 ---
 

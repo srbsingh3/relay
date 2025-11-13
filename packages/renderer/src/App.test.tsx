@@ -26,6 +26,21 @@ describe('App layout', () => {
     expect(codexButton?.[0]).toMatch(/\bdisabled\b/);
     expect(html).toContain('Not detected');
   });
+
+  it('marks detection paths as read-only and surfaces the update opt-out toggle', () => {
+    const html = renderToStaticMarkup(<App />);
+    expect(html).toContain('data-readonly="config-path"');
+    expect(html).toContain('Auto checks on');
+  });
+
+  it('renders the settings controls for sync status and manifest checks', () => {
+    const html = renderToStaticMarkup(<App />);
+    expect(html).toContain('Last sync');
+    expect(html).toContain('Sync Now');
+    expect(html).toContain('Manifest checks');
+    expect(html).toContain('Latest manifest');
+    expect(html).toContain('Check for updates');
+  });
 });
 
 const buildDetection = (detected: Partial<Record<SupportedAgent, boolean>>): DetectionSummary => {
