@@ -652,6 +652,15 @@ const App = () => {
 
   return (
     <main className="relative min-h-screen bg-slate-950 font-sans text-slate-100 antialiased">
+      <div
+        aria-hidden="true"
+        className="fixed top-0 right-0 z-50 h-10"
+        style={{
+          left: '72px',
+          WebkitAppRegion: 'drag',
+          WebkitUserSelect: 'none'
+        }}
+      />
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute left-10 top-[-10%] h-64 w-64 rounded-full bg-sky-500/30 blur-[140px]" />
         <div className="absolute right-20 top-0 h-72 w-72 rounded-full bg-fuchsia-500/25 blur-[160px]" />
