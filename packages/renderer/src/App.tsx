@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import './styles.css';
-import type { DetectionStatus, DetectionSummary, RegistryServerEntry } from '../../main/src/ipc/contracts';
+import type { DetectionStatus, DetectionSummary, RegistryServerEntry, RegistrySnapshot } from '../../main/src/ipc/contracts';
+import { REGISTRY_VERSION } from '../../main/src/registry/schema';
 import type { SupportedAgent } from '../../main/src/types/agents';
 import { SUPPORTED_AGENTS } from '../../main/src/types/agents';
 
@@ -64,12 +65,74 @@ const fallbackDetection = buildDetectionSnapshot({
   codex: { detected: false }
 });
 
+const fallbackRegistrySnapshot: RegistrySnapshot = {
+  version: REGISTRY_VERSION,
+  servers: fallbackServers
+};
+
 type MasterState = 'on' | 'off' | 'custom';
+type MasterIntent = Extract<MasterState, 'on' | 'off'>;
 
 const masterLabels: Record<MasterState, string> = {
   on: 'All detected apps enabled',
   off: 'Disabled for every app',
   custom: 'Mix of enabled/disabled apps'
+};
+
+const normalizeAppOverrides = (overrides?: RegistryServerEntry['apps']): RegistryServerEntry['apps'] | undefined => {
+  if (!overrides) {
+    return undefined;
+  }
+
+  const entries = Object.entries(overrides).filter(([, value]) => value === false);
+  if (entries.length === 0) {
+    return undefined;
+  }
+
+  return entries.reduce<RegistryServerEntry['apps']>((acc, [key]) => {
+    acc[key as SupportedAgent] = false;
+    return acc;
+  }, {} as RegistryServerEntry['apps']);
+};
+
+export const deriveAppsForMasterToggle = (
+  server: RegistryServerEntry,
+  detection: DetectionSummary,
+  target: MasterIntent
+): RegistryServerEntry['apps'] | undefined => {
+  if (target === 'off') {
+    return SUPPORTED_AGENTS.reduce<RegistryServerEntry['apps']>((acc, agent) => {
+      acc[agent] = false;
+      return acc;
+    }, {} as RegistryServerEntry['apps']);
+  }
+
+  const overrides = { ...(server.apps ?? {}) };
+  SUPPORTED_AGENTS.forEach((agent) => {
+    if (detection[agent]?.detected) {
+      delete overrides[agent];
+    }
+  });
+
+  return normalizeAppOverrides(overrides);
+};
+
+const areAppOverridesEqual = (
+  current?: RegistryServerEntry['apps'],
+  next?: RegistryServerEntry['apps']
+): boolean => {
+  if (current === next) {
+    return true;
+  }
+
+  const currentEntries = Object.entries(current ?? {});
+  const nextEntries = Object.entries(next ?? {});
+
+  if (currentEntries.length !== nextEntries.length) {
+    return false;
+  }
+
+  return nextEntries.every(([key, value]) => (current ?? {})[key as SupportedAgent] === value);
 };
 
 const formatCommand = (server: RegistryServerEntry) => {
@@ -106,10 +169,16 @@ const computeMasterState = (server: RegistryServerEntry, detection: DetectionSum
 const App = () => {
   const bridge = resolveBridge();
   const versionLabel = typeof window !== 'undefined' ? window.relay?.version ?? 'dev' : 'dev';
-  const [servers, setServers] = useState<RegistryServerEntry[]>(() => (bridge ? [] : fallbackServers));
+  const [servers, setServers] = useState<RegistryServerEntry[]>(() =>
+    bridge ? [] : fallbackRegistrySnapshot.servers
+  );
+  const [registryVersion, setRegistryVersion] = useState<number>(() =>
+    bridge ? REGISTRY_VERSION : fallbackRegistrySnapshot.version
+  );
   const [detection, setDetection] = useState<DetectionSummary>(() => (bridge ? buildDetectionSnapshot() : fallbackDetection));
   const [loading, setLoading] = useState(Boolean(bridge));
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [mutationError, setMutationError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!bridge) {
@@ -131,8 +200,10 @@ const App = () => {
         }
 
         setServers(registrySnapshot.servers);
+        setRegistryVersion(registrySnapshot.version);
         setDetection(detectionSnapshot);
         setLoadError(null);
+        setMutationError(null);
       } catch (error) {
         console.error('[relay] failed to load registry/detection snapshot', error);
         if (!cancelled) {
@@ -151,6 +222,55 @@ const App = () => {
       cancelled = true;
     };
   }, [bridge]);
+
+  const persistServers = useCallback(
+    async (nextServers: RegistryServerEntry[]) => {
+      if (!bridge) {
+        return;
+      }
+
+      try {
+        const snapshot = await bridge.registry.write({
+          snapshot: {
+            version: registryVersion,
+            servers: nextServers
+          }
+        });
+        setServers(snapshot.servers);
+        setRegistryVersion(snapshot.version);
+        setMutationError(null);
+      } catch (error) {
+        console.error('[relay] failed to save registry snapshot', error);
+        setMutationError('Unable to save registry changes');
+      }
+    },
+    [bridge, registryVersion]
+  );
+
+  const handleMasterToggle = (serverId: string, targetState: MasterIntent) => {
+    let changed = false;
+    const nextServers = servers.map((server) => {
+      if (server.id !== serverId) {
+        return server;
+      }
+
+      const nextApps = deriveAppsForMasterToggle(server, detection, targetState);
+      if (areAppOverridesEqual(server.apps, nextApps)) {
+        return server;
+      }
+
+      changed = true;
+      return nextApps ? { ...server, apps: nextApps } : { ...server, apps: undefined };
+    });
+
+    if (!changed) {
+      return;
+    }
+
+    setMutationError(null);
+    setServers(nextServers);
+    void persistServers(nextServers);
+  };
 
   const detectedCount = useMemo(
     () => SUPPORTED_AGENTS.filter((agent) => detection[agent]?.detected).length,
@@ -189,6 +309,7 @@ const App = () => {
               </button>
             </div>
             {loadError && <p className="inline-error">{loadError}</p>}
+            {mutationError && <p className="inline-error">{mutationError}</p>}
             {loading ? (
               <p className="inline-hint">Loading servers…</p>
             ) : servers.length === 0 ? (
@@ -224,6 +345,7 @@ const App = () => {
                           type="button"
                           className={`switch switch--${masterState}`}
                           aria-pressed={masterState === 'on'}
+                          onClick={() => handleMasterToggle(server.id, masterState === 'on' ? 'off' : 'on')}
                         >
                           {masterState === 'custom' ? 'Custom' : masterState === 'on' ? 'On' : 'Off'}
                         </button>
