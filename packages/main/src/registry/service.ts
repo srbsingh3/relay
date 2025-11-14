@@ -303,7 +303,7 @@ const deleteUnusedAliases = async (
       try {
         await keychainService.deleteSecret(alias);
       } catch (error) {
-        console.error(`[relay] Failed to delete unused Keychain alias "${alias}"`, error);
+        console.error('[relay] Failed to delete unused Keychain alias "%s"', alias, error);
       }
     })
   );

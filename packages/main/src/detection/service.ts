@@ -20,7 +20,7 @@ const pathExists = async (target: string): Promise<boolean> => {
       return false;
     }
 
-    console.warn(`[relay] detection: unable to access path "${target}"`, error);
+    console.warn('[relay] detection: unable to access path "%s"', target, error);
     return false;
   }
 };
@@ -33,7 +33,7 @@ const isExecutableFile = async (target: string): Promise<boolean> => {
   } catch (error) {
     if (!isEnoent(error)) {
       // Non-existent files are common; only warn on other errors to avoid log spam.
-      console.warn(`[relay] detection: unable to inspect executable "${target}"`, error);
+      console.warn('[relay] detection: unable to inspect executable "%s"', target, error);
     }
     return false;
   }
