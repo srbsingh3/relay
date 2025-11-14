@@ -5,6 +5,7 @@ import path from 'node:path';
 import { atomicWrite } from '../../fs/io';
 import type { SupportedAgent } from '../../types/agents';
 import type { AgentServerPlan, AgentSyncPlan, SyncAdapter } from '../types';
+import { SyncAdapterError, isFsPermissionError } from '../errors';
 
 const JSON_INDENT = 2;
 const RELAY_META_KEY = '__relayManagedServers';
@@ -28,7 +29,15 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 
 const isEnoent = (error: unknown): boolean => (error as NodeJS.ErrnoException)?.code === 'ENOENT';
 
-const loadJsonConfig = async (filePath: string): Promise<JsonConfig> => {
+const AGENT_LABELS: Record<SupportedAgent, string> = {
+  cursor: 'Cursor',
+  claude: 'Claude',
+  codex: 'Codex'
+};
+
+const agentLabel = (agent: SupportedAgent) => AGENT_LABELS[agent] ?? 'Agent';
+
+const loadJsonConfig = async (agent: SupportedAgent, filePath: string): Promise<JsonConfig> => {
   try {
     const contents = await readFile(filePath, 'utf8');
     return normalizeConfig(JSON.parse(contents));
@@ -38,10 +47,32 @@ const loadJsonConfig = async (filePath: string): Promise<JsonConfig> => {
     }
 
     if (error instanceof SyntaxError) {
-      throw new Error('Config contains invalid JSON');
+      throw new SyncAdapterError({
+        agent,
+        code: 'ERR_INVALID_CONFIG',
+        message: `${agentLabel(agent)} config contains invalid JSON.`,
+        filePath,
+        cause: error
+      });
     }
 
-    throw error;
+    if (isFsPermissionError(error)) {
+      throw new SyncAdapterError({
+        agent,
+        code: 'ERR_PERMISSION_DENIED',
+        message: `${agentLabel(agent)} config cannot be accessed (permission denied).`,
+        filePath,
+        cause: error
+      });
+    }
+
+    throw new SyncAdapterError({
+      agent,
+      code: 'ERR_IO_FAILURE',
+      message: `Unable to read ${agentLabel(agent)} config.`,
+      filePath,
+      cause: error
+    });
   }
 };
 
@@ -172,9 +203,33 @@ export const createJsonMcpAdapter = (options: JsonAdapterOptions): SyncAdapter =
   agent: options.agent,
   async sync(plan) {
     const configPath = resolveConfigPath(plan, options.defaultPath);
-    const existing = await loadJsonConfig(configPath);
+    const existing = await loadJsonConfig(plan.agent, configPath);
     const nextConfig = nextConfigFromPlan(plan, existing);
-    await atomicWrite(configPath, serializeConfig(nextConfig));
+    try {
+      await atomicWrite(configPath, serializeConfig(nextConfig));
+    } catch (error) {
+      if (error instanceof SyncAdapterError) {
+        throw error;
+      }
+
+      if (isFsPermissionError(error)) {
+        throw new SyncAdapterError({
+          agent: plan.agent,
+          code: 'ERR_PERMISSION_DENIED',
+          message: `${agentLabel(plan.agent)} config cannot be written (permission denied).`,
+          filePath: configPath,
+          cause: error
+        });
+      }
+
+      throw new SyncAdapterError({
+        agent: plan.agent,
+        code: 'ERR_IO_FAILURE',
+        message: `Unable to write ${agentLabel(plan.agent)} config.`,
+        filePath: configPath,
+        cause: error
+      });
+    }
   }
 });
 

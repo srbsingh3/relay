@@ -5,6 +5,7 @@ import path from 'node:path';
 
 import { atomicWrite } from '../../fs/io';
 import type { AgentServerPlan, AgentSyncPlan, SyncAdapter } from '../types';
+import { SyncAdapterError, isFsPermissionError } from '../errors';
 
 type CodexServerEntry = Record<string, unknown>;
 type CodexServersMap = Record<string, CodexServerEntry>;
@@ -46,10 +47,32 @@ const loadCodexConfig = async (filePath: string): Promise<CodexConfig> => {
     }
 
     if (isTomlError(error)) {
-      throw new Error('Codex config contains invalid TOML');
+      throw new SyncAdapterError({
+        agent: 'codex',
+        code: 'ERR_INVALID_CONFIG',
+        message: 'Codex config contains invalid TOML.',
+        filePath,
+        cause: error
+      });
     }
 
-    throw error;
+    if (isFsPermissionError(error)) {
+      throw new SyncAdapterError({
+        agent: 'codex',
+        code: 'ERR_PERMISSION_DENIED',
+        message: 'Codex config cannot be accessed (permission denied).',
+        filePath,
+        cause: error
+      });
+    }
+
+    throw new SyncAdapterError({
+      agent: 'codex',
+      code: 'ERR_IO_FAILURE',
+      message: 'Unable to read Codex config.',
+      filePath,
+      cause: error
+    });
   }
 };
 
@@ -201,6 +224,30 @@ export const createCodexAdapter = (): SyncAdapter => ({
     const configPath = resolveConfigPath(plan);
     const existing = await loadCodexConfig(configPath);
     const nextConfig = nextConfigFromPlan(plan, existing);
-    await atomicWrite(configPath, serializeConfig(nextConfig));
+    try {
+      await atomicWrite(configPath, serializeConfig(nextConfig));
+    } catch (error) {
+      if (error instanceof SyncAdapterError) {
+        throw error;
+      }
+
+      if (isFsPermissionError(error)) {
+        throw new SyncAdapterError({
+          agent: plan.agent,
+          code: 'ERR_PERMISSION_DENIED',
+          message: 'Codex config cannot be written (permission denied).',
+          filePath: configPath,
+          cause: error
+        });
+      }
+
+      throw new SyncAdapterError({
+        agent: plan.agent,
+        code: 'ERR_IO_FAILURE',
+        message: 'Unable to write Codex config.',
+        filePath: configPath,
+        cause: error
+      });
+    }
   }
 });

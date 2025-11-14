@@ -6,6 +6,7 @@ import type { SupportedAgent } from '../types/agents';
 import { SUPPORTED_AGENTS } from '../types/agents';
 import type { AgentSyncPlan, SyncAdaptersMap } from './types';
 import { SyncService } from './service';
+import { SyncAdapterError } from './errors';
 
 const iso = (value: string) => new Date(value).toISOString();
 
@@ -79,6 +80,8 @@ const createKeychain = (secrets?: Record<string, string | null>) => {
   };
 };
 
+const createPrompter = () => vi.fn(async () => 'skip_app');
+
 describe('SyncService', () => {
   it('invokes adapters with effective servers for each detected agent', async () => {
     const registry = createRegistry([
@@ -102,13 +105,15 @@ describe('SyncService', () => {
 
     const adapters = createAdapterMap();
     const keychain = createKeychain();
+    const prompter = createPrompter();
 
     const service = new SyncService({
       adapters,
       registryLoader: async () => registry,
       detectionResolver: async () => detection,
       keychain,
-      now: () => new Date('2024-03-01T12:00:00.000Z')
+      now: () => new Date('2024-03-01T12:00:00.000Z'),
+      recoveryPrompter: prompter
     });
 
     const result = await service.syncNow({ source: 'user' });
@@ -150,9 +155,12 @@ describe('SyncService', () => {
     });
 
     expect(result.syncedApps).toEqual(['cursor', 'claude', 'codex']);
+    expect(result.ok).toBe(true);
+    expect(result.issues).toEqual([]);
     expect(result.finishedAt).toBe('2024-03-01T12:00:00.000Z');
     expect(result.message).toBe('Synced 3 apps');
     expect(service.getStatus()).toEqual({ state: 'idle', lastRun: '2024-03-01T12:00:00.000Z' });
+    expect(prompter).not.toHaveBeenCalled();
   });
 
   it('skips undetected or server-less agents and reports partial counts', async () => {
@@ -171,23 +179,28 @@ describe('SyncService', () => {
 
     const adapters = createAdapterMap();
     const keychain = createKeychain();
+    const prompter = createPrompter();
 
     const service = new SyncService({
       adapters,
       registryLoader: async () => registry,
       detectionResolver: async () => detection,
       keychain,
-      now: () => new Date('2024-04-10T08:00:00.000Z')
+      now: () => new Date('2024-04-10T08:00:00.000Z'),
+      recoveryPrompter: prompter
     });
 
     const result = await service.syncNow();
 
     expect(result.syncedApps).toEqual(['cursor']);
+    expect(result.ok).toBe(true);
+    expect(result.issues).toEqual([]);
     expect(result.message).toBe('Synced 1/3 apps; skipped Claude (undetected), Codex (no enabled servers)');
     expect(adapters.cursor.sync).toHaveBeenCalledTimes(1);
     expect(adapters.claude.sync).not.toHaveBeenCalled();
     expect(adapters.codex.sync).not.toHaveBeenCalled();
     expect(service.getStatus()).toEqual({ state: 'idle', lastRun: '2024-04-10T08:00:00.000Z' });
+    expect(prompter).not.toHaveBeenCalled();
   });
 
   it('prevents overlapping sync runs and shares the in-flight promise', async () => {
@@ -213,13 +226,15 @@ describe('SyncService', () => {
       cursor: cursorAdapter
     });
     const keychain = createKeychain();
+    const prompter = createPrompter();
 
     const service = new SyncService({
       adapters,
       registryLoader: async () => registry,
       detectionResolver: async () => detection,
       keychain,
-      now: () => new Date('2024-05-20T18:30:00.000Z')
+      now: () => new Date('2024-05-20T18:30:00.000Z'),
+      recoveryPrompter: prompter
     });
 
     const first = service.syncNow({ source: 'user', apps: ['cursor'] });
@@ -234,8 +249,11 @@ describe('SyncService', () => {
 
     expect(firstResult).toEqual(secondResult);
     expect(firstResult.syncedApps).toEqual(['cursor']);
+    expect(firstResult.ok).toBe(true);
+    expect(firstResult.issues).toEqual([]);
     expect(firstResult.message).toBe('Synced 1 app');
     expect(service.getStatus()).toEqual({ state: 'idle', lastRun: '2024-05-20T18:30:00.000Z' });
+    expect(prompter).not.toHaveBeenCalled();
   });
 
   it('resolves keychain-referenced env vars before invoking adapters', async () => {
@@ -268,13 +286,15 @@ describe('SyncService', () => {
     const adapters = createAdapterMap({
       cursor: cursorAdapter
     });
+    const prompter = createPrompter();
 
     const service = new SyncService({
       adapters,
       registryLoader: async () => registry,
       detectionResolver: async () => detection,
       keychain,
-      now: () => new Date('2024-06-15T10:00:00.000Z')
+      now: () => new Date('2024-06-15T10:00:00.000Z'),
+      recoveryPrompter: prompter
     });
 
     const result = await service.syncNow({ apps: ['cursor'] });
@@ -283,6 +303,9 @@ describe('SyncService', () => {
     expect(capturedEnv).toEqual([{ API_KEY: 'super-secret', MODE: 'debug' }]);
     expect(keychain.getSecret).toHaveBeenCalledWith('workspace_api');
     expect(result.message).toBe('Synced 1 app');
+    expect(result.issues).toEqual([]);
+    expect(result.ok).toBe(true);
+    expect(prompter).not.toHaveBeenCalled();
   });
 
   it('omits env vars when secrets are missing and surfaces warnings once', async () => {
@@ -313,13 +336,15 @@ describe('SyncService', () => {
     const adapters = createAdapterMap({
       cursor: cursorAdapter
     });
+    const prompter = createPrompter();
 
     const service = new SyncService({
       adapters,
       registryLoader: async () => registry,
       detectionResolver: async () => detection,
       keychain,
-      now: () => new Date('2024-07-01T09:30:00.000Z')
+      now: () => new Date('2024-07-01T09:30:00.000Z'),
+      recoveryPrompter: prompter
     });
 
     const result = await service.syncNow();
@@ -329,5 +354,57 @@ describe('SyncService', () => {
     expect(result.message).toBe(
       'Synced 2/3 apps; skipped Codex (undetected); missing secrets: Workspace API_KEY (alias missing_api)'
     );
+    expect(result.ok).toBe(true);
+    expect(result.issues).toHaveLength(1);
+    expect(result.issues[0].code).toBe('ERR_SECRET_MISSING');
+    expect(result.issues[0].agents).toEqual(expect.arrayContaining(['cursor', 'claude']));
+    expect(prompter).not.toHaveBeenCalled();
+  });
+
+  it('captures adapter failures, prompts for recovery, and marks the run as partial', async () => {
+    const registry = createRegistry([createServer({ id: 'srv_workspace', name: 'Workspace' })]);
+    const detection = buildDetectionSummary({
+      cursor: true,
+      claude: false,
+      codex: false
+    });
+
+    const adapters = createAdapterMap({
+      cursor: createAdapter('cursor', async () => {
+        throw new SyncAdapterError({
+          agent: 'cursor',
+          code: 'ERR_INVALID_CONFIG',
+          message: 'Cursor config is invalid.',
+          filePath: '/tmp/mcp.json'
+        });
+      })
+    });
+
+    const keychain = createKeychain();
+    const prompter = vi.fn(async () => 'restore_backup');
+
+    const service = new SyncService({
+      adapters,
+      registryLoader: async () => registry,
+      detectionResolver: async () => detection,
+      keychain,
+      now: () => new Date('2024-07-15T16:00:00.000Z'),
+      recoveryPrompter: prompter
+    });
+
+    const result = await service.syncNow({ apps: ['cursor'] });
+
+    expect(result.ok).toBe(false);
+    expect(result.syncedApps).toEqual([]);
+    expect(result.issues).toHaveLength(1);
+    expect(result.issues[0].code).toBe('ERR_INVALID_CONFIG');
+    expect(result.issues[0].meta?.actionTaken).toBe('restore_backup');
+    expect(result.message).toContain('skipped Cursor (error)');
+    expect(service.getStatus()).toEqual({
+      state: 'error',
+      lastRun: '2024-07-15T16:00:00.000Z',
+      lastError: result.message
+    });
+    expect(prompter).toHaveBeenCalledTimes(1);
   });
 });

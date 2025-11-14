@@ -374,9 +374,9 @@ const App = () => {
 
       const result = await bridge.sync.invoke({ source: 'user' });
       setSyncStatus({
-        state: 'idle',
+        state: result.ok ? 'idle' : 'error',
         lastRun: result.finishedAt,
-        lastError: undefined
+        lastError: result.ok ? undefined : result.message
       });
     } catch (error) {
       console.error('[relay] sync failed', error);

@@ -46,11 +46,39 @@ export interface SyncInvocationPayload {
   apps?: SupportedAgent[];
 }
 
+export type SyncErrorCode = 'ERR_SECRET_MISSING' | 'ERR_PERMISSION_DENIED' | 'ERR_INVALID_CONFIG' | 'ERR_IO_FAILURE';
+
+export type SyncIssueSeverity = 'warning' | 'error';
+
+export type SyncIssueSurface = 'toast' | 'modal' | 'settings';
+
+export type SyncIssueAction = 'open_file' | 'restore_backup' | 'skip_app';
+
+export interface SyncIssueMeta {
+  serverId?: string;
+  serverName?: string;
+  envKey?: string;
+  alias?: string;
+  filePath?: string;
+  actionTaken?: SyncIssueAction;
+}
+
+export interface SyncIssue {
+  code: SyncErrorCode;
+  severity: SyncIssueSeverity;
+  message: string;
+  agents: SupportedAgent[];
+  surfaces: SyncIssueSurface[];
+  actions?: SyncIssueAction[];
+  meta?: SyncIssueMeta;
+}
+
 export interface SyncInvocationResult {
   ok: boolean;
   syncedApps: SupportedAgent[];
   finishedAt: string;
   message?: string;
+  issues: SyncIssue[];
 }
 
 export interface SyncStatusSnapshot {

@@ -269,17 +269,17 @@ Use it as the primary execution plan for the macOS MVP.
   - [x] 5.5.5 Use `atomicWrite` + `.bak`.
   - [x] 5.5.6 Add tests with TOML fixtures.
 
-- [ ] 5.6 **Error taxonomy & UX**
-  - [ ] 5.6.1 Define basic error categories:
-    - [ ] 5.6.1.1 `ERR_SECRET_MISSING`
-    - [ ] 5.6.1.2 `ERR_PERMISSION_DENIED`
-    - [ ] 5.6.1.3 `ERR_INVALID_CONFIG`
-    - [ ] 5.6.1.4 `ERR_IO_FAILURE`
-  - [ ] 5.6.2 Map errors to:
-    - [ ] 5.6.2.1 Toast vs modal.
-    - [ ] 5.6.2.2 Settings warnings.
-  - [ ] 5.6.3 Implement `.bak` restore prompt for invalid JSON/TOML or permission issues:
-    - [ ] 5.6.3.1 Options: “Open file”, “Restore backup”, “Skip app”.
+- [x] 5.6 **Error taxonomy & UX**
+  - [x] 5.6.1 Define basic error categories:
+    - [x] 5.6.1.1 `ERR_SECRET_MISSING`
+    - [x] 5.6.1.2 `ERR_PERMISSION_DENIED`
+    - [x] 5.6.1.3 `ERR_INVALID_CONFIG`
+    - [x] 5.6.1.4 `ERR_IO_FAILURE`
+  - [x] 5.6.2 Map errors to:
+    - [x] 5.6.2.1 Toast vs modal.
+    - [x] 5.6.2.2 Settings warnings.
+  - [x] 5.6.3 Implement `.bak` restore prompt for invalid JSON/TOML or permission issues:
+    - [x] 5.6.3.1 Options: “Open file”, “Restore backup”, “Skip app”.
 
 - [ ] 5.7 **User feedback**
   - [ ] 5.7.1 Implement toast on sync completion:

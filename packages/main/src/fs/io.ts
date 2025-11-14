@@ -71,3 +71,8 @@ export const atomicWrite = async (filePath: string, content: AtomicWriteContent)
     });
   }
 };
+
+export const restoreBackup = async (filePath: string) => {
+  const backupPath = `${filePath}.bak`;
+  await fs.copyFile(backupPath, filePath);
+};

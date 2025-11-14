@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { atomicWrite, ensureDir } from './io';
+import { atomicWrite, ensureDir, restoreBackup } from './io';
 
 let workspaceDir: string;
 
@@ -44,6 +44,18 @@ describe('fs/io helpers', () => {
 
     const backupContents = await readFile(`${targetFile}.bak`, 'utf8');
     expect(backupContents).toBe('{"original":true}');
+  });
+
+  it('restores the previous backup when requested', async () => {
+    const targetFile = tempPath('restore.json');
+    await ensureDir(path.dirname(targetFile));
+    await writeFile(targetFile, '{"initial":true}', 'utf8');
+
+    await atomicWrite(targetFile, '{"mutated":true}');
+    await restoreBackup(targetFile);
+
+    const contents = await readFile(targetFile, 'utf8');
+    expect(contents).toBe('{"initial":true}');
   });
 
   it('cleans up tmp files when the rename fails', async () => {
