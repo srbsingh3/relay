@@ -221,15 +221,15 @@ Use it as the primary execution plan for the macOS MVP.
 
 ## Milestone 5 — Sync Engine & File IO
 
-- [ ] 5.1 **Sync orchestration**
-  - [ ] 5.1.1 Implement `syncNow()` in main process:
-    - [ ] 5.1.1.1 For each server in registry:
-      - [ ] 5.1.1.1.1 Compute effective per-app enablement with `effectiveEnabled(agent)`.
-    - [ ] 5.1.1.2 For each detected app with at least one effective server:
-      - [ ] 5.1.1.2.1 Build adapter-specific payload.
-      - [ ] 5.1.1.2.2 Call adapter write with `atomicWrite`.
-    - [ ] 5.1.1.3 Skip undetected apps; track them for partial success reporting.
-  - [ ] 5.1.2 Ensure `Sync Now` runs at most once at a time (sync-in-flight lock).
+- [x] 5.1 **Sync orchestration**
+  - [x] 5.1.1 Implement `syncNow()` in main process:
+    - [x] 5.1.1.1 For each server in registry:
+      - [x] 5.1.1.1.1 Compute effective per-app enablement with `effectiveEnabled(agent)`.
+    - [x] 5.1.1.2 For each detected app with at least one effective server:
+      - [x] 5.1.1.2.1 Build adapter-specific payload.
+      - [x] 5.1.1.2.2 Call adapter write with `atomicWrite`.
+    - [x] 5.1.1.3 Skip undetected apps; track them for partial success reporting.
+  - [x] 5.1.2 Ensure `Sync Now` runs at most once at a time (sync-in-flight lock).
 
 - [ ] 5.2 **Secrets resolution (Keychain contract)**
   - [ ] 5.2.1 For each server env var referring to `keychain:<alias>`:

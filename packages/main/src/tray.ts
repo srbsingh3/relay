@@ -35,11 +35,9 @@ export const initializeTray = ({ showOrCreateWindow }: TrayController) => {
 };
 
 const handleSyncNow = () => {
-  try {
-    triggerSyncFromMain({ source: 'tray' });
-  } catch (error) {
+  triggerSyncFromMain({ source: 'tray' }).catch((error) => {
     console.error('Tray sync invocation failed', error);
-  }
+  });
 };
 
 const buildTrayIcon = () => {

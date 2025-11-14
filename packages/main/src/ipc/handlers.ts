@@ -8,10 +8,8 @@ import {
   KeychainSaveResult,
   RegistrySnapshot,
   RegistryWritePayload,
-  SupportedAgent,
   SyncInvocationPayload,
   SyncInvocationResult,
-  SyncStatusSnapshot,
   UpdateCheckPayload,
   UpdatePreferencePayload,
   UpdateStatusSnapshot
@@ -21,14 +19,13 @@ import { loadRegistry, saveRegistry } from '../registry/service';
 import { getKeychainService } from '../keychain/service';
 import { getDetectionService } from '../detection/service';
 import { getUpdateService } from '../update/service';
+import { getSyncService } from '../sync/service';
 
-let syncStatus: SyncStatusSnapshot = { state: 'idle', lastRun: null };
 let handlersRegistered = false;
 const keychainService = getKeychainService();
 const detectionService = getDetectionService();
 const updateService = getUpdateService();
-
-const fallbackAgents: SupportedAgent[] = ['cursor', 'claude', 'codex'];
+const syncService = getSyncService();
 
 const readRegistrySnapshot = async (): Promise<RegistrySnapshot> => {
   try {
@@ -99,41 +96,14 @@ const handleDetectionStatus = async () => detectionService.getSummary();
 
 const handleDetectionRefresh = async () => detectionService.refresh();
 
-const resolveSyncApps = (payload?: SyncInvocationPayload): SupportedAgent[] => {
-  if (payload?.apps && payload.apps.length > 0) {
-    return payload.apps;
-  }
-
-  return fallbackAgents;
+const handleSyncInvoke = (
+  _event: Electron.IpcMainInvokeEvent,
+  payload?: SyncInvocationPayload
+): Promise<SyncInvocationResult> => {
+  return syncService.syncNow(payload);
 };
 
-const performSync = (payload?: SyncInvocationPayload): SyncInvocationResult => {
-  const normalizedPayload: SyncInvocationPayload = {
-    source: payload?.source ?? 'user',
-    apps: payload?.apps?.length ? payload.apps : undefined
-  };
-
-  const finishedAt = new Date().toISOString();
-  const syncedApps = resolveSyncApps(normalizedPayload);
-
-  syncStatus = {
-    state: 'idle',
-    lastRun: finishedAt
-  };
-
-  return {
-    ok: true,
-    finishedAt,
-    syncedApps,
-    message: `Sync triggered via ${normalizedPayload.source}`
-  };
-};
-
-const handleSyncInvoke = (_event: Electron.IpcMainInvokeEvent, payload?: SyncInvocationPayload): SyncInvocationResult => {
-  return performSync(payload);
-};
-
-const handleSyncStatus = () => syncStatus;
+const handleSyncStatus = () => syncService.getStatus();
 
 const handleUpdateStatus = (): UpdateStatusSnapshot => {
   return updateService.getStatus();
@@ -178,6 +148,6 @@ export const registerIpcHandlers = () => {
   handlersRegistered = true;
 };
 
-export const triggerSyncFromMain = (payload?: SyncInvocationPayload) => performSync(payload);
+export const triggerSyncFromMain = (payload?: SyncInvocationPayload) => syncService.syncNow(payload);
 
 export type { RendererBridge } from './contracts';
