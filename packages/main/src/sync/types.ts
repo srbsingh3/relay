@@ -1,11 +1,16 @@
 import type { DetectionStatus } from '../ipc/contracts';
-import type { RegistryServerRecord } from '../registry/schema';
+import type { RegistryEnvironmentMap, RegistryServerRecord } from '../registry/schema';
 import type { SupportedAgent } from '../types/agents';
+
+export interface AgentServerPlan {
+  server: RegistryServerRecord;
+  env: RegistryEnvironmentMap;
+}
 
 export interface AgentSyncPlan {
   agent: SupportedAgent;
   detection: DetectionStatus;
-  servers: RegistryServerRecord[];
+  servers: AgentServerPlan[];
 }
 
 export interface SyncAdapter {

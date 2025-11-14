@@ -67,6 +67,18 @@ const createServer = (overrides?: Partial<RegistryServerRecord>): RegistryServer
   apps: overrides?.apps
 });
 
+const createKeychain = (secrets?: Record<string, string | null>) => {
+  const store = secrets ?? {};
+  return {
+    getSecret: vi.fn(async (alias: string) => {
+      if (Object.prototype.hasOwnProperty.call(store, alias)) {
+        return store[alias] ?? null;
+      }
+      return null;
+    })
+  };
+};
+
 describe('SyncService', () => {
   it('invokes adapters with effective servers for each detected agent', async () => {
     const registry = createRegistry([
@@ -89,11 +101,13 @@ describe('SyncService', () => {
     });
 
     const adapters = createAdapterMap();
+    const keychain = createKeychain();
 
     const service = new SyncService({
       adapters,
       registryLoader: async () => registry,
       detectionResolver: async () => detection,
+      keychain,
       now: () => new Date('2024-03-01T12:00:00.000Z')
     });
 
@@ -103,21 +117,36 @@ describe('SyncService', () => {
     expect(adapters.cursor.sync).toHaveBeenCalledWith({
       agent: 'cursor',
       detection: detection.cursor,
-      servers: [registry.servers[0]]
+      servers: [
+        {
+          server: registry.servers[0],
+          env: {}
+        }
+      ]
     });
 
     expect(adapters.claude.sync).toHaveBeenCalledTimes(1);
     expect(adapters.claude.sync).toHaveBeenCalledWith({
       agent: 'claude',
       detection: detection.claude,
-      servers: [registry.servers[0]]
+      servers: [
+        {
+          server: registry.servers[0],
+          env: {}
+        }
+      ]
     });
 
     expect(adapters.codex.sync).toHaveBeenCalledTimes(1);
     expect(adapters.codex.sync).toHaveBeenCalledWith({
       agent: 'codex',
       detection: detection.codex,
-      servers: [registry.servers[1]]
+      servers: [
+        {
+          server: registry.servers[1],
+          env: {}
+        }
+      ]
     });
 
     expect(result.syncedApps).toEqual(['cursor', 'claude', 'codex']);
@@ -141,11 +170,13 @@ describe('SyncService', () => {
     });
 
     const adapters = createAdapterMap();
+    const keychain = createKeychain();
 
     const service = new SyncService({
       adapters,
       registryLoader: async () => registry,
       detectionResolver: async () => detection,
+      keychain,
       now: () => new Date('2024-04-10T08:00:00.000Z')
     });
 
@@ -181,11 +212,13 @@ describe('SyncService', () => {
     const adapters = createAdapterMap({
       cursor: cursorAdapter
     });
+    const keychain = createKeychain();
 
     const service = new SyncService({
       adapters,
       registryLoader: async () => registry,
       detectionResolver: async () => detection,
+      keychain,
       now: () => new Date('2024-05-20T18:30:00.000Z')
     });
 
@@ -203,5 +236,98 @@ describe('SyncService', () => {
     expect(firstResult.syncedApps).toEqual(['cursor']);
     expect(firstResult.message).toBe('Synced 1 app');
     expect(service.getStatus()).toEqual({ state: 'idle', lastRun: '2024-05-20T18:30:00.000Z' });
+  });
+
+  it('resolves keychain-referenced env vars before invoking adapters', async () => {
+    const registry = createRegistry([
+      createServer({
+        env: {
+          API_KEY: 'keychain:workspace_api',
+          MODE: 'debug'
+        }
+      })
+    ]);
+
+    const detection = buildDetectionSummary({
+      cursor: true,
+      claude: false,
+      codex: false
+    });
+
+    const keychain = createKeychain({
+      workspace_api: 'super-secret'
+    });
+
+    const capturedEnv: Record<string, string>[] = [];
+    const cursorAdapter = createAdapter('cursor', async (plan) => {
+      plan.servers.forEach((entry) => {
+        capturedEnv.push({ ...entry.env });
+      });
+    });
+
+    const adapters = createAdapterMap({
+      cursor: cursorAdapter
+    });
+
+    const service = new SyncService({
+      adapters,
+      registryLoader: async () => registry,
+      detectionResolver: async () => detection,
+      keychain,
+      now: () => new Date('2024-06-15T10:00:00.000Z')
+    });
+
+    const result = await service.syncNow({ apps: ['cursor'] });
+
+    expect(result.syncedApps).toEqual(['cursor']);
+    expect(capturedEnv).toEqual([{ API_KEY: 'super-secret', MODE: 'debug' }]);
+    expect(keychain.getSecret).toHaveBeenCalledWith('workspace_api');
+    expect(result.message).toBe('Synced 1 app');
+  });
+
+  it('omits env vars when secrets are missing and surfaces warnings once', async () => {
+    const registry = createRegistry([
+      createServer({
+        name: 'Workspace',
+        env: {
+          API_KEY: 'keychain:missing_api',
+          FALLBACK: '1'
+        }
+      })
+    ]);
+
+    const detection = buildDetectionSummary({
+      cursor: true,
+      claude: true,
+      codex: false
+    });
+
+    const keychain = createKeychain();
+    const capturedEnv: Record<string, string>[] = [];
+    const cursorAdapter = createAdapter('cursor', async (plan) => {
+      plan.servers.forEach((entry) => {
+        capturedEnv.push({ ...entry.env });
+      });
+    });
+
+    const adapters = createAdapterMap({
+      cursor: cursorAdapter
+    });
+
+    const service = new SyncService({
+      adapters,
+      registryLoader: async () => registry,
+      detectionResolver: async () => detection,
+      keychain,
+      now: () => new Date('2024-07-01T09:30:00.000Z')
+    });
+
+    const result = await service.syncNow();
+
+    expect(result.syncedApps).toEqual(['cursor', 'claude']);
+    expect(capturedEnv).toEqual([{ FALLBACK: '1' }]);
+    expect(result.message).toBe(
+      'Synced 2/3 apps; skipped Codex (undetected); missing secrets: Workspace API_KEY (alias missing_api)'
+    );
   });
 });

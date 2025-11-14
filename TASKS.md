@@ -231,14 +231,14 @@ Use it as the primary execution plan for the macOS MVP.
     - [x] 5.1.1.3 Skip undetected apps; track them for partial success reporting.
   - [x] 5.1.2 Ensure `Sync Now` runs at most once at a time (sync-in-flight lock).
 
-- [ ] 5.2 **Secrets resolution (Keychain contract)**
-  - [ ] 5.2.1 For each server env var referring to `keychain:<alias>`:
-    - [ ] 5.2.1.1 Resolve secret via Keychain in memory.
-    - [ ] 5.2.1.2 Never write plaintext secrets to registry.
-  - [ ] 5.2.2 Handle missing secrets:
-    - [ ] 5.2.2.1 Omit env var from generated config.
-    - [ ] 5.2.2.2 Surface warning to user (toast or settings error).
-  - [ ] 5.2.3 Purge secret values from memory buffers after sync completes.
+- [x] 5.2 **Secrets resolution (Keychain contract)**
+  - [x] 5.2.1 For each server env var referring to `keychain:<alias>`:
+    - [x] 5.2.1.1 Resolve secret via Keychain in memory.
+    - [x] 5.2.1.2 Never write plaintext secrets to registry.
+  - [x] 5.2.2 Handle missing secrets:
+    - [x] 5.2.2.1 Omit env var from generated config.
+    - [x] 5.2.2.2 Surface warning to user (toast or settings error).
+  - [x] 5.2.3 Purge secret values from memory buffers after sync completes.
 
 - [ ] 5.3 **Cursor adapter (`~/.cursor/mcp.json`)**
   - [ ] 5.3.1 Load existing JSON (if present), handling invalid JSON gracefully.
