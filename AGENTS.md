@@ -48,6 +48,7 @@ Keep PRD untouched, update this playbook only when guardrails shift, and let TAS
 ## Working With Design
 - Share data contracts (server row fields, modal states, detection cards, toast copy) before implementation so Tailwind utility classes and shadcn/ui primitives can be applied once and reused across screens.
 - Prefer Tailwind + shadcn/ui over ad-hoc CSS; if a layout or interaction can’t be expressed cleanly with the existing primitives, sync with design before introducing custom styling or one-off components.
+- Treat the renderer as a shadcn-admin style surface (dark-first with a polished light/system toggle). Retire the old “Apple liquid glass” guidance and mirror the reference kit’s spacing, typography, and chip patterns so every screen feels cohesive.
 - Confirm All Apps vs Custom logic and disabled toggle behavior in design reviews before merging UI changes.
 - Align on update-check card copy (status text, last-checked timestamp, disable toggle, CTA) so the UX stays transparent and privacy expectations are clear.
 - Surface blockers early: missing assets, copy, or interaction changes should be resolved with design before code freeze on each milestone.
