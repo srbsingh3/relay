@@ -25,6 +25,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@iarna/toml": "^2.2.5",
     "@radix-ui/react-slot": "^1.2.4",
     "keytar": "^7.9.0",
     "react": "^19.2.0",

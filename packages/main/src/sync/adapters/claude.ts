@@ -1,6 +1,7 @@
-import type { SyncAdapter } from '../types';
+import { createJsonMcpAdapter, defaultClaudePath } from './json-config';
 
-export const createClaudeAdapter = (): SyncAdapter => ({
-  agent: 'claude',
-  async sync() {}
-});
+export const createClaudeAdapter = () =>
+  createJsonMcpAdapter({
+    agent: 'claude',
+    defaultPath: defaultClaudePath
+  });

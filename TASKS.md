@@ -240,34 +240,34 @@ Use it as the primary execution plan for the macOS MVP.
     - [x] 5.2.2.2 Surface warning to user (toast or settings error).
   - [x] 5.2.3 Purge secret values from memory buffers after sync completes.
 
-- [ ] 5.3 **Cursor adapter (`~/.cursor/mcp.json`)**
-  - [ ] 5.3.1 Load existing JSON (if present), handling invalid JSON gracefully.
-  - [ ] 5.3.2 Ensure `mcpServers` map is present.
-  - [ ] 5.3.3 For each Relay-managed server:
-    - [ ] 5.3.3.1 Add/update `mcpServers[name]` with `command`, `args`, and resolved `env`.
-  - [ ] 5.3.4 For disabled Relay-managed servers:
-    - [ ] 5.3.4.1 Remove them from `mcpServers`.
-  - [ ] 5.3.5 Preserve all unrelated top-level keys and non-Relay `mcpServers` entries.
-  - [ ] 5.3.6 Use `atomicWrite` + `.bak` for final write.
-  - [ ] 5.3.7 Add unit tests using fixtures.
+- [x] 5.3 **Cursor adapter (`~/.cursor/mcp.json`)**
+  - [x] 5.3.1 Load existing JSON (if present), handling invalid JSON gracefully.
+  - [x] 5.3.2 Ensure `mcpServers` map is present.
+  - [x] 5.3.3 For each Relay-managed server:
+    - [x] 5.3.3.1 Add/update `mcpServers[name]` with `command`, `args`, and resolved `env`.
+  - [x] 5.3.4 For disabled Relay-managed servers:
+    - [x] 5.3.4.1 Remove them from `mcpServers`.
+  - [x] 5.3.5 Preserve all unrelated top-level keys and non-Relay `mcpServers` entries.
+  - [x] 5.3.6 Use `atomicWrite` + `.bak` for final write.
+  - [x] 5.3.7 Add unit tests using fixtures.
 
-- [ ] 5.4 **Claude Code adapter (`~/.claude.json`)**
-  - [ ] 5.4.1 Same behavior as Cursor:
-    - [ ] 5.4.1.1 Merge into `mcpServers`.
-    - [ ] 5.4.1.2 Remove disabled Relay-managed entries.
-    - [ ] 5.4.1.3 Preserve other top-level keys.
-    - [ ] 5.4.1.4 Use `atomicWrite` + `.bak`.
-    - [ ] 5.4.1.5 Add tests with representative fixtures.
+- [x] 5.4 **Claude Code adapter (`~/.claude.json`)**
+  - [x] 5.4.1 Same behavior as Cursor:
+    - [x] 5.4.1.1 Merge into `mcpServers`.
+    - [x] 5.4.1.2 Remove disabled Relay-managed entries.
+    - [x] 5.4.1.3 Preserve other top-level keys.
+    - [x] 5.4.1.4 Use `atomicWrite` + `.bak`.
+    - [x] 5.4.1.5 Add tests with representative fixtures.
 
-- [ ] 5.5 **Codex adapter (`~/.codex/config.toml`)**
-  - [ ] 5.5.1 Load existing TOML; handle invalid syntax gracefully.
-  - [ ] 5.5.2 For each Relay-managed server:
-    - [ ] 5.5.2.1 Manage `[mcp_servers."<name>"]` tables.
-    - [ ] 5.5.2.2 Populate `command`, `args`, and `env` (with resolved secrets).
-  - [ ] 5.5.3 Remove tables for disabled Relay-managed servers.
-  - [ ] 5.5.4 Preserve all non-Relay TOML blocks.
-  - [ ] 5.5.5 Use `atomicWrite` + `.bak`.
-  - [ ] 5.5.6 Add tests with TOML fixtures.
+- [x] 5.5 **Codex adapter (`~/.codex/config.toml`)**
+  - [x] 5.5.1 Load existing TOML; handle invalid syntax gracefully.
+  - [x] 5.5.2 For each Relay-managed server:
+    - [x] 5.5.2.1 Manage `[mcp_servers."<name>"]` tables.
+    - [x] 5.5.2.2 Populate `command`, `args`, and `env` (with resolved secrets).
+  - [x] 5.5.3 Remove tables for disabled Relay-managed servers.
+  - [x] 5.5.4 Preserve all non-Relay TOML blocks.
+  - [x] 5.5.5 Use `atomicWrite` + `.bak`.
+  - [x] 5.5.6 Add tests with TOML fixtures.
 
 - [ ] 5.6 **Error taxonomy & UX**
   - [ ] 5.6.1 Define basic error categories:

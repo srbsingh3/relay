@@ -1,6 +1,7 @@
-import type { SyncAdapter } from '../types';
+import { createJsonMcpAdapter, defaultCursorPath } from './json-config';
 
-export const createCursorAdapter = (): SyncAdapter => ({
-  agent: 'cursor',
-  async sync() {}
-});
+export const createCursorAdapter = () =>
+  createJsonMcpAdapter({
+    agent: 'cursor',
+    defaultPath: defaultCursorPath
+  });
