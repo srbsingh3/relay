@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import type { DetectionSummary, RegistryServerEntry } from '../../../main/src/ipc/contracts';
 import type { RegistryEnvironmentMap } from '../../../main/src/registry/schema';
 import type { SupportedAgent } from '../../../main/src/types/agents';
@@ -230,8 +230,23 @@ const ServerModal = ({
   const [state, setState] = useState<ServerFormState>(() => buildInitialFormState(server, detection));
   const [submitting, setSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const previousServerRef = useRef<RegistryServerEntry | undefined>(server);
+  const previousDetectionRef = useRef<DetectionSummary>(detection);
+  const previousModeRef = useRef<typeof mode>(mode);
 
   useEffect(() => {
+    const serverChanged = previousServerRef.current !== server;
+    const modeChanged = previousModeRef.current !== mode;
+    const detectionChanged = previousDetectionRef.current !== detection;
+
+    previousServerRef.current = server;
+    previousModeRef.current = mode;
+    previousDetectionRef.current = detection;
+
+    if (!serverChanged && !modeChanged && detectionChanged) {
+      return;
+    }
+
     setState(buildInitialFormState(server, detection));
     setSubmitting(false);
     setSubmissionError(null);
