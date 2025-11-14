@@ -18,7 +18,14 @@ import { Button } from './components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card';
 import { cn } from './lib/utils';
 
-const SETTINGS_SECTION_ID = 'settings-panel';
+type SectionId = 'servers' | 'settings' | 'sync' | 'updates';
+
+const SIDEBAR_SECTIONS: { id: SectionId; label: string }[] = [
+  { id: 'servers', label: 'Servers' },
+  { id: 'settings', label: 'Settings' },
+  { id: 'sync', label: 'Sync' },
+  { id: 'updates', label: 'Updates' }
+];
 
 const agentLabels: Record<SupportedAgent, string> = {
   cursor: 'Cursor',
@@ -137,19 +144,19 @@ const masterLabels: Record<MasterState, string> = {
 };
 
 const masterStateStyles: Record<MasterState, string> = {
-  on: 'border-emerald-400/60 bg-emerald-500/10 text-emerald-100',
-  off: 'border-slate-600/70 bg-slate-800/60 text-slate-300',
-  custom: 'border-sky-400/60 bg-sky-500/10 text-sky-100'
+  on: 'border-emerald-400/60 bg-emerald-500/10 text-emerald-50 dark:text-emerald-100',
+  off: 'border-border bg-muted text-muted-foreground',
+  custom: 'border-sky-400/70 bg-sky-500/15 text-sky-50'
 };
 
 const appToggleStyles = {
-  on: 'border-emerald-400/60 bg-emerald-500/10 text-emerald-50',
-  off: 'border-white/10 bg-slate-900/40 text-slate-200'
+  on: 'border-emerald-400/70 bg-emerald-500/10 text-emerald-50 dark:text-emerald-100',
+  off: 'border-border bg-muted text-muted-foreground'
 };
 
 const detectionStatusStyles = {
-  detected: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-100',
-  missing: 'border-slate-600/60 bg-slate-900/60 text-slate-300'
+  detected: 'border-emerald-400/60 bg-emerald-500/10 text-emerald-50 dark:text-emerald-100',
+  missing: 'border-border bg-muted text-muted-foreground'
 };
 
 const updateStateStyles: Record<
@@ -159,12 +166,12 @@ const updateStateStyles: Record<
     className: string;
   }
 > = {
-  idle: { label: 'Idle', className: 'border-slate-600/70 text-slate-200' },
-  checking: { label: 'Checking…', className: 'border-sky-500/60 text-sky-200' },
+  idle: { label: 'Idle', className: 'border-border text-muted-foreground' },
+  checking: { label: 'Checking…', className: 'border-sky-400/70 text-sky-100' },
   up_to_date: { label: 'Up to date', className: 'border-emerald-400/70 text-emerald-100' },
   update_available: { label: 'Update available', className: 'border-amber-400/70 text-amber-100' },
-  offline: { label: 'Offline', className: 'border-slate-600/70 text-slate-300' },
-  error: { label: 'Error', className: 'border-rose-500/70 text-rose-200' }
+  offline: { label: 'Offline', className: 'border-border text-muted-foreground' },
+  error: { label: 'Error', className: 'border-rose-500/70 text-rose-100' }
 };
 
 const formatTimestamp = (isoValue?: string | null): string => {
@@ -295,6 +302,7 @@ const App = () => {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [modalState, setModalState] = useState<ModalState>(null);
+  const [activeSection, setActiveSection] = useState<SectionId>('servers');
 
   useEffect(() => {
     if (!bridge) {
@@ -345,13 +353,8 @@ const App = () => {
     };
   }, [bridge]);
 
-  const scrollToSettings = useCallback(() => {
-    if (typeof document === 'undefined') {
-      return;
-    }
-
-    const target = document.getElementById(SETTINGS_SECTION_ID);
-    target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const handleSectionChange = useCallback((section: SectionId) => {
+    setActiveSection(section);
   }, []);
 
   const handleSyncNow = useCallback(async () => {
@@ -671,8 +674,318 @@ const App = () => {
     [detection]
   );
 
+  const sectionContent: Record<SectionId, JSX.Element> = {
+    servers: (
+      <Card className="p-6" aria-labelledby="servers-heading">
+            <CardHeader className="flex flex-col gap-4 pb-2 md:flex-row md:items-start md:justify-between">
+              <div className="space-y-1.5">
+                <p className="text-xs uppercase tracking-[0.24em] text-primary/70">Servers</p>
+                <CardTitle id="servers-heading" className="text-2xl">
+                  Workspace registry
+                </CardTitle>
+                <CardDescription>
+                  {servers.length} server{servers.length === 1 ? '' : 's'} • {detectedCount} detected app
+                  {detectedCount === 1 ? '' : 's'}
+                </CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full border border-border/70 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground"
+                onClick={() => setModalState({ mode: 'add' })}
+                type="button"
+              >
+                Add server
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {loadError && <p className="text-sm text-rose-300">{loadError}</p>}
+              {mutationError && <p className="text-sm text-rose-300">{mutationError}</p>}
+              {loading ? (
+                <p className="text-sm text-muted-foreground">Loading servers…</p>
+              ) : servers.length === 0 ? (
+                <div className="rounded-2xl border border-border/60 bg-muted/60 p-6 text-center text-sm text-muted-foreground">
+                  <p className="text-base font-medium text-foreground/90">No servers yet</p>
+                  <span>Use Add server to register your first shared MCP endpoint.</span>
+                </div>
+              ) : (
+                <ul className="space-y-4">
+                  {servers.map((server) => {
+                    const masterState = computeMasterState(server, detection);
+                    return (
+                      <li
+                        key={server.id}
+                        className="rounded-2xl border border-border/70 bg-card/90 p-5 shadow-[0_20px_60px_rgba(2,6,23,0.4)] backdrop-blur-2xl"
+                      >
+                        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                          <div>
+                            <p className="text-lg font-semibold text-foreground">{server.name}</p>
+                            <p className="mt-2 text-xs text-muted-foreground">
+                              <code className="rounded-lg bg-muted/60 px-3 py-1 font-mono text-sm text-foreground">
+                                {formatCommand(server)}
+                              </code>
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="rounded-full border border-border/60 text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground"
+                              onClick={() => setModalState({ mode: 'edit', serverId: server.id })}
+                              type="button"
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="rounded-full border border-rose-400/60 text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-rose-200 transition hover:text-rose-100"
+                              onClick={() => void handleRemoveServer(server.id)}
+                              type="button"
+                            >
+                              Remove
+                            </Button>
+                            <button
+                              type="button"
+                              aria-pressed={server.enabled}
+                              className={cn(
+                                'rounded-full border px-4 py-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.25em] transition',
+                                server.enabled
+                                  ? 'border-emerald-400/70 bg-emerald-500/10 text-emerald-50'
+                                  : 'border-border bg-muted text-muted-foreground'
+                              )}
+                            >
+                              {server.enabled ? 'Enabled' : 'Disabled'}
+                            </button>
+                          </div>
+                        </div>
+                        <div className="mt-4 rounded-2xl border border-border/60 bg-muted/60 px-4 py-3 md:mt-3">
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                              <p className="text-[0.65rem] uppercase tracking-[0.3em] text-muted-foreground">All apps</p>
+                              <p className="text-sm text-foreground/90">{masterLabels[masterState]}</p>
+                            </div>
+                            <button
+                              type="button"
+                              className={cn(
+                                'rounded-full border px-5 py-2 text-xs font-semibold uppercase tracking-[0.3em] transition',
+                                masterStateStyles[masterState]
+                              )}
+                              aria-pressed={masterState === 'on'}
+                              onClick={() => handleMasterToggle(server.id, masterState === 'on' ? 'off' : 'on')}
+                            >
+                              {masterState === 'custom' ? 'Custom' : masterState === 'on' ? 'On' : 'Off'}
+                            </button>
+                          </div>
+                        </div>
+                        <div className="mt-4 flex flex-wrap gap-3" role="group" aria-label="Per-app toggles">
+                          {SUPPORTED_AGENTS.map((agent) => {
+                            const status = detection[agent];
+                            const detected = Boolean(status?.detected);
+                            const effectiveEnabled = Boolean(server.enabled) && server.apps?.[agent] !== false;
+                            const disabled = !detected || !server.enabled;
+
+                            return (
+                              <button
+                                key={`${server.id}-${agent}`}
+                                type="button"
+                                className={cn(
+                                  'flex min-w-[130px] flex-col rounded-2xl border px-4 py-3 text-left text-xs uppercase tracking-[0.25em] transition',
+                                  effectiveEnabled ? appToggleStyles.on : appToggleStyles.off,
+                                  disabled ? 'cursor-not-allowed opacity-40' : 'hover:border-ring/70'
+                                )}
+                                disabled={disabled}
+                                aria-pressed={effectiveEnabled}
+                                data-agent={agent}
+                                onClick={() => handleAgentToggle(server.id, agent)}
+                              >
+                                <span className="text-[0.65rem]">{agentLabels[agent]}</span>
+                                <span className="text-base font-semibold tracking-normal text-foreground">
+                                  {!detected ? 'Not detected' : effectiveEnabled ? 'On' : 'Off'}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+    ),
+    settings: (
+      <Card className="p-6" aria-labelledby="detection-heading">
+            <CardHeader className="flex flex-col gap-3 pb-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.24em] text-primary/70">Settings</p>
+                <CardTitle id="detection-heading">Agent detection</CardTitle>
+                <CardDescription>Resolved config paths are read-only and shared across Cursor, Claude, and Codex.</CardDescription>
+              </div>
+              {bridge && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full border border-border/70 text-[0.65rem] font-semibold uppercase tracking-[0.25em] text-muted-foreground"
+                  type="button"
+                  disabled={detectionBusy}
+                  onClick={handleDetectionRefresh}
+                >
+                  {detectionBusy ? 'Scanning…' : 'Re-scan'}
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {detectionError && <p className="text-sm text-rose-300">{detectionError}</p>}
+              <ul className="space-y-3">
+                {SUPPORTED_AGENTS.map((agent) => {
+                  const status = detection[agent];
+                  const detected = Boolean(status?.detected);
+                  const badgeStyle = detected ? detectionStatusStyles.detected : detectionStatusStyles.missing;
+                  return (
+                    <li
+                      key={`detection-${agent}`}
+                      className="rounded-2xl border border-border/60 bg-muted/60 p-4"
+                    >
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">{agentLabels[agent]}</p>
+                          <p className="text-xs text-muted-foreground">Read-only config path</p>
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className={cn('rounded-full px-3 py-1 text-[0.65rem] uppercase tracking-[0.3em]', badgeStyle)}
+                        >
+                          {detected ? 'Detected' : 'Not detected'}
+                        </Badge>
+                      </div>
+                      <p
+                        className="mt-3 truncate font-mono text-sm text-foreground/90"
+                        data-readonly="config-path"
+                        title="Relay displays project-scoped configs in read-only mode."
+                      >
+                        {status?.path ?? 'Unknown path'}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground/80">Last checked {formatTimestamp(status?.lastChecked)}</p>
+                    </li>
+                  );
+                })}
+              </ul>
+            </CardContent>
+          </Card>
+    ),
+    sync: (
+      <Card className="p-6" aria-labelledby="sync-heading">
+            <CardHeader className="flex items-start justify-between gap-4 pb-3">
+              <div className="space-y-1">
+                <p className="text-xs uppercase tracking-[0.24em] text-primary/70">Sync</p>
+                <CardTitle id="sync-heading">Deterministic writes</CardTitle>
+                <CardDescription>Invokes the same locked-down main-process service used by the tray and schedule.</CardDescription>
+              </div>
+              <Badge
+                variant="outline"
+                className={cn(
+                  'text-[0.65rem] uppercase tracking-[0.3em]',
+                  syncStatus.state === 'running'
+                    ? 'border-sky-400/70 text-sky-200'
+                    : syncStatus.state === 'error'
+                      ? 'border-rose-500/70 text-rose-200'
+                      : 'border-emerald-400/70 text-emerald-100'
+                )}
+              >
+                {syncStatus.state === 'running' ? 'Syncing' : syncStatus.state === 'error' ? 'Error' : 'Ready'}
+              </Badge>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="rounded-2xl border border-border/60 bg-muted/60 p-4">
+                <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Last sync</p>
+                <p className="mt-1 text-lg font-semibold text-foreground">{formatTimestamp(syncStatus.lastRun)}</p>
+                {syncStatus.lastError ? (
+                  <p className="mt-1 text-sm text-rose-300">{syncStatus.lastError}</p>
+                ) : (
+                  <p className="mt-1 text-sm text-muted-foreground">Every detected agent uses this timestamp.</p>
+                )}
+              </div>
+              <Button
+                type="button"
+                onClick={handleSyncNow}
+                disabled={syncBusy}
+                className="w-full rounded-full text-xs font-semibold uppercase tracking-[0.3em]"
+              >
+                {syncStatus.state === 'running' ? 'Syncing…' : 'Sync Now'}
+              </Button>
+            </CardContent>
+          </Card>
+    ),
+    updates: (
+      <Card className="p-6" aria-labelledby="updates-heading">
+            <CardHeader className="flex items-start justify-between gap-4 pb-3">
+              <div className="space-y-1">
+                <p className="text-xs uppercase tracking-[0.24em] text-primary/70">Updates</p>
+                <CardTitle id="updates-heading">Manifest checks</CardTitle>
+                <CardDescription>Manual checks stay in the main process and never include registry or secret data.</CardDescription>
+              </div>
+              <Badge
+                variant="outline"
+                className={cn(
+                  'text-[0.65rem] uppercase tracking-[0.3em]',
+                  updateStateStyles[updateStatus.state].className
+                )}
+              >
+                {updateStateStyles[updateStatus.state].label}
+              </Badge>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm text-foreground/90">
+              <dl className="grid grid-cols-1 gap-3 text-sm text-foreground/90">
+                <div className="rounded-2xl border border-border/60 bg-muted/60 p-4">
+                  <dt className="text-xs uppercase tracking-wide text-muted-foreground">Current build</dt>
+                  <dd className="text-base font-medium text-foreground">{updateStatus.currentVersion}</dd>
+                </div>
+                <div className="rounded-2xl border border-border/60 bg-muted/60 p-4">
+                  <dt className="text-xs uppercase tracking-wide text-muted-foreground">Latest manifest</dt>
+                  <dd className="text-base font-medium text-foreground">{updateStatus.latestVersion ?? '—'}</dd>
+                </div>
+                <div className="rounded-2xl border border-border/60 bg-muted/60 p-4">
+                  <dt className="text-xs uppercase tracking-wide text-muted-foreground">Last checked</dt>
+                  <dd className="text-base font-medium text-foreground">{formatTimestamp(updateStatus.checkedAt)}</dd>
+                </div>
+              </dl>
+              <p className="text-xs text-muted-foreground">{updateStatus.message ?? 'No update checks have run yet.'}</p>
+              {updateError && <p className="text-xs text-rose-300">{updateError}</p>}
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleUpdateCheck}
+                  disabled={updateBusy}
+                  className="flex-1 rounded-full text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground"
+                >
+                  {updateStatus.state === 'checking' ? 'Checking…' : 'Check for updates'}
+                </Button>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={updateStatus.autoCheckEnabled}
+                  onClick={handleUpdatePreferenceToggle}
+                  disabled={updateBusy}
+                  className={cn(
+                    'w-full rounded-full border px-4 py-2 text-center text-[0.65rem] font-semibold uppercase tracking-[0.3em] transition sm:w-auto',
+                    updateStatus.autoCheckEnabled
+                      ? 'border-emerald-400/70 text-emerald-100'
+                      : 'border-border text-muted-foreground'
+                  )}
+                >
+                  {updateStatus.autoCheckEnabled ? 'Auto checks on' : 'Auto checks off'}
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+    )
+  };
+
   return (
-    <main className="relative min-h-screen bg-slate-950 font-sans text-slate-100 antialiased">
+    <main className="relative min-h-screen bg-background font-sans text-foreground antialiased">
       <div
         aria-hidden="true"
         className="fixed top-0 right-0 z-50 h-10"
@@ -683,349 +996,105 @@ const App = () => {
         }}
       />
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute left-10 top-[-10%] h-64 w-64 rounded-full bg-sky-500/30 blur-[140px]" />
+        <div className="absolute left-10 top-[-10%] h-64 w-64 rounded-full bg-primary/20 blur-[140px]" />
         <div className="absolute right-20 top-0 h-72 w-72 rounded-full bg-fuchsia-500/25 blur-[160px]" />
-        <div className="absolute bottom-[-10%] left-1/3 h-80 w-96 rounded-full bg-emerald-500/25 blur-[200px]" />
+        <div className="absolute bottom-[-10%] left-1/3 h-80 w-96 rounded-full bg-emerald-500/20 blur-[200px]" />
       </div>
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-10 sm:px-6 lg:px-8">
-        <div className="flex flex-1 flex-col gap-8 rounded-[34px] border border-white/10 bg-slate-950/80 p-6 shadow-[0_30px_80px_rgba(2,6,23,0.85)] backdrop-blur-3xl md:p-10">
-          <header
-            className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between"
-            style={{ WebkitAppRegion: 'drag' }}
-          >
-            <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-300">Relay</p>
-              <h1 className="text-3xl font-semibold sm:text-4xl">Shared MCP Orchestrator</h1>
-              <p className="max-w-2xl text-base text-slate-400">
-                macOS-only shell keeps Cursor, Claude, and Codex servers in sync with deterministic IO, Keychain secrets, and
-                offline defaults.
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              className="self-start rounded-full border-white/15 text-xs uppercase tracking-[0.2em]"
-              style={{ WebkitAppRegion: 'no-drag' }}
-              type="button"
-              aria-label="Open settings panel"
-              onClick={scrollToSettings}
-            >
-              Settings
-            </Button>
-          </header>
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-            <Card
-              className="p-6"
-              aria-labelledby="servers-heading"
-            >
-              <CardHeader className="flex flex-col gap-4 pb-2 md:flex-row md:items-start md:justify-between">
-                <div className="space-y-1.5">
-                  <p className="text-xs uppercase tracking-[0.24em] text-sky-300">Servers</p>
-                  <CardTitle id="servers-heading" className="text-2xl">
-                    Workspace registry
-                  </CardTitle>
-                  <CardDescription>
-                    {servers.length} server{servers.length === 1 ? '' : 's'} • {detectedCount} detected app
-                    {detectedCount === 1 ? '' : 's'}
-                  </CardDescription>
+        <div className="flex flex-1 flex-col gap-6 lg:flex-row">
+          <aside className="rounded-3xl border border-border/60 bg-card/80 p-6 shadow-[0_25px_70px_rgba(2,6,23,0.35)] backdrop-blur-3xl lg:sticky lg:top-10 lg:h-fit lg:w-64">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-lg font-semibold text-primary">
+                  R
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-full border-white/15 text-xs uppercase tracking-[0.2em]"
-                  onClick={() => setModalState({ mode: 'add' })}
-                  type="button"
-                >
-                  Add server
-                </Button>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {loadError && <p className="text-sm text-rose-300">{loadError}</p>}
-                {mutationError && <p className="text-sm text-rose-300">{mutationError}</p>}
-                {loading ? (
-                  <p className="text-sm text-slate-400">Loading servers…</p>
-                ) : servers.length === 0 ? (
-                  <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-6 text-center text-sm text-slate-400">
-                    <p className="text-base font-medium text-slate-200">No servers yet</p>
-                    <span>Use Add server to register your first shared MCP endpoint.</span>
-                  </div>
-                ) : (
-                  <ul className="space-y-4">
-                    {servers.map((server) => {
-                      const masterState = computeMasterState(server, detection);
-                      return (
-                        <li
-                          key={server.id}
-                          className="rounded-[26px] border border-white/10 bg-slate-950/60 p-5 shadow-[0_15px_45px_rgba(2,6,23,0.55)] backdrop-blur-xl"
-                        >
-                          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                            <div>
-                              <p className="text-lg font-semibold text-white">{server.name}</p>
-                              <p className="mt-2 text-xs text-slate-400">
-                                <code className="rounded-lg bg-slate-900/60 px-3 py-1 font-mono text-sm text-slate-100">
-                                  {formatCommand(server)}
-                                </code>
-                              </p>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="rounded-full border border-white/15 text-[0.7rem] uppercase tracking-[0.2em]"
-                                onClick={() => setModalState({ mode: 'edit', serverId: server.id })}
-                                type="button"
-                              >
-                                Edit
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="rounded-full border border-rose-400/40 text-[0.7rem] uppercase tracking-[0.2em] text-rose-200 transition hover:border-rose-300 hover:text-rose-100"
-                                onClick={() => void handleRemoveServer(server.id)}
-                                type="button"
-                              >
-                                Remove
-                              </Button>
-                              <button
-                                type="button"
-                                aria-pressed={server.enabled}
-                                className={cn(
-                                  'rounded-full border px-4 py-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.25em]',
-                                  server.enabled
-                                    ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100'
-                                    : 'border-slate-700/70 bg-slate-900/60 text-slate-300'
-                                )}
-                              >
-                                {server.enabled ? 'Enabled' : 'Disabled'}
-                              </button>
-                            </div>
-                          </div>
-                          <div className="mt-4 rounded-2xl border border-white/5 bg-slate-900/40 px-4 py-3 md:mt-3">
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                              <div>
-                                <p className="text-[0.65rem] uppercase tracking-[0.3em] text-slate-400">All apps</p>
-                                <p className="text-sm text-slate-200">{masterLabels[masterState]}</p>
-                              </div>
-                              <button
-                                type="button"
-                                className={cn(
-                                  'rounded-full border px-5 py-2 text-xs font-semibold uppercase tracking-[0.3em] transition',
-                                  masterStateStyles[masterState]
-                                )}
-                                aria-pressed={masterState === 'on'}
-                                onClick={() => handleMasterToggle(server.id, masterState === 'on' ? 'off' : 'on')}
-                              >
-                                {masterState === 'custom' ? 'Custom' : masterState === 'on' ? 'On' : 'Off'}
-                              </button>
-                            </div>
-                          </div>
-                          <div className="mt-4 flex flex-wrap gap-3" role="group" aria-label="Per-app toggles">
-                            {SUPPORTED_AGENTS.map((agent) => {
-                              const status = detection[agent];
-                              const detected = Boolean(status?.detected);
-                              const effectiveEnabled = Boolean(server.enabled) && server.apps?.[agent] !== false;
-                              const disabled = !detected || !server.enabled;
-
-                              return (
-                                <button
-                                  key={`${server.id}-${agent}`}
-                                  type="button"
-                                  className={cn(
-                                    'flex min-w-[130px] flex-col rounded-2xl border px-4 py-3 text-left text-xs uppercase tracking-[0.25em] transition',
-                                    effectiveEnabled ? appToggleStyles.on : appToggleStyles.off,
-                                    disabled ? 'cursor-not-allowed opacity-40' : 'hover:border-white/40'
-                                  )}
-                                  disabled={disabled}
-                                  aria-pressed={effectiveEnabled}
-                                  data-agent={agent}
-                                  onClick={() => handleAgentToggle(server.id, agent)}
-                                >
-                                  <span className="text-[0.65rem]">{agentLabels[agent]}</span>
-                                  <span className="text-base font-semibold tracking-normal text-white">
-                                    {!detected ? 'Not detected' : effectiveEnabled ? 'On' : 'Off'}
-                                  </span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </CardContent>
-            </Card>
-            <div id={SETTINGS_SECTION_ID} className="flex flex-col gap-6">
-              <Card className="p-6" aria-labelledby="detection-heading">
-                <CardHeader className="flex flex-col gap-3 pb-3 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.24em] text-sky-300">Settings</p>
-                    <CardTitle id="detection-heading">Agent detection</CardTitle>
-                    <CardDescription>Resolved config paths are read-only and shared across Cursor, Claude, and Codex.</CardDescription>
-                  </div>
-                  {bridge && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="rounded-full border-white/20 text-[0.65rem] uppercase tracking-[0.25em]"
-                      type="button"
-                      disabled={detectionBusy}
-                      onClick={handleDetectionRefresh}
-                    >
-                      {detectionBusy ? 'Scanning…' : 'Re-scan'}
-                    </Button>
-                  )}
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {detectionError && <p className="text-sm text-rose-300">{detectionError}</p>}
-                  <ul className="space-y-3">
-                    {SUPPORTED_AGENTS.map((agent) => {
-                      const status = detection[agent];
-                      const detected = Boolean(status?.detected);
-                      const badgeStyle = detected ? detectionStatusStyles.detected : detectionStatusStyles.missing;
-                      return (
-                        <li
-                          key={`detection-${agent}`}
-                          className="rounded-2xl border border-white/5 bg-slate-900/40 p-4"
-                        >
-                          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                              <p className="text-sm font-semibold text-white">{agentLabels[agent]}</p>
-                              <p className="text-xs text-slate-400">Read-only config path</p>
-                            </div>
-                            <Badge
-                              variant="outline"
-                              className={cn('rounded-full px-3 py-1 text-[0.65rem] uppercase tracking-[0.3em]', badgeStyle)}
-                            >
-                              {detected ? 'Detected' : 'Not detected'}
-                            </Badge>
-                          </div>
-                          <p
-                            className="mt-3 truncate font-mono text-sm text-slate-200"
-                            data-readonly="config-path"
-                            title="Relay displays project-scoped configs in read-only mode."
-                          >
-                            {status?.path ?? 'Unknown path'}
-                          </p>
-                          <p className="mt-1 text-xs text-slate-500">Last checked {formatTimestamp(status?.lastChecked)}</p>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </CardContent>
-              </Card>
-              <Card className="p-6" aria-labelledby="sync-heading">
-                <CardHeader className="flex items-start justify-between gap-4 pb-3">
-                  <div className="space-y-1">
-                    <p className="text-xs uppercase tracking-[0.24em] text-sky-300">Sync</p>
-                    <CardTitle id="sync-heading">Deterministic writes</CardTitle>
-                    <CardDescription>Invokes the same locked-down main-process service used by the tray and schedule.</CardDescription>
-                  </div>
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      'text-[0.65rem] uppercase tracking-[0.3em]',
-                      syncStatus.state === 'running'
-                        ? 'border-sky-400/70 text-sky-200'
-                        : syncStatus.state === 'error'
-                          ? 'border-rose-500/70 text-rose-200'
-                          : 'border-emerald-400/70 text-emerald-100'
-                    )}
-                  >
-                    {syncStatus.state === 'running' ? 'Syncing' : syncStatus.state === 'error' ? 'Error' : 'Ready'}
-                  </Badge>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-4">
-                    <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Last sync</p>
-                    <p className="mt-1 text-lg font-semibold text-white">{formatTimestamp(syncStatus.lastRun)}</p>
-                    {syncStatus.lastError ? (
-                      <p className="mt-1 text-sm text-rose-300">{syncStatus.lastError}</p>
-                    ) : (
-                      <p className="mt-1 text-sm text-slate-400">Every detected agent uses this timestamp.</p>
-                    )}
-                  </div>
-                  <Button
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Relay Control</p>
+                  <p className="text-xs text-muted-foreground">Shared MCP shell</p>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-border/70 bg-muted/40 px-4 py-3 text-xs text-muted-foreground">
+                Offline-first Electron app with deterministic sync.
+              </div>
+            </div>
+            <nav className="mt-8 flex flex-col gap-1" aria-label="Primary">
+              {SIDEBAR_SECTIONS.map((section) => {
+                const isActive = activeSection === section.id;
+                return (
+                  <button
+                    key={section.id}
                     type="button"
-                    onClick={handleSyncNow}
-                    disabled={syncBusy}
-                    className="w-full rounded-full text-xs uppercase tracking-[0.3em]"
-                  >
-                    {syncStatus.state === 'running' ? 'Syncing…' : 'Sync Now'}
-                  </Button>
-                </CardContent>
-              </Card>
-              <Card className="p-6" aria-labelledby="updates-heading">
-                <CardHeader className="flex items-start justify-between gap-4 pb-3">
-                  <div className="space-y-1">
-                    <p className="text-xs uppercase tracking-[0.24em] text-sky-300">Updates</p>
-                    <CardTitle id="updates-heading">Manifest checks</CardTitle>
-                    <CardDescription>Manual checks stay in the main process and never include registry or secret data.</CardDescription>
-                  </div>
-                  <Badge
-                    variant="outline"
+                    onClick={() => handleSectionChange(section.id)}
+                    aria-current={isActive ? 'page' : undefined}
                     className={cn(
-                      'text-[0.65rem] uppercase tracking-[0.3em]',
-                      updateStateStyles[updateStatus.state].className
+                      'flex items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm font-medium transition focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50',
+                      isActive
+                        ? 'border-primary/60 bg-primary/10 text-foreground shadow-[0_15px_35px_rgba(2,6,23,0.25)]'
+                        : 'border-transparent text-muted-foreground hover:border-border/80 hover:bg-muted/40 hover:text-foreground'
                     )}
                   >
-                    {updateStateStyles[updateStatus.state].label}
-                  </Badge>
-                </CardHeader>
-                <CardContent className="space-y-4 text-sm text-slate-200">
-                  <dl className="grid grid-cols-1 gap-3 text-sm text-slate-200">
-                    <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-4">
-                      <dt className="text-xs uppercase tracking-wide text-slate-500">Current build</dt>
-                      <dd className="text-base font-medium text-white">{updateStatus.currentVersion}</dd>
-                    </div>
-                    <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-4">
-                      <dt className="text-xs uppercase tracking-wide text-slate-500">Latest manifest</dt>
-                      <dd className="text-base font-medium text-white">{updateStatus.latestVersion ?? '—'}</dd>
-                    </div>
-                    <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-4">
-                      <dt className="text-xs uppercase tracking-wide text-slate-500">Last checked</dt>
-                      <dd className="text-base font-medium text-white">{formatTimestamp(updateStatus.checkedAt)}</dd>
-                    </div>
-                  </dl>
-                  <p className="text-xs text-slate-400">{updateStatus.message ?? 'No update checks have run yet.'}</p>
-                  {updateError && <p className="text-xs text-rose-300">{updateError}</p>}
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleUpdateCheck}
-                      disabled={updateBusy}
-                      className="flex-1 rounded-full text-xs uppercase tracking-[0.3em]"
-                    >
-                      {updateStatus.state === 'checking' ? 'Checking…' : 'Check for updates'}
-                    </Button>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={updateStatus.autoCheckEnabled}
-                      onClick={handleUpdatePreferenceToggle}
-                      disabled={updateBusy}
-                      className={cn(
-                        'w-full rounded-full border px-4 py-2 text-center text-[0.65rem] font-semibold uppercase tracking-[0.3em] transition sm:w-auto',
-                        updateStatus.autoCheckEnabled
-                          ? 'border-emerald-400/70 text-emerald-100'
-                          : 'border-slate-600/70 text-slate-300'
-                      )}
-                    >
-                      {updateStatus.autoCheckEnabled ? 'Auto checks on' : 'Auto checks off'}
-                    </button>
-                  </div>
-                </CardContent>
-              </Card>
+                    <span>{section.label}</span>
+                    <span aria-hidden="true" className="text-xs text-muted-foreground/70">
+                      ↗
+                    </span>
+                  </button>
+                );
+              })}
+            </nav>
+          </aside>
+          <div className="flex flex-1 flex-col gap-8 rounded-[32px] border border-border/70 bg-card/95 p-6 shadow-[0_30px_80px_rgba(2,6,23,0.5)] backdrop-blur-3xl md:p-10">
+            <header
+              className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between"
+              style={{ WebkitAppRegion: 'drag' }}
+            >
+              <div className="space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary/80">Relay</p>
+                <h1 className="text-3xl font-semibold text-foreground sm:text-4xl">Shared MCP Orchestrator</h1>
+                <p className="max-w-2xl text-base text-muted-foreground">
+                  macOS-only shell keeps Cursor, Claude, and Codex servers in sync with deterministic IO, Keychain secrets, and
+                  offline defaults.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                className="self-start rounded-full border border-border/70 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground"
+                style={{ WebkitAppRegion: 'no-drag' }}
+                type="button"
+                aria-label="Open settings panel"
+                onClick={() => handleSectionChange('settings')}
+              >
+                Settings
+              </Button>
+            </header>
+            <div className="relative min-h-[420px]">
+              {SIDEBAR_SECTIONS.map((section) => {
+                const isActive = activeSection === section.id;
+                return (
+                  <section
+                    key={`section-${section.id}`}
+                    data-section={section.id}
+                    aria-hidden={!isActive}
+                    className={cn(
+                      'transition-all duration-300',
+                      isActive
+                        ? 'relative opacity-100'
+                        : 'absolute inset-0 -z-10 opacity-0 pointer-events-none'
+                    )}
+                  >
+                    {sectionContent[section.id]}
+                  </section>
+                );
+              })}
             </div>
           </div>
-          <footer className="flex flex-wrap gap-2 text-xs uppercase tracking-[0.25em] text-slate-400">
-            <Badge variant="outline" className="border-white/10 bg-transparent px-4 py-2 text-[0.7rem]">
+          <footer className="flex flex-wrap gap-2 text-xs uppercase tracking-[0.25em] text-muted-foreground">
+            <Badge variant="outline" className="border-border/70 bg-transparent px-4 py-2 text-[0.7rem] text-muted-foreground">
               Deterministic IO
             </Badge>
-            <Badge variant="outline" className="border-white/10 bg-transparent px-4 py-2 text-[0.7rem]">
+            <Badge variant="outline" className="border-border/70 bg-transparent px-4 py-2 text-[0.7rem] text-muted-foreground">
               Keychain-only secrets
             </Badge>
-            <Badge variant="outline" className="border-white/10 bg-transparent px-4 py-2 text-[0.7rem]">
+            <Badge variant="outline" className="border-border/70 bg-transparent px-4 py-2 text-[0.7rem] text-muted-foreground">
               No telemetry
             </Badge>
           </footer>

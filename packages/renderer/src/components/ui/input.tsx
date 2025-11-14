@@ -5,13 +5,15 @@ export type InputProps = React.InputHTMLAttributes<HTMLInputElement>;
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, type = 'text', ...props }, ref) => (
   <input
+    ref={ref}
     type={type}
+    data-slot="input"
     className={cn(
-      'flex h-11 w-full rounded-2xl border border-white/10 bg-slate-900/70 px-4 text-sm text-white placeholder:text-slate-500',
-      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950',
+      'flex h-11 w-full min-w-0 rounded-xl border border-input bg-transparent px-4 text-base text-foreground shadow-xs transition-[color,box-shadow] placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 md:text-sm',
+      'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+      'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive disabled:pointer-events-none disabled:opacity-50',
       className
     )}
-    ref={ref}
     {...props}
   />
 ));
