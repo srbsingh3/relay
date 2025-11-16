@@ -691,7 +691,7 @@ const App = () => {
               <Button
                 variant="outline"
                 size="sm"
-                className="rounded-full border border-border/70 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground"
+                className="text-xs font-semibold text-muted-foreground"
                 onClick={() => setModalState({ mode: 'add' })}
                 type="button"
               >
@@ -704,7 +704,7 @@ const App = () => {
               {loading ? (
                 <p className="text-sm text-muted-foreground">Loading servers…</p>
               ) : servers.length === 0 ? (
-                <div className="rounded-2xl border border-border/60 bg-muted/60 p-6 text-center text-sm text-muted-foreground">
+                <div className="rounded-lg border border-border/60 bg-muted/60 p-6 text-center text-sm text-muted-foreground">
                   <p className="text-base font-medium text-foreground/90">No servers yet</p>
                   <span>Use Add server to register your first shared MCP endpoint.</span>
                 </div>
@@ -713,15 +713,12 @@ const App = () => {
                   {servers.map((server) => {
                     const masterState = computeMasterState(server, detection);
                     return (
-                      <li
-                        key={server.id}
-                        className="rounded-2xl border border-border/70 bg-card/90 p-5 shadow-[0_20px_60px_rgba(2,6,23,0.4)] backdrop-blur-2xl"
-                      >
+                      <li key={server.id} className="rounded-lg border border-border bg-card p-5">
                         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                           <div>
                             <p className="text-lg font-semibold text-foreground">{server.name}</p>
                             <p className="mt-2 text-xs text-muted-foreground">
-                              <code className="rounded-lg bg-muted/60 px-3 py-1 font-mono text-sm text-foreground">
+                              <code className="rounded-md bg-muted/60 px-3 py-1 font-mono text-sm text-foreground">
                                 {formatCommand(server)}
                               </code>
                             </p>
@@ -730,7 +727,7 @@ const App = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="rounded-full border border-border/60 text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground"
+                              className="text-xs font-semibold text-muted-foreground"
                               onClick={() => setModalState({ mode: 'edit', serverId: server.id })}
                               type="button"
                             >
@@ -739,7 +736,7 @@ const App = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="rounded-full border border-rose-400/60 text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-rose-200 transition hover:text-rose-100"
+                              className="text-xs font-semibold text-rose-200 transition hover:text-rose-100"
                               onClick={() => void handleRemoveServer(server.id)}
                               type="button"
                             >
@@ -749,7 +746,7 @@ const App = () => {
                               type="button"
                               aria-pressed={server.enabled}
                               className={cn(
-                                'rounded-full border px-4 py-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.25em] transition',
+                                'rounded-md border px-3 py-1.5 text-xs font-semibold transition',
                                 server.enabled
                                   ? 'border-emerald-400/70 bg-emerald-500/10 text-emerald-50'
                                   : 'border-border bg-muted text-muted-foreground'
@@ -759,16 +756,16 @@ const App = () => {
                             </button>
                           </div>
                         </div>
-                        <div className="mt-4 rounded-2xl border border-border/60 bg-muted/60 px-4 py-3 md:mt-3">
+                        <div className="mt-4 rounded-lg border border-border/60 bg-muted/60 px-4 py-3 md:mt-3">
                           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
-                              <p className="text-[0.65rem] uppercase tracking-[0.3em] text-muted-foreground">All apps</p>
+                              <p className="text-[0.7rem] uppercase tracking-[0.2em] text-muted-foreground">All apps</p>
                               <p className="text-sm text-foreground/90">{masterLabels[masterState]}</p>
                             </div>
                             <button
                               type="button"
                               className={cn(
-                                'rounded-full border px-5 py-2 text-xs font-semibold uppercase tracking-[0.3em] transition',
+                                'rounded-md border px-4 py-2 text-xs font-semibold transition',
                                 masterStateStyles[masterState]
                               )}
                               aria-pressed={masterState === 'on'}
@@ -790,7 +787,7 @@ const App = () => {
                                 key={`${server.id}-${agent}`}
                                 type="button"
                                 className={cn(
-                                  'flex min-w-[130px] flex-col rounded-2xl border px-4 py-3 text-left text-xs uppercase tracking-[0.25em] transition',
+                                  'flex min-w-[130px] flex-col rounded-md border px-4 py-3 text-left text-xs uppercase tracking-[0.18em] transition',
                                   effectiveEnabled ? appToggleStyles.on : appToggleStyles.off,
                                   disabled ? 'cursor-not-allowed opacity-40' : 'hover:border-ring/70'
                                 )}
@@ -827,7 +824,7 @@ const App = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="rounded-full border border-border/70 text-[0.65rem] font-semibold uppercase tracking-[0.25em] text-muted-foreground"
+                  className="text-[0.75rem] font-semibold text-muted-foreground"
                   type="button"
                   disabled={detectionBusy}
                   onClick={handleDetectionRefresh}
@@ -844,19 +841,13 @@ const App = () => {
                   const detected = Boolean(status?.detected);
                   const badgeStyle = detected ? detectionStatusStyles.detected : detectionStatusStyles.missing;
                   return (
-                    <li
-                      key={`detection-${agent}`}
-                      className="rounded-2xl border border-border/60 bg-muted/60 p-4"
-                    >
+                    <li key={`detection-${agent}`} className="rounded-lg border border-border/60 bg-muted/60 p-4">
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                           <p className="text-sm font-semibold text-foreground">{agentLabels[agent]}</p>
                           <p className="text-xs text-muted-foreground">Read-only config path</p>
                         </div>
-                        <Badge
-                          variant="outline"
-                          className={cn('rounded-full px-3 py-1 text-[0.65rem] uppercase tracking-[0.3em]', badgeStyle)}
-                        >
+                        <Badge variant="outline" className={cn('px-3 py-1 text-[0.65rem] uppercase tracking-[0.2em]', badgeStyle)}>
                           {detected ? 'Detected' : 'Not detected'}
                         </Badge>
                       </div>
@@ -898,7 +889,7 @@ const App = () => {
               </Badge>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="rounded-2xl border border-border/60 bg-muted/60 p-4">
+              <div className="rounded-lg border border-border/60 bg-muted/60 p-4">
                 <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Last sync</p>
                 <p className="mt-1 text-lg font-semibold text-foreground">{formatTimestamp(syncStatus.lastRun)}</p>
                 {syncStatus.lastError ? (
@@ -911,7 +902,7 @@ const App = () => {
                 type="button"
                 onClick={handleSyncNow}
                 disabled={syncBusy}
-                className="w-full rounded-full text-xs font-semibold uppercase tracking-[0.3em]"
+                className="w-full text-xs font-semibold uppercase tracking-[0.2em]"
               >
                 {syncStatus.state === 'running' ? 'Syncing…' : 'Sync Now'}
               </Button>
@@ -938,15 +929,15 @@ const App = () => {
             </CardHeader>
             <CardContent className="space-y-4 text-sm text-foreground/90">
               <dl className="grid grid-cols-1 gap-3 text-sm text-foreground/90">
-                <div className="rounded-2xl border border-border/60 bg-muted/60 p-4">
+                <div className="rounded-lg border border-border/60 bg-muted/60 p-4">
                   <dt className="text-xs uppercase tracking-wide text-muted-foreground">Current build</dt>
                   <dd className="text-base font-medium text-foreground">{updateStatus.currentVersion}</dd>
                 </div>
-                <div className="rounded-2xl border border-border/60 bg-muted/60 p-4">
+                <div className="rounded-lg border border-border/60 bg-muted/60 p-4">
                   <dt className="text-xs uppercase tracking-wide text-muted-foreground">Latest manifest</dt>
                   <dd className="text-base font-medium text-foreground">{updateStatus.latestVersion ?? '—'}</dd>
                 </div>
-                <div className="rounded-2xl border border-border/60 bg-muted/60 p-4">
+                <div className="rounded-lg border border-border/60 bg-muted/60 p-4">
                   <dt className="text-xs uppercase tracking-wide text-muted-foreground">Last checked</dt>
                   <dd className="text-base font-medium text-foreground">{formatTimestamp(updateStatus.checkedAt)}</dd>
                 </div>
@@ -959,7 +950,7 @@ const App = () => {
                   variant="outline"
                   onClick={handleUpdateCheck}
                   disabled={updateBusy}
-                  className="flex-1 rounded-full text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground"
+                  className="flex-1 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground"
                 >
                   {updateStatus.state === 'checking' ? 'Checking…' : 'Check for updates'}
                 </Button>
@@ -970,7 +961,7 @@ const App = () => {
                   onClick={handleUpdatePreferenceToggle}
                   disabled={updateBusy}
                   className={cn(
-                    'w-full rounded-full border px-4 py-2 text-center text-[0.65rem] font-semibold uppercase tracking-[0.3em] transition sm:w-auto',
+                    'w-full rounded-md border px-4 py-2 text-center text-[0.75rem] font-semibold uppercase tracking-[0.2em] transition sm:w-auto',
                     updateStatus.autoCheckEnabled
                       ? 'border-emerald-400/70 text-emerald-100'
                       : 'border-border text-muted-foreground'
@@ -995,17 +986,12 @@ const App = () => {
           WebkitUserSelect: 'none'
         }}
       />
-      <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute left-10 top-[-10%] h-64 w-64 rounded-full bg-primary/20 blur-[140px]" />
-        <div className="absolute right-20 top-0 h-72 w-72 rounded-full bg-fuchsia-500/25 blur-[160px]" />
-        <div className="absolute bottom-[-10%] left-1/3 h-80 w-96 rounded-full bg-emerald-500/20 blur-[200px]" />
-      </div>
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-10 sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-10 sm:px-6 lg:px-8">
         <div className="flex flex-1 flex-col gap-6 lg:flex-row">
-          <aside className="rounded-3xl border border-border/60 bg-card/80 p-6 shadow-[0_25px_70px_rgba(2,6,23,0.35)] backdrop-blur-3xl lg:sticky lg:top-10 lg:h-fit lg:w-64">
+          <aside className="rounded-xl border border-border bg-card p-6 lg:sticky lg:top-10 lg:h-fit lg:w-72">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-lg font-semibold text-primary">
+                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-lg font-semibold text-primary">
                   R
                 </div>
                 <div>
@@ -1013,7 +999,7 @@ const App = () => {
                   <p className="text-xs text-muted-foreground">Shared MCP shell</p>
                 </div>
               </div>
-              <div className="rounded-2xl border border-border/70 bg-muted/40 px-4 py-3 text-xs text-muted-foreground">
+              <div className="rounded-lg border border-border/70 bg-muted/40 px-4 py-3 text-xs text-muted-foreground">
                 Offline-first Electron app with deterministic sync.
               </div>
             </div>
@@ -1027,9 +1013,9 @@ const App = () => {
                     onClick={() => handleSectionChange(section.id)}
                     aria-current={isActive ? 'page' : undefined}
                     className={cn(
-                      'flex items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm font-medium transition focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50',
+                      'flex items-center justify-between rounded-lg border px-4 py-3 text-left text-sm font-medium transition focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50',
                       isActive
-                        ? 'border-primary/60 bg-primary/10 text-foreground shadow-[0_15px_35px_rgba(2,6,23,0.25)]'
+                        ? 'border-primary/60 bg-primary/10 text-foreground'
                         : 'border-transparent text-muted-foreground hover:border-border/80 hover:bg-muted/40 hover:text-foreground'
                     )}
                   >
@@ -1042,7 +1028,7 @@ const App = () => {
               })}
             </nav>
           </aside>
-          <div className="flex flex-1 flex-col gap-8 rounded-[32px] border border-border/70 bg-card/95 p-6 shadow-[0_30px_80px_rgba(2,6,23,0.5)] backdrop-blur-3xl md:p-10">
+          <div className="flex flex-1 flex-col gap-8 rounded-xl border border-border bg-card p-6 md:p-10">
             <header
               className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between"
               style={{ WebkitAppRegion: 'drag' }}
@@ -1057,7 +1043,7 @@ const App = () => {
               </div>
               <Button
                 variant="outline"
-                className="self-start rounded-full border border-border/70 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground"
+                className="self-start text-xs font-semibold text-muted-foreground"
                 style={{ WebkitAppRegion: 'no-drag' }}
                 type="button"
                 aria-label="Open settings panel"
@@ -1087,17 +1073,6 @@ const App = () => {
               })}
             </div>
           </div>
-          <footer className="flex flex-wrap gap-2 text-xs uppercase tracking-[0.25em] text-muted-foreground">
-            <Badge variant="outline" className="border-border/70 bg-transparent px-4 py-2 text-[0.7rem] text-muted-foreground">
-              Deterministic IO
-            </Badge>
-            <Badge variant="outline" className="border-border/70 bg-transparent px-4 py-2 text-[0.7rem] text-muted-foreground">
-              Keychain-only secrets
-            </Badge>
-            <Badge variant="outline" className="border-border/70 bg-transparent px-4 py-2 text-[0.7rem] text-muted-foreground">
-              No telemetry
-            </Badge>
-          </footer>
         </div>
       </div>
       {modalState && (
