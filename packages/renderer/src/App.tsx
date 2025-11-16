@@ -20,11 +20,49 @@ import { cn } from './lib/utils';
 
 type SectionId = 'servers' | 'settings' | 'sync' | 'updates';
 
-const SIDEBAR_SECTIONS: { id: SectionId; label: string }[] = [
-  { id: 'servers', label: 'Servers' },
-  { id: 'settings', label: 'Settings' },
-  { id: 'sync', label: 'Sync' },
-  { id: 'updates', label: 'Updates' }
+const ServersIcon = () => (
+  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6}>
+    <rect x="4" y="5" width="16" height="4" rx="1.5" />
+    <rect x="4" y="13" width="16" height="4" rx="1.5" />
+    <circle cx="8" cy="7" r="0.7" />
+    <circle cx="8" cy="15" r="0.7" />
+  </svg>
+);
+
+const SettingsIcon = () => (
+  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6}>
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M6 7.5h6m3.5 0H18M7.5 7.5a1.5 1.5 0 1 1 3 0m-4.5 9h6m3.5 0H18m-9-4.5H18m-8.5 0a1.5 1.5 0 1 0 3 0"
+    />
+  </svg>
+);
+
+const SyncIcon = () => (
+  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6}>
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M7 11a5 5 0 0 1 8.5-3.5M17 13a5 5 0 0 1-8.5 3.5"
+    />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6.5 9.5 9 7m-2.5 2.5V7" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M17.5 14.5 15 17m2.5-2.5V17" />
+  </svg>
+);
+
+const UpdatesIcon = () => (
+  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v9m0-9 3 3m-3-3-3 3" />
+    <rect x="5" y="15" width="14" height="3" rx="1.2" />
+  </svg>
+);
+
+const SIDEBAR_SECTIONS: { id: SectionId; label: string; icon: JSX.Element }[] = [
+  { id: 'servers', label: 'Servers', icon: <ServersIcon /> },
+  { id: 'settings', label: 'Settings', icon: <SettingsIcon /> },
+  { id: 'sync', label: 'Sync', icon: <SyncIcon /> },
+  { id: 'updates', label: 'Updates', icon: <UpdatesIcon /> }
 ];
 
 const agentLabels: Record<SupportedAgent, string> = {
@@ -976,102 +1014,97 @@ const App = () => {
   };
 
   return (
-    <main className="relative min-h-screen bg-background font-sans text-foreground antialiased">
+    <main className="relative flex min-h-screen bg-background font-sans text-foreground antialiased">
       <div
         aria-hidden="true"
-        className="fixed top-0 right-0 z-50 h-10"
+        className="fixed left-0 right-0 top-0 z-50 h-10"
         style={{
-          left: '72px',
           WebkitAppRegion: 'drag',
           WebkitUserSelect: 'none'
         }}
       />
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-10 sm:px-6 lg:px-8">
-        <div className="flex flex-1 flex-col gap-6 lg:flex-row">
-          <aside className="rounded-xl border border-border bg-card p-6 lg:sticky lg:top-10 lg:h-fit lg:w-72">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-lg font-semibold text-primary">
-                  R
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">Relay Control</p>
-                  <p className="text-xs text-muted-foreground">Shared MCP shell</p>
-                </div>
-              </div>
-              <div className="rounded-lg border border-border/70 bg-muted/40 px-4 py-3 text-xs text-muted-foreground">
-                Offline-first Electron app with deterministic sync.
-              </div>
+      <aside className="flex min-h-screen w-[300px] flex-col border-r border-border/60 bg-[hsl(0,0%,7%)] px-6 py-8">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-lg font-semibold text-primary">
+              R
             </div>
-            <nav className="mt-8 flex flex-col gap-1" aria-label="Primary">
-              {SIDEBAR_SECTIONS.map((section) => {
-                const isActive = activeSection === section.id;
-                return (
-                  <button
-                    key={section.id}
-                    type="button"
-                    onClick={() => handleSectionChange(section.id)}
-                    aria-current={isActive ? 'page' : undefined}
-                    className={cn(
-                      'flex items-center justify-between rounded-lg border px-4 py-3 text-left text-sm font-medium transition focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50',
-                      isActive
-                        ? 'border-primary/60 bg-primary/10 text-foreground'
-                        : 'border-transparent text-muted-foreground hover:border-border/80 hover:bg-muted/40 hover:text-foreground'
-                    )}
-                  >
-                    <span>{section.label}</span>
-                    <span aria-hidden="true" className="text-xs text-muted-foreground/70">
-                      ↗
-                    </span>
-                  </button>
-                );
-              })}
-            </nav>
-          </aside>
-          <div className="flex flex-1 flex-col gap-8 rounded-xl border border-border bg-card p-6 md:p-10">
-            <header
-              className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between"
-              style={{ WebkitAppRegion: 'drag' }}
-            >
-              <div className="space-y-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary/80">Relay</p>
-                <h1 className="text-3xl font-semibold text-foreground sm:text-4xl">Shared MCP Orchestrator</h1>
-                <p className="max-w-2xl text-base text-muted-foreground">
-                  macOS-only shell keeps Cursor, Claude, and Codex servers in sync with deterministic IO, Keychain secrets, and
-                  offline defaults.
-                </p>
-              </div>
-              <Button
-                variant="outline"
-                className="self-start text-xs font-semibold text-muted-foreground"
-                style={{ WebkitAppRegion: 'no-drag' }}
+            <div>
+              <p className="text-sm font-semibold text-foreground">Relay Control</p>
+              <p className="text-xs text-muted-foreground">Shared MCP shell</p>
+            </div>
+          </div>
+          <div className="rounded-lg border border-border/70 bg-white/5 px-4 py-3 text-xs text-muted-foreground">
+            Offline-first Electron app with deterministic sync.
+          </div>
+        </div>
+        <nav className="mt-8 flex flex-col gap-2" aria-label="Primary">
+          {SIDEBAR_SECTIONS.map((section) => {
+            const isActive = activeSection === section.id;
+            return (
+              <button
+                key={section.id}
                 type="button"
-                aria-label="Open settings panel"
-                onClick={() => handleSectionChange('settings')}
+                onClick={() => handleSectionChange(section.id)}
+                aria-current={isActive ? 'page' : undefined}
+                className={cn(
+                  'group flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
+                  isActive ? 'bg-white/10 text-foreground' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
+                )}
               >
-                Settings
-              </Button>
-            </header>
-            <div className="relative min-h-[420px]">
-              {SIDEBAR_SECTIONS.map((section) => {
-                const isActive = activeSection === section.id;
-                return (
-                  <section
-                    key={`section-${section.id}`}
-                    data-section={section.id}
-                    aria-hidden={!isActive}
-                    className={cn(
-                      'transition-all duration-300',
-                      isActive
-                        ? 'relative opacity-100'
-                        : 'absolute inset-0 -z-10 opacity-0 pointer-events-none'
-                    )}
-                  >
-                    {sectionContent[section.id]}
-                  </section>
-                );
-              })}
+                <span className="flex h-8 w-8 items-center justify-center rounded-md bg-white/5 text-muted-foreground group-hover:text-foreground">
+                  {section.icon}
+                </span>
+                <span>{section.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      </aside>
+      <div className="relative flex min-h-screen flex-1 flex-col bg-background">
+        <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-6 py-10 lg:px-10">
+          <header
+            className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between"
+            style={{ WebkitAppRegion: 'drag' }}
+          >
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary/80">Relay</p>
+              <h1 className="text-3xl font-semibold text-foreground sm:text-4xl">Shared MCP Orchestrator</h1>
+              <p className="max-w-2xl text-base text-muted-foreground">
+                macOS-only shell keeps Cursor, Claude, and Codex servers in sync with deterministic IO, Keychain secrets, and
+                offline defaults.
+              </p>
             </div>
+            <Button
+              variant="outline"
+              className="self-start text-xs font-semibold text-muted-foreground"
+              style={{ WebkitAppRegion: 'no-drag' }}
+              type="button"
+              aria-label="Open settings panel"
+              onClick={() => handleSectionChange('settings')}
+            >
+              Settings
+            </Button>
+          </header>
+          <div className="relative min-h-[420px]">
+            {SIDEBAR_SECTIONS.map((section) => {
+              const isActive = activeSection === section.id;
+              return (
+                <section
+                  key={`section-${section.id}`}
+                  data-section={section.id}
+                  aria-hidden={!isActive}
+                  className={cn(
+                    'transition-all duration-300',
+                    isActive
+                      ? 'relative opacity-100'
+                      : 'absolute inset-0 -z-10 pointer-events-none opacity-0'
+                  )}
+                >
+                  {sectionContent[section.id]}
+                </section>
+              );
+            })}
           </div>
         </div>
       </div>
