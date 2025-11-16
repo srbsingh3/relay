@@ -11,10 +11,10 @@ export const buildMainWindowOptions = ({
   isMac,
   allowDevTools
 }: WindowOptionsArgs): BrowserWindowConstructorOptions => ({
-  width: 900,
-  height: 600,
-  minWidth: 900,
-  minHeight: 600,
+  width: 1100,
+  height: 700,
+  minWidth: 1100,
+  minHeight: 700,
   show: false,
   title: 'Relay',
   titleBarStyle: 'hiddenInset',

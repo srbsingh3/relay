@@ -21,7 +21,7 @@ Use it as the primary execution plan for the macOS MVP.
 - [x] 1.2 **Secure BrowserWindow shell**
   - [x] 1.2.1 Create main Electron process entry.
   - [x] 1.2.2 Configure a single BrowserWindow:
-    - [x] 1.2.2.1 Size: 900×600.
+    - [x] 1.2.2.1 Size: 1100×700.
     - [x] 1.2.2.2 ~~Dark theme using Tailwind CSS and shadcn/ui primitives (can be basic initially).~~ Mirror the shadcn-admin dark-first aesthetic (with optional light/system toggle) using Tailwind CSS + shadcn/ui primitives.
   - [x] 1.2.3 Enforce Electron security flags:
     - [x] 1.2.3.1 `contextIsolation = true`
