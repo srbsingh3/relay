@@ -1026,7 +1026,7 @@ const App = () => {
             WebkitUserSelect: 'none'
           }}
         />
-        <aside className="flex min-h-screen w-[300px] flex-col border-r border-border/60 bg-card px-6 py-8">
+        <aside className="flex min-h-screen w-[240px] flex-col border-r border-border/60 bg-card px-6 py-8">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-lg font-semibold text-primary">
@@ -1037,10 +1037,7 @@ const App = () => {
                 <p className="text-xs text-muted-foreground">Shared MCP shell</p>
               </div>
             </div>
-            <div className="rounded-lg border border-border/70 bg-muted px-4 py-3 text-xs text-muted-foreground">
-              Offline-first Electron app with deterministic sync.
             </div>
-          </div>
           <nav className="mt-8 flex flex-col gap-2" aria-label="Primary">
             {SIDEBAR_SECTIONS.map((section) => {
               const isActive = activeSection === section.id;
@@ -1074,8 +1071,7 @@ const App = () => {
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary/80">Relay</p>
                 <h1 className="text-3xl font-semibold text-foreground sm:text-4xl">Shared MCP Orchestrator</h1>
                 <p className="max-w-2xl text-base text-muted-foreground">
-                  macOS-only shell keeps Cursor, Claude, and Codex servers in sync with deterministic IO, Keychain secrets, and
-                  offline defaults.
+                  Shared MCP shell keeps Cursor, Claude, and Codex servers in sync with secure Keychain storage.
                 </p>
               </div>
               <div className="flex items-center gap-3">
