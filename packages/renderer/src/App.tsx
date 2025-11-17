@@ -184,18 +184,18 @@ const masterLabels: Record<MasterState, string> = {
 };
 
 const masterStateStyles: Record<MasterState, string> = {
-  on: 'border-emerald-400/60 bg-emerald-500/10 text-emerald-50 dark:text-emerald-100',
+  on: 'border-emerald-500/60 bg-emerald-500/10 text-emerald-700 dark:text-emerald-100',
   off: 'border-border bg-muted text-muted-foreground',
-  custom: 'border-sky-400/70 bg-sky-500/15 text-sky-50'
+  custom: 'border-sky-500/70 bg-sky-500/15 text-sky-700 dark:text-sky-100'
 };
 
 const appToggleStyles = {
-  on: 'border-emerald-400/70 bg-emerald-500/10 text-emerald-50 dark:text-emerald-100',
+  on: 'border-emerald-500/70 bg-emerald-500/10 text-emerald-700 dark:text-emerald-100',
   off: 'border-border bg-muted text-muted-foreground'
 };
 
 const detectionStatusStyles = {
-  detected: 'border-emerald-400/60 bg-emerald-500/10 text-emerald-50 dark:text-emerald-100',
+  detected: 'border-emerald-500/60 bg-emerald-500/10 text-emerald-700 dark:text-emerald-100',
   missing: 'border-border bg-muted text-muted-foreground'
 };
 
@@ -207,11 +207,11 @@ const updateStateStyles: Record<
   }
 > = {
   idle: { label: 'Idle', className: 'border-border text-muted-foreground' },
-  checking: { label: 'Checking…', className: 'border-sky-400/70 text-sky-100' },
-  up_to_date: { label: 'Up to date', className: 'border-emerald-400/70 text-emerald-100' },
-  update_available: { label: 'Update available', className: 'border-amber-400/70 text-amber-100' },
+  checking: { label: 'Checking…', className: 'border-sky-500/70 text-sky-700 dark:text-sky-100' },
+  up_to_date: { label: 'Up to date', className: 'border-emerald-500/70 text-emerald-700 dark:text-emerald-100' },
+  update_available: { label: 'Update available', className: 'border-amber-500/70 text-amber-700 dark:text-amber-100' },
   offline: { label: 'Offline', className: 'border-border text-muted-foreground' },
-  error: { label: 'Error', className: 'border-rose-500/70 text-rose-100' }
+  error: { label: 'Error', className: 'border-rose-500/70 text-rose-700 dark:text-rose-100' }
 };
 
 const formatTimestamp = (isoValue?: string | null): string => {
@@ -739,8 +739,8 @@ const App = () => {
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
-              {loadError && <p className="text-sm text-rose-300">{loadError}</p>}
-              {mutationError && <p className="text-sm text-rose-300">{mutationError}</p>}
+              {loadError && <p className="text-sm text-rose-600 dark:text-rose-300">{loadError}</p>}
+              {mutationError && <p className="text-sm text-rose-600 dark:text-rose-300">{mutationError}</p>}
               {loading ? (
                 <p className="text-sm text-muted-foreground">Loading servers…</p>
               ) : servers.length === 0 ? (
@@ -776,7 +776,7 @@ const App = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="text-xs font-semibold text-rose-200 transition hover:text-rose-100"
+                              className="text-xs font-semibold text-rose-600 transition hover:text-rose-700 dark:text-rose-200 dark:hover:text-rose-100"
                               onClick={() => void handleRemoveServer(server.id)}
                               type="button"
                             >
@@ -788,7 +788,7 @@ const App = () => {
                               className={cn(
                                 'rounded-md border px-3 py-1.5 text-xs font-semibold transition',
                                 server.enabled
-                                  ? 'border-emerald-400/70 bg-emerald-500/10 text-emerald-50'
+                                  ? 'border-emerald-500/70 bg-emerald-500/10 text-emerald-700 dark:text-emerald-100'
                                   : 'border-border bg-muted text-muted-foreground'
                               )}
                             >
@@ -874,7 +874,7 @@ const App = () => {
               )}
             </CardHeader>
             <CardContent className="space-y-4">
-              {detectionError && <p className="text-sm text-rose-300">{detectionError}</p>}
+              {detectionError && <p className="text-sm text-rose-600 dark:text-rose-300">{detectionError}</p>}
               <ul className="space-y-3">
                 {SUPPORTED_AGENTS.map((agent) => {
                   const status = detection[agent];
@@ -919,10 +919,10 @@ const App = () => {
                 className={cn(
                   'text-[0.65rem] uppercase tracking-[0.3em]',
                   syncStatus.state === 'running'
-                    ? 'border-sky-400/70 text-sky-200'
+                    ? 'border-sky-500/70 text-sky-700 dark:text-sky-200'
                     : syncStatus.state === 'error'
-                      ? 'border-rose-500/70 text-rose-200'
-                      : 'border-emerald-400/70 text-emerald-100'
+                      ? 'border-rose-500/70 text-rose-700 dark:text-rose-200'
+                      : 'border-emerald-500/70 text-emerald-700 dark:text-emerald-100'
                 )}
               >
                 {syncStatus.state === 'running' ? 'Syncing' : syncStatus.state === 'error' ? 'Error' : 'Ready'}
@@ -933,7 +933,7 @@ const App = () => {
                 <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Last sync</p>
                 <p className="mt-1 text-lg font-semibold text-foreground">{formatTimestamp(syncStatus.lastRun)}</p>
                 {syncStatus.lastError ? (
-                  <p className="mt-1 text-sm text-rose-300">{syncStatus.lastError}</p>
+                  <p className="mt-1 text-sm text-rose-600 dark:text-rose-300">{syncStatus.lastError}</p>
                 ) : (
                   <p className="mt-1 text-sm text-muted-foreground">Every detected agent uses this timestamp.</p>
                 )}
@@ -983,7 +983,7 @@ const App = () => {
                 </div>
               </dl>
               <p className="text-xs text-muted-foreground">{updateStatus.message ?? 'No update checks have run yet.'}</p>
-              {updateError && <p className="text-xs text-rose-300">{updateError}</p>}
+              {updateError && <p className="text-xs text-rose-600 dark:text-rose-300">{updateError}</p>}
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Button
                   type="button"
@@ -1003,7 +1003,7 @@ const App = () => {
                   className={cn(
                     'w-full rounded-md border px-4 py-2 text-center text-[0.75rem] font-semibold uppercase tracking-[0.2em] transition sm:w-auto',
                     updateStatus.autoCheckEnabled
-                      ? 'border-emerald-400/70 text-emerald-100'
+                      ? 'border-emerald-500/70 text-emerald-700 dark:text-emerald-100'
                       : 'border-border text-muted-foreground'
                   )}
                 >
@@ -1026,7 +1026,7 @@ const App = () => {
             WebkitUserSelect: 'none'
           }}
         />
-        <aside className="flex min-h-screen w-[300px] flex-col border-r border-border/60 bg-[hsl(0,0%,7%)] px-6 py-8">
+        <aside className="flex min-h-screen w-[300px] flex-col border-r border-border/60 bg-card px-6 py-8">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-lg font-semibold text-primary">
@@ -1037,7 +1037,7 @@ const App = () => {
                 <p className="text-xs text-muted-foreground">Shared MCP shell</p>
               </div>
             </div>
-            <div className="rounded-lg border border-border/70 bg-white/5 px-4 py-3 text-xs text-muted-foreground">
+            <div className="rounded-lg border border-border/70 bg-muted px-4 py-3 text-xs text-muted-foreground">
               Offline-first Electron app with deterministic sync.
             </div>
           </div>
@@ -1052,10 +1052,10 @@ const App = () => {
                   aria-current={isActive ? 'page' : undefined}
                   className={cn(
                     'group flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
-                    isActive ? 'bg-white/10 text-foreground' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
+                    isActive ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
                   )}
                 >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-md bg-white/5 text-muted-foreground group-hover:text-foreground">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-md bg-muted text-muted-foreground group-hover:text-foreground">
                     {section.icon}
                   </span>
                   <span>{section.label}</span>
