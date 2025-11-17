@@ -36,3 +36,7 @@ coverage
 Thumbs.db
 .idea
 .vscode
+
+# MCP and Claude Code personal configs
+.mcp.json
+.claude
