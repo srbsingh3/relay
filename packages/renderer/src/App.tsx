@@ -293,6 +293,76 @@ const formatCommand = (server: RegistryServerEntry) => {
 
 const resolveBridge = () => (typeof window !== 'undefined' ? window.relay : undefined);
 
+// Hook to detect scrolling and add/remove CSS class for scrollbar visibility
+const useScrollDetection = () => {
+  useEffect(() => {
+    let scrollTimeout: NodeJS.Timeout;
+
+    const handleScroll = () => {
+      // Add scrolling class to document.documentElement and body to show scrollbar thumb
+      document.documentElement.classList.add('scrolling');
+      document.body.classList.add('scrolling');
+
+      // Clear existing timeout
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+
+      // Remove scrolling class after scrolling stops
+      scrollTimeout = setTimeout(() => {
+        document.documentElement.classList.remove('scrolling');
+        document.body.classList.remove('scrolling');
+      }, 500);
+    };
+
+    // Add scroll listeners to window and any scrollable elements
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    // Listen for scroll events on the main content area after component mounts
+    const setupScrollListeners = () => {
+      const mainContent = document.querySelector('[data-section]') ||
+                          document.querySelector('.relative.min-h-[420px]') ||
+                          document.querySelector('main > div:last-child');
+
+      if (mainContent) {
+        mainContent.addEventListener('scroll', handleScroll, { passive: true });
+      }
+
+      // Also listen for scroll events on any potential scrollable container
+      const scrollableElements = document.querySelectorAll('[data-section], .overflow-auto, .overflow-y-auto');
+      scrollableElements.forEach((element) => {
+        element.addEventListener('scroll', handleScroll, { passive: true });
+      });
+    };
+
+    // Setup listeners immediately and also after a short delay to ensure DOM is ready
+    setupScrollListeners();
+    const timeoutId = setTimeout(setupScrollListeners, 100);
+
+    return () => {
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+      clearTimeout(timeoutId);
+      window.removeEventListener('scroll', handleScroll);
+
+      // Clean up all scroll listeners
+      const mainContent = document.querySelector('[data-section]') ||
+                          document.querySelector('.relative.min-h-[420px]') ||
+                          document.querySelector('main > div:last-child');
+
+      if (mainContent) {
+        mainContent.removeEventListener('scroll', handleScroll);
+      }
+
+      const scrollableElements = document.querySelectorAll('[data-section], .overflow-auto, .overflow-y-auto');
+      scrollableElements.forEach((element) => {
+        element.removeEventListener('scroll', handleScroll);
+      });
+    };
+  }, []);
+};
+
 const computeMasterState = (server: RegistryServerEntry, detection: DetectionSummary): MasterState => {
   if (!server.enabled) {
     return 'off';
@@ -319,6 +389,9 @@ const computeMasterState = (server: RegistryServerEntry, detection: DetectionSum
 
 const App = () => {
   const bridge = resolveBridge();
+
+  // Enable scroll-based scrollbar visibility
+  useScrollDetection();
   const versionLabel = typeof window !== 'undefined' ? window.relay?.version ?? 'dev' : 'dev';
   const [servers, setServers] = useState<RegistryServerEntry[]>(() =>
     bridge ? [] : fallbackRegistrySnapshot.servers
