@@ -61,7 +61,7 @@ const UpdatesIcon = () => (
 );
 
 const SIDEBAR_SECTIONS: { id: SectionId; label: string; icon: JSX.Element }[] = [
-  { id: 'servers', label: 'Servers', icon: <ServersIcon /> },
+  { id: 'servers', label: 'MCP Servers', icon: <ServersIcon /> },
   { id: 'settings', label: 'Settings', icon: <SettingsIcon /> },
   { id: 'sync', label: 'Sync', icon: <SyncIcon /> },
   { id: 'updates', label: 'Updates', icon: <UpdatesIcon /> }
@@ -1099,19 +1099,18 @@ const App = () => {
             WebkitUserSelect: 'none'
           }}
         />
-        <aside className="flex min-h-screen w-[240px] flex-col border-r border-border/60 bg-card px-6 py-12">
+        <aside className="fixed left-0 top-0 bottom-0 w-[240px] flex-col border-r border-border/60 bg-card px-6 py-14 overflow-hidden hidden md:flex">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-lg font-semibold text-primary">
                 R
               </div>
               <div>
-                <p className="text-sm font-semibold text-foreground">Relay Control</p>
-                <p className="text-xs text-muted-foreground">Shared MCP shell</p>
+                <p className="text-sm font-semibold text-foreground">Relay</p>
               </div>
             </div>
             </div>
-          <nav className="mt-8 flex flex-col gap-2" aria-label="Primary">
+          <nav className="mt-8 flex-1 flex flex-col gap-2" aria-label="Primary">
             {SIDEBAR_SECTIONS.map((section) => {
               const isActive = activeSection === section.id;
               return (
@@ -1134,7 +1133,7 @@ const App = () => {
             })}
           </nav>
         </aside>
-        <div className="relative flex min-h-screen flex-1 flex-col bg-background">
+        <div className="relative min-h-screen bg-background md:ml-[240px]">
           <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-6 py-14 lg:px-10">
             <header
               className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between"
