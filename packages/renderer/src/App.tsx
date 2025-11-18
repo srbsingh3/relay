@@ -1093,13 +1093,13 @@ const App = () => {
       <main className="relative flex min-h-screen bg-background font-sans text-foreground antialiased">
         <div
           aria-hidden="true"
-          className="fixed left-0 right-0 top-0 z-50 h-10"
+          className="fixed left-0 right-0 top-0 z-50 h-6"
           style={{
             WebkitAppRegion: 'drag',
             WebkitUserSelect: 'none'
           }}
         />
-        <aside className="flex min-h-screen w-[240px] flex-col border-r border-border/60 bg-card px-6 py-8">
+        <aside className="flex min-h-screen w-[240px] flex-col border-r border-border/60 bg-card px-6 py-12">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-lg font-semibold text-primary">
@@ -1135,7 +1135,7 @@ const App = () => {
           </nav>
         </aside>
         <div className="relative flex min-h-screen flex-1 flex-col bg-background">
-          <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-6 py-10 lg:px-10">
+          <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-6 py-14 lg:px-10">
             <header
               className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between"
               style={{ WebkitAppRegion: 'drag' }}
