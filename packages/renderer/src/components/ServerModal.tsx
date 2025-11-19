@@ -4,8 +4,15 @@ import type { RegistryEnvironmentMap } from '../../../main/src/registry/schema';
 import type { SupportedAgent } from '../../../main/src/types/agents';
 import { SUPPORTED_AGENTS } from '../../../main/src/types/agents';
 import { Button } from './ui/button';
+import { ErrorBoundary } from './ui/error-boundary';
+import { FocusTrap } from './ui/focus-trap';
+import { FormField } from './ui/form-field';
 import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { LoadingSpinner } from './ui/loading-spinner';
+import { Switch } from './ui/switch';
 import { Textarea } from './ui/textarea';
+import { Typography } from './ui/typography';
 import { cn } from '../lib/utils';
 
 const KEYCHAIN_VALUE_PREFIX = 'keychain:';
@@ -345,13 +352,14 @@ const ServerModal = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 overflow-y-auto bg-background/80 px-4 py-10 backdrop-blur-sm"
+      className="fixed inset-0 z-50 overflow-y-auto bg-background/80 px-4 py-10 backdrop-blur-sm modal-backdrop"
       role="dialog"
       aria-modal="true"
       aria-labelledby="server-modal-title"
     >
       <div className="mx-auto flex min-h-full w-full max-w-4xl items-start justify-center">
-        <div className="relative w-full rounded-xl border border-border bg-card p-6">
+        <FocusTrap active onEscape={onCancel}>
+          <div className="relative w-full rounded-xl border border-border bg-card p-6 modal-content animate-scale-in">
         <header className="flex flex-col gap-3 border-b border-border/50 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-primary">Registry</p>
@@ -363,9 +371,10 @@ const ServerModal = ({
             Cancel
           </Button>
         </header>
+        <ErrorBoundary>
         <form className="mt-6 flex flex-col gap-6" onSubmit={handleSubmit}>
           <div className="space-y-2">
-            <label className="text-[0.7rem] uppercase tracking-[0.25em] text-muted-foreground">Server name</label>
+            <Label variant="uppercase">Server name</Label>
             <Input
               value={state.name}
               onChange={(event) => updateField('name', event.target.value)}
@@ -375,7 +384,7 @@ const ServerModal = ({
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-[0.7rem] uppercase tracking-[0.25em] text-muted-foreground">Launch command</label>
+              <Label variant="uppercase">Launch command</Label>
               <Input
                 value={state.command}
                 onChange={(event) => updateField('command', event.target.value)}
@@ -383,7 +392,7 @@ const ServerModal = ({
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[0.7rem] uppercase tracking-[0.25em] text-muted-foreground">Args (one per line)</label>
+              <Label variant="uppercase">Args (one per line)</Label>
               <Textarea
                 value={state.argsText}
                 onChange={(event) => updateField('argsText', event.target.value)}
@@ -395,56 +404,51 @@ const ServerModal = ({
           <div className="rounded-2xl border border-border bg-muted/40 px-4 py-3">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-[0.7rem] uppercase tracking-[0.25em] text-muted-foreground">Enabled</p>
-                <p className="text-sm text-foreground">
+                <Typography variant="label" color="muted">Enabled</Typography>
+                <Typography variant="small">
                   {state.enabled ? 'Server participates in sync.' : 'Server stays disabled until re-enabled.'}
-                </p>
+                </Typography>
               </div>
-              <button
-                type="button"
-                className={cn(
-                  'rounded-full border px-5 py-2 text-xs font-semibold uppercase tracking-[0.3em]',
-                  state.enabled
-                    ? 'border-success/70 bg-success/10 text-success'
-                    : 'border-muted-foreground/70 bg-muted/70 text-foreground'
-                )}
-                aria-pressed={state.enabled}
-                onClick={() => updateField('enabled', !state.enabled)}
-              >
-                {state.enabled ? 'Enabled' : 'Disabled'}
-              </button>
+              <Switch
+                checked={state.enabled}
+                onCheckedChange={(checked) => updateField('enabled', checked)}
+              />
             </div>
           </div>
           <div className="rounded-3xl border border-border bg-muted/30 px-4 py-4" role="group" aria-label="App scope toggles">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-[0.7rem] uppercase tracking-[0.25em] text-muted-foreground">Per-app scope</p>
-                <p className="text-sm text-foreground">Detected agents can be disabled per app.</p>
+                <Typography variant="label" color="muted">Per-app scope</Typography>
+                <Typography variant="small">Detected agents can be disabled per app.</Typography>
               </div>
             </div>
-            <div className="mt-4 flex flex-wrap gap-3">
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
               {SUPPORTED_AGENTS.map((agent) => {
                 const detected = Boolean(detection[agent]?.detected);
                 const on = state.appStates[agent];
                 const disabled = !detected;
                 return (
-                  <button
+                  <div
                     key={agent}
-                    type="button"
                     className={cn(
-                      'flex min-w-[140px] flex-col rounded-2xl border px-4 py-3 text-left text-xs uppercase tracking-[0.25em] transition',
-                      on ? 'border-success/60 bg-success/10 text-success' : 'border-border bg-muted/40 text-card-foreground',
-                      disabled ? 'cursor-not-allowed opacity-40' : 'hover:border-border/40'
+                      'flex items-center justify-between rounded-lg border border-border bg-card p-3',
+                      !detected && 'opacity-50'
                     )}
-                    disabled={disabled}
-                    aria-pressed={on}
-                    onClick={() => toggleApp(agent)}
                   >
-                    <span className="text-[0.65rem]">{agent.charAt(0).toUpperCase() + agent.slice(1)}</span>
-                    <span className="text-base font-semibold tracking-normal text-foreground">
-                      {!detected ? 'Not detected' : on ? 'On' : 'Off'}
-                    </span>
-                  </button>
+                    <div className="flex-1">
+                      <Typography variant="eyebrow" color="muted">
+                        {agent.charAt(0).toUpperCase() + agent.slice(1)}
+                      </Typography>
+                      <Typography variant="small" color="default">
+                        {!detected ? 'Not detected' : on ? 'Enabled' : 'Disabled'}
+                      </Typography>
+                    </div>
+                    <Switch
+                      checked={on}
+                      onCheckedChange={() => toggleApp(agent)}
+                      disabled={disabled}
+                    />
+                  </div>
                 );
               })}
             </div>
@@ -452,7 +456,7 @@ const ServerModal = ({
           <section className="space-y-4 rounded-3xl border border-border bg-muted/30 px-4 py-4">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-[0.7rem] uppercase tracking-[0.25em] text-muted-foreground">Keychain env aliases</p>
+                <Typography variant="label" color="muted">Keychain env aliases</Typography>
                 <p className="text-sm text-muted-foreground">Env key + alias (Keychain holds the secret).</p>
               </div>
               <Button variant="outline" size="sm" type="button" onClick={addEnvRow} className="rounded-full border-border/20 text-xs uppercase tracking-[0.2em]">
@@ -470,7 +474,7 @@ const ServerModal = ({
                   >
                     <div className="grid gap-3 md:grid-cols-[1.1fr_1fr_1fr_auto]">
                       <div className="space-y-2">
-                        <label className="text-[0.65rem] uppercase tracking-[0.25em] text-muted-foreground">Env key</label>
+                        <Label variant="uppercase">Env key</Label>
                         <Input
                           value={row.key}
                           onChange={(event) => updateEnvRow(row.id, { key: event.target.value })}
@@ -479,7 +483,7 @@ const ServerModal = ({
                         {rowErrors?.key && <p className="text-xs text-destructive">{rowErrors.key}</p>}
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[0.65rem] uppercase tracking-[0.25em] text-muted-foreground">Alias</label>
+                        <Label variant="uppercase">Alias</Label>
                         <Input
                           value={row.alias}
                           onChange={(event) => updateEnvRow(row.id, { alias: event.target.value })}
@@ -488,7 +492,7 @@ const ServerModal = ({
                         {rowErrors?.alias && <p className="text-xs text-destructive">{rowErrors.alias}</p>}
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[0.65rem] uppercase tracking-[0.25em] text-muted-foreground">Secret (optional)</label>
+                        <Label variant="uppercase">Secret (optional)</Label>
                         <Input
                           type="password"
                           value={row.secret}
@@ -527,6 +531,9 @@ const ServerModal = ({
             </Button>
           </div>
         </form>
+        </ErrorBoundary>
+      </div>
+        </FocusTrap>
       </div>
     </div>
   </div>

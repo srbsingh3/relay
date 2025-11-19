@@ -16,8 +16,14 @@ import ServerModal, { type ServerFormSubmitPayload } from './components/ServerMo
 import { Badge } from './components/ui/badge';
 import { Button } from './components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card';
+import { ErrorBoundary } from './components/ui/error-boundary';
+import { LoadingSpinner } from './components/ui/loading-spinner';
+import { Skeleton } from './components/ui/skeleton';
+import { StatusCard } from './components/ui/status-card';
 import { ModeToggle } from './components/mode-toggle';
+import { Switch } from './components/ui/switch';
 import { ThemeProvider } from './components/theme-provider';
+import { Typography } from './components/ui/typography';
 import { cn } from './lib/utils';
 
 type SectionId = 'servers' | 'settings' | 'sync' | 'updates';
@@ -183,16 +189,6 @@ const masterLabels: Record<MasterState, string> = {
   custom: 'Mix of enabled/disabled apps'
 };
 
-const masterStateStyles: Record<MasterState, string> = {
-  on: 'border-success/60 bg-success/10 text-success dark:text-success',
-  off: 'border-border bg-muted text-muted-foreground',
-  custom: 'border-warning/70 bg-warning/15 text-warning dark:text-warning'
-};
-
-const appToggleStyles = {
-  on: 'border-success/70 bg-success/10 text-success dark:text-success',
-  off: 'border-border bg-muted text-muted-foreground'
-};
 
 const detectionStatusStyles = {
   detected: 'border-success/60 bg-success/10 text-success dark:text-success',
@@ -392,6 +388,25 @@ const App = () => {
 
   // Enable scroll-based scrollbar visibility
   useScrollDetection();
+
+  // Keyboard navigation handler
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Escape key closes modal
+      if (event.key === 'Escape' && modalState) {
+        setModalState(null);
+      }
+
+      // Ctrl/Cmd + K for quick add server (if modal is not open)
+      if ((event.metaKey || event.ctrlKey) && event.key === 'k' && !modalState) {
+        event.preventDefault();
+        setModalState({ mode: 'add', server: undefined });
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [modalState]);
   const versionLabel = typeof window !== 'undefined' ? window.relay?.version ?? 'dev' : 'dev';
   const [servers, setServers] = useState<RegistryServerEntry[]>(() =>
     bridge ? [] : fallbackRegistrySnapshot.servers
@@ -815,7 +830,34 @@ const App = () => {
               {loadError && <p className="text-sm text-destructive">{loadError}</p>}
               {mutationError && <p className="text-sm text-destructive">{mutationError}</p>}
               {loading ? (
-                <p className="text-sm text-muted-foreground">Loading servers…</p>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <LoadingSpinner size="sm" />
+                    <Typography variant="small" color="muted">Loading servers…</Typography>
+                  </div>
+                  {Array.from({ length: 2 }).map((_, i) => (
+                    <div key={i} className="rounded-lg border border-border bg-card p-5 space-y-3">
+                      <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                        <div className="space-y-2">
+                          <Skeleton className="h-6 w-48" />
+                          <Skeleton className="h-6 w-64" />
+                        </div>
+                        <div className="flex gap-2">
+                          <Skeleton className="h-8 w-16 rounded-md" />
+                          <Skeleton className="h-8 w-16 rounded-md" />
+                        </div>
+                      </div>
+                      <div className="mt-4 space-y-3">
+                        <Skeleton className="h-16 w-full rounded-lg" />
+                        <div className="grid gap-3 sm:grid-cols-3">
+                          {Array.from({ length: 3 }).map((_, j) => (
+                            <Skeleton key={j} className="h-16 w-full rounded-lg" />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : servers.length === 0 ? (
                 <div className="rounded-lg border border-border/60 bg-muted/60 p-6 text-center text-sm text-muted-foreground">
                   <p className="text-base font-medium text-foreground/90">No servers yet</p>
@@ -872,23 +914,26 @@ const App = () => {
                         <div className="mt-4 rounded-lg border border-border/60 bg-muted/60 px-4 py-3 md:mt-3">
                           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
-                              <p className="text-[0.7rem] uppercase tracking-[0.2em] text-muted-foreground">All apps</p>
-                              <p className="text-sm text-foreground/90">{masterLabels[masterState]}</p>
+                              <Typography variant="label" color="muted">All apps</Typography>
+                              <Typography variant="small">{masterLabels[masterState]}</Typography>
                             </div>
-                            <button
-                              type="button"
-                              className={cn(
-                                'rounded-md border px-4 py-2 text-xs font-semibold transition',
-                                masterStateStyles[masterState]
-                              )}
-                              aria-pressed={masterState === 'on'}
-                              onClick={() => handleMasterToggle(server.id, masterState === 'on' ? 'off' : 'on')}
-                            >
-                              {masterState === 'custom' ? 'Custom' : masterState === 'on' ? 'On' : 'Off'}
-                            </button>
+                            <div className="flex items-center gap-3">
+                              <Badge
+                                variant={masterState === 'custom' ? 'warning' : masterState === 'on' ? 'success' : 'muted'}
+                                className="text-xs"
+                              >
+                                {masterState === 'custom' ? 'Custom' : masterState === 'on' ? 'All on' : 'All off'}
+                              </Badge>
+                              <Switch
+                                checked={masterState === 'on' || masterState === 'custom'}
+                                onCheckedChange={(checked) =>
+                                  handleMasterToggle(server.id, checked ? 'on' : 'off')
+                                }
+                              />
+                            </div>
                           </div>
                         </div>
-                        <div className="mt-4 flex flex-wrap gap-3" role="group" aria-label="Per-app toggles">
+                        <div className="mt-4 grid gap-3 sm:grid-cols-3" role="group" aria-label="Per-app toggles">
                           {SUPPORTED_AGENTS.map((agent) => {
                             const status = detection[agent];
                             const detected = Boolean(status?.detected);
@@ -896,24 +941,27 @@ const App = () => {
                             const disabled = !detected || !server.enabled;
 
                             return (
-                              <button
+                              <div
                                 key={`${server.id}-${agent}`}
-                                type="button"
                                 className={cn(
-                                  'flex min-w-[130px] flex-col rounded-md border px-4 py-3 text-left text-xs uppercase tracking-[0.18em] transition',
-                                  effectiveEnabled ? appToggleStyles.on : appToggleStyles.off,
-                                  disabled ? 'cursor-not-allowed opacity-40' : 'hover:border-ring/70'
+                                  'flex items-center justify-between rounded-lg border border-border bg-card p-3',
+                                  !detected && 'opacity-50'
                                 )}
-                                disabled={disabled}
-                                aria-pressed={effectiveEnabled}
-                                data-agent={agent}
-                                onClick={() => handleAgentToggle(server.id, agent)}
                               >
-                                <span className="text-[0.65rem]">{agentLabels[agent]}</span>
-                                <span className="text-base font-semibold tracking-normal text-foreground">
-                                  {!detected ? 'Not detected' : effectiveEnabled ? 'On' : 'Off'}
-                                </span>
-                              </button>
+                                <div className="flex-1">
+                                  <Typography variant="eyebrow" color="muted">
+                                    {agentLabels[agent]}
+                                  </Typography>
+                                  <Typography variant="small" color="default">
+                                    {!detected ? 'Not detected' : effectiveEnabled ? 'Enabled' : 'Disabled'}
+                                  </Typography>
+                                </div>
+                                <Switch
+                                  checked={effectiveEnabled}
+                                  onCheckedChange={() => handleAgentToggle(server.id, agent)}
+                                  disabled={disabled}
+                                />
+                              </div>
                             );
                           })}
                         </div>
@@ -1175,7 +1223,9 @@ const App = () => {
                       : 'absolute inset-0 -z-10 pointer-events-none opacity-0'
                   )}
                 >
-                  {sectionContent[section.id]}
+                  <ErrorBoundary key={section.id}>
+                    {sectionContent[section.id]}
+                  </ErrorBoundary>
                 </section>
               );
             })}

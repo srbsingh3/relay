@@ -1,282 +1,456 @@
-# Relay UI — Style Inventory
+# Relay UI — Complete Style Guide
 
-This document captures every UI-facing style, component, or pattern currently in the repository so we can standardize visuals and remove unused code safely. Each entry calls out the purpose, visual characteristics, source files, usage sites, and any inconsistencies to revisit during the redesign.
+This document captures the complete UI component system for Relay, a macOS-only Electron application that serves as an offline-first MCP (Model Context Protocol) orchestrator.
 
-## ✅ Phase 1 Complete: shadcn/ui Foundation
+## Design System Overview
 
-### New shadcn Components Added
+### Core Principles
+- **macOS-first**: Native-feeling desktop application with proper window chrome
+- **Dark-first theme**: Seamless light/dark/system theme support via CSS custom properties
+- **shadcn/ui compliance**: Full adherence to the shadcn/ui component system
+- **Semantic tokens**: All colors use theme tokens, never raw Tailwind values
+- **Offline-first**: All functionality works without network connectivity
+
+## Theme System
+
+### Color Tokens (`packages/renderer/src/theme.css`)
+```css
+/* Semantic color palette */
+--background: 0 0% 100%;           /* Main app background */
+--foreground: 0 0% 3.9%;           /* Primary text */
+--card: 0 0% 100%;                /* Card/surface backgrounds */
+--border: 0 0% 89.8%;             /* Borders and dividers */
+--muted: 0 0% 96.1%;              /* Secondary surfaces */
+--accent: 0 0% 96.1%;             /* Interactive highlights */
+--primary: 0 0% 9%;               /* Primary brand color */
+--destructive: 0 84.2% 60.2%;     /* Error states */
+--success: 142 76% 36%;           /* Success states */
+--warning: 38 92% 50%;            /* Warning states */
+```
+
+### Typography System
+Uses shadcn/ui Typography component with standardized variants:
+- `h1`-`h4`: Heading sizes with proper tracking and weight
+- `body`: Standard body text
+- `small`: Secondary text
+- `label`: Uppercase form labels (`text-xs uppercase tracking-[0.25em]`)
+- `eyebrow`: Section headers (`text-xs font-semibold uppercase tracking-[0.3em]`)
+
+## Component Library
+
+### shadcn/ui Components Available
+
+#### Interactive Elements
+- **Button**: All variants (`default`, `outline`, `ghost`, `secondary`, `destructive`, `icon`, `sm`, `lg`)
 - **Switch**: Radix-based toggle component for enable/disable functionality
-- **Separator**: Visual divider component for layouts
+- **Input**: Form input fields with proper focus states
+- **Textarea**: Multi-line text input with field sizing
 - **Label**: Enhanced with `uppercase` variant for form field labels
+
+#### Layout & Display
+- **Card**: Standard container with header variants (`CardHeader`, `CardTitle`, `CardDescription`, `CardContent`)
+- **Separator**: Visual dividers for layouts
+- **Badge**: Status indicators with semantic variants (`success`, `warning`, `error`, `muted`, `outline`)
+
+#### Feedback & Communication
 - **Alert**: Success/warning/error variants with proper semantic tokens
-- **Progress**: Radix-based progress indicator component
+- **Progress**: Radix-based progress indicators
 
-### Enhanced Badge Variants
-- Added `success`, `warning`, `error`, `muted` semantic variants
-- All status patterns now use consistent token-based colors
+#### Specialized Components
+- **Typography**: Comprehensive typography system with variants and color controls
+- **ModeToggle**: Theme switcher in the header
 
-### Semantic Color System Standardized
-- **New tokens**: `--success`, `--warning`, `--success-foreground`, `--warning-foreground`
-- **Replaced raw colors**: All `rose-`, `emerald-`, `sky-`, `slate-`, `white-` literals now use semantic tokens
-- **Consistent error handling**: All destructive states use `text-destructive` token
-- **Modal updated**: ServerModal fully migrated to theme token system
+## Layout Patterns
 
----
+### App Shell (`packages/renderer/src/App.tsx:1092`)
+```tsx
+<main className="relative flex min-h-screen bg-background font-sans text-foreground antialiased">
+  {/* Drag strip for macOS window management */}
+  <div className="fixed left-0 right-0 top-0 z-50 h-6" style={{ WebkitAppRegion: 'drag' }} />
 
-## Foundations
+  {/* Two-column layout */}
+  <Sidebar />
+  <ContentArea className="md:ml-[240px]" />
+</main>
+```
 
-### Theme tokens (`packages/renderer/src/theme.css:1`)
-- **Purpose**: Defines light/dark HSL tokens for backgrounds, surfaces, typography, charts, radius tokens, and sidebar colors so Tailwind utilities map back to a shared palette.
-- **Key visuals**: `--background`, `--foreground`, `--card`, `--primary`, `--muted`, `--border`, chart hues, and `--radius` family. The `.dark` block in the same file overrides each token for dark mode.
-- **Usage**: Referenced indirectly via Tailwind classes such as `bg-background`, `text-foreground`, `border-border`, etc., throughout `packages/renderer/src/App.tsx` (e.g., lines 1092, 829, 957) and `packages/renderer/src/components/ServerModal.tsx:354`.
-- **Notes**: Most renderer views respect these tokens, but ServerModal mixes raw slate/white Tailwind colors with token-based ones, yielding a different tone from the main shell.
+### Sidebar Navigation
+- Fixed sidebar with icon + text navigation
+- Active state uses `bg-accent text-accent-foreground`
+- Desktop-only layout (`hidden md:flex`)
 
-### Base layer & custom utilities (`packages/renderer/src/styles.css:1`)
-- **Purpose**: Imports Tailwind (`@import 'tailwindcss'`) and `tw-animate-css`, sets the dark variant shorthand, and applies global scrollbar + focus styles.
-- **Key visuals**: Global `@layer base` applies `border-border` and `outline-ring/50` to `*`, hides scrollbars until `.scrolling` is set, forces body to `bg-background text-foreground`, and ensures touch-friendly input font sizes.
-- **Usage**: Applied globally via `import './styles.css'` in `App.tsx:2` and `main.tsx:4`. Scrollbar styling pairs with the `useScrollDetection` hook in `App.tsx:297`.
-- **Notes**: Utility classes `@utility container`, `@utility no-scrollbar`, `@utility faded-bottom`, and `.CollapsibleContent` animations are not referenced anywhere yet—safe cleanup candidates once confirmed. `tw-animate-css` is only needed for the dropdown menu component (which is currently unused).
+### Header Hero Pattern
+```tsx
+<header>
+  <Typography variant="eyebrow" color="primary">Product category</Typography>
+  <Typography variant="h1">Product name</Typography>
+  <Typography variant="body" color="muted">Product description</Typography>
+  <ModeToggle />
+</header>
+```
 
-### Class merging helper (`packages/renderer/src/lib/utils.ts:1`)
-- **Purpose**: Supplies the `cn` helper that combines `clsx` with `tailwind-merge` to dedupe utility classes.
-- **Usage**: Imported in most components (App, ServerModal, inputs, dropdown). Essential for merging variant class strings.
-- **Notes**: Any new style helper should funnel through `cn` to avoid conflicting Tailwind utilities.
+### Section Cards
+```tsx
+<Card>
+  <CardHeader>
+    <CardTitle>Section Title</CardTitle>
+    <CardDescription>Section description</CardDescription>
+  </CardHeader>
+  <CardContent>
+    {/* Section content */}
+  </CardContent>
+</Card>
+```
 
-### Theme provider (`packages/renderer/src/components/theme-provider.tsx:1`)
-- **Purpose**: Persists the selected theme in `localStorage`, toggles `light`/`dark` classes on `<html>`, and exposes `useTheme`.
-- **Usage**: Wraps the entire app at `App.tsx:1092`. `ModeToggle` drives it (see below).
-- **Notes**: Default theme is `"dark"` via `ThemeProvider` props, but `"system"` remains an option.
+## Interactive Patterns
 
----
+### Toggle Controls
+All toggle functionality uses shadcn Switch component:
 
-## Layout & Navigation
+#### Server Enable Toggle
+```tsx
+<div className="flex items-center justify-between">
+  <div>
+    <Typography variant="label" color="muted">Enabled</Typography>
+    <Typography variant="small">Description text</Typography>
+  </div>
+  <Switch
+    checked={enabled}
+    onCheckedChange={handleChange}
+  />
+</div>
+```
 
-### App shell (`packages/renderer/src/App.tsx:1092`)
-- **Purpose**: Root `<main>` sets the desktop Electron chrome with `relative flex min-h-screen bg-background font-sans text-foreground antialiased`.
-- **Key visuals**: Fixed drag strip (`className="fixed left-0 right-0 top-0 z-50 h-6"`) and two-column layout with an always-visible sidebar (`md:flex`) and content area offset by `md:ml-[240px]`.
-- **Usage**: All renderer routes live inside this shell.
-- **Notes**: Inline `WebkitAppRegion` styles appear on the drag strip and header; verify they remain after redesign.
+#### Per-App Scope Toggles
+```tsx
+<div className="grid gap-3 sm:grid-cols-3">
+  {agents.map((agent) => (
+    <div key={agent} className="flex items-center justify-between rounded-lg border border-border bg-card p-3">
+      <div className="flex-1">
+        <Typography variant="eyebrow" color="muted">{agent}</Typography>
+        <Typography variant="small">{status}</Typography>
+      </div>
+      <Switch checked={enabled} onCheckedChange={handleToggle} disabled={!detected} />
+    </div>
+  ))}
+</div>
+```
 
-### Sidebar navigation (`packages/renderer/src/App.tsx:1102`)
-- **Purpose**: Vertical nav for “MCP Servers / Settings / Sync / Updates”.
-- **Key visuals**: Buttons use `group flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium transition` plus conditional `bg-accent text-accent-foreground` for the active section.
-- **Usage**: Only in App shell. Icons are inline SVGs defined earlier in `App.tsx`.
-- **Notes**: Currently desktop-only (`hidden md:flex`). Consider responsive behavior later.
+### Status Indicators
 
-### Header hero (`packages/renderer/src/App.tsx:1138`)
-- **Purpose**: Introduces the product name and description at the top of the content column.
-- **Key visuals**: Uppercase eyebrow (`text-xs font-semibold uppercase tracking-[0.3em] text-primary/80`), large title `text-3xl sm:text-4xl`, muted description text, ModeToggle, and an outline Settings button.
-- **Usage**: Present at the top of every section view.
-- **Notes**: Header text relies on repeated Tailwind literals; factoring into shared typography tokens could simplify future updates.
+#### Badge Variants
+```tsx
+{/* Status badges */}
+<Badge variant="success">Connected</Badge>
+<Badge variant="warning">Updating</Badge>
+<Badge variant="error">Error</Badge>
+<Badge variant="muted">Offline</Badge>
+<Badge variant="outline">Default</Badge>
+```
 
-### Section switcher (`packages/renderer/src/App.tsx:1163`)
-- **Purpose**: Keeps each section (servers/settings/sync/updates) mounted for transitions.
-- **Key visuals**: Container `relative min-h-[420px]` with each `<section>` toggling between `relative opacity-100` and `absolute inset-0 -z-10 pointer-events-none opacity-0` inside a `transition-all duration-300`.
-- **Usage**: All four section cards are inserted via the `sectionContent` map.
-- **Notes**: JavaScript-controlled `data-section` is also how the scroll detection hook finds scrollable regions.
+#### Alert Component
+```tsx
+<Alert variant="destructive">
+  <AlertTitle>Error</AlertTitle>
+  <AlertDescription>Error message with details.</AlertDescription>
+</Alert>
 
----
+<Alert variant="success">
+  <AlertTitle>Success</AlertTitle>
+  <AlertDescription>Operation completed successfully.</AlertDescription>
+</Alert>
+```
 
-## UI Primitives
+## Form Patterns
 
-### Buttons (`packages/renderer/src/components/ui/button.tsx:6`)
-- **Purpose**: Shared CTA component with size + variant control using class-variance-authority.
-- **Key visuals**:
-  ```ts
-  const buttonVariants = cva(
-    "inline-flex items-center justify-center gap-2 ...",
-    { variants: { variant: { default, destructive, outline, secondary, ghost, link }, size: { default, sm, lg, icon } } }
-  );
-  ```
-- **Usage**: Outline buttons for secondary actions (`App.tsx:839`, `App.tsx:1058`, `ServerModal.tsx:458`), ghost buttons for “Edit/Remove” (`App.tsx:840`, `App.tsx:850`), default buttons for primaries such as “Sync Now” (`App.tsx:1006`) and modal “Save” (`ServerModal.tsx:525`), icon size for `ModeToggle` (`mode-toggle.tsx:18`).
-- **Notes**: `destructive`, `secondary`, and `link` variants plus the `lg` size are never used; we can drop or restyle them later if not needed.
+### Standard Form Layout
+```tsx
+<form className="flex flex-col gap-6">
+  <div className="space-y-2">
+    <Label variant="uppercase">Field Name</Label>
+    <Input placeholder="Placeholder text" />
+    {error && <Typography variant="small" color="destructive">{error}</Typography>}
+  </div>
 
-### Cards (`packages/renderer/src/components/ui/card.tsx:6`)
-- **Purpose**: Standard container for every dashboard section.
-- **Key visuals**: `flex flex-col gap-6 rounded-xl border border-border p-6 bg-card text-card-foreground`, with header/title/description helpers.
-- **Usage**: Wraps the Servers, Settings, Sync, and Updates sections (`App.tsx:820`, `App.tsx:948`, `App.tsx:998`, `App.tsx:1022`).
-- **Notes**: Padding is hard-coded to `p-6`; if we need denser layouts, consider exposing padding variants.
+  <div className="grid gap-4 md:grid-cols-2">
+    <div className="space-y-2">
+      <Label variant="uppercase">Field 1</Label>
+      <Input />
+    </div>
+    <div className="space-y-2">
+      <Label variant="uppercase">Field 2</Label>
+      <Textarea />
+    </div>
+  </div>
+</form>
+```
 
-### Inputs & textarea (`packages/renderer/src/components/ui/input.tsx:6`, `textarea.tsx:6`)
-- **Purpose**: Form-ready fields that integrate Tailwind focus rings and error states.
-- **Key visuals**: Rounded corners, `border-input bg-background`, focus ring on `focus-visible`.
-- **Usage**: Only inside `ServerModal` for the server name, command, args, and Keychain alias rows (`ServerModal.tsx:369-498`).
-- **Notes**: No small/large variants; responsive fonts rely on the global base rule.
+### Modal Structure
+```tsx
+<div className="fixed inset-0 z-50 overflow-y-auto bg-background/80 backdrop-blur-sm">
+  <div className="mx-auto flex min-h-full w-full max-w-4xl items-start justify-center p-4">
+    <div className="relative w-full rounded-xl border border-border bg-card p-6">
+      <header className="flex flex-col gap-3 border-b border-border/50 pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <Typography variant="eyebrow" color="primary">Modal Type</Typography>
+          <Typography variant="h2">Modal Title</Typography>
+        </div>
+        <Button variant="ghost" onClick={onClose}>Cancel</Button>
+      </header>
 
-### Badge (`packages/renderer/src/components/ui/badge.tsx:5`)
-- **Purpose**: Status chips for detection/sync/update state.
-- **Key visuals**: Rounded pill with border, uppercase capability via extra classes at the call site. Available variants: `default`, `secondary`, `destructive`, `outline`, `accent`.
-- **Usage**: Only `variant="outline"` is used (detection state `App.tsx:963`, sync state `App.tsx:1003`, update state `App.tsx:1033`).
-- **Notes**: The other variants are unused and could be removed or recolored later.
+      {/* Modal content */}
+    </div>
+  </div>
+</div>
+```
 
-### Dropdown menu (unused) (`packages/renderer/src/components/ui/dropdown-menu.tsx:1`)
-- **Purpose**: Radix UI wrapper with animated content styles (`data-[state=open]:animate-in`).
-- **Usage**: Not imported anywhere yet.
-- **Notes**: Since it’s unused, the supporting `tw-animate-css` import might also be removable unless future work requires menus.
+## Responsive Design
 
-### Mode toggle (`packages/renderer/src/components/mode-toggle.tsx:6`)
-- **Purpose**: Outline `Button` that swaps the theme via `useTheme`.
-- **Key visuals**: Icon-size button with overlapping Sun/Moon icons and transitions (`rotate-90/scale-0` classes).
-- **Usage**: Lives in the header (`App.tsx:1150`).
-- **Notes**: Inline `style={{ WebkitAppRegion: 'no-drag' }}` prevents accidental dragging; retain if header stays draggable.
+### Breakpoints
+- Mobile: Default styles
+- Tablet: `md:` prefix (768px+)
+- Desktop: Full layout with sidebar
 
----
+### Patterns
+- **Mobile-first**: Base styles target mobile, enhanced for desktop
+- **Responsive grids**: Use `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`
+- **Flexible layouts**: `flex-col sm:flex-row` for horizontal stacking on larger screens
 
-## Feedback & Status Patterns
+## Accessibility
 
-### Scroll behavior (`packages/renderer/src/App.tsx:297` + `styles.css:7`)
-- **Purpose**: `useScrollDetection` adds/removes a `.scrolling` class on `<html>` and `<body>` so the base CSS can fade scrollbar thumbs in/out.
-- **Key visuals**: Scrollbar thumbs remain transparent until the class is set, then use `var(--border)` with a subtle hover mix.
-- **Usage**: Applied globally via the hook invoked in `App.tsx:394`.
-- **Notes**: Any new scrollable regions should keep the `[data-section]` attribute or include `.overflow-auto` so the hook can attach listeners.
+### Standards
+- **ARIA attributes**: All interactive elements have proper ARIA labels
+- **Keyboard navigation**: Full keyboard accessibility via Radix UI primitives
+- **Focus management**: Visible focus states (`focus-visible:ring-2 focus-visible:ring-ring`)
+- **Screen reader support**: Semantic HTML and proper labeling
 
-### Error text pattern (`packages/renderer/src/App.tsx:832`, `ServerModal.tsx:374`)
-- **Purpose**: Simple error messaging for load/mutation failures and validation issues.
-- **Key visuals**: Semantic `text-destructive` token for all error states, bordered error box for submission failures (`ServerModal.tsx:517`).
-- **Usage**: `loadError`, `mutationError`, `detectionError`, `updateError`, and form field validation states.
-- **Notes**: ✅ Standardized to use semantic `text-destructive` token consistently across all error states.
+### Patterns
+```tsx
+{/* Proper form labeling */}
+<Label htmlFor="field-id">Field Name</Label>
+<Input id="field-id" />
 
-### Empty states (`packages/renderer/src/App.tsx:820`)
-- **Purpose**: Communicate when no servers exist.
-- **Key visuals**: Rounded `border-border/60 bg-muted/60 p-6` block containing a `text-base` headline and muted body copy.
-- **Usage**: Displayed when `servers.length === 0` in the server list.
-- **Notes**: Could be extracted into a reusable component if more empty states appear.
+{/* Toggle with proper state */}
+<Switch checked={enabled} aria-label="Enable feature" />
 
----
+{/* Status announcements */}
+<Badge aria-label={`Status: ${status}`}>{status}</Badge>
+```
 
-## Domain-Specific Patterns
+## Animation & Transitions
 
-### Server list rows (`packages/renderer/src/App.tsx:825`)
-- **Purpose**: Primary CRUD surface for registry entries.
-- **Key visuals**: Each `<li>` uses `rounded-lg border border-border bg-card p-5`, with the command string wrapped in a `code` block (`rounded-md bg-muted/60 px-3 py-1 font-mono text-sm`).
-- **Usage**: Rendered for each server in `servers.map`.
-- **Notes**: Server names use theme tokens, but command chips rely on `bg-muted/60` overlays for readability.
+### Standard Transitions
+- **Color transitions**: `transition-colors`
+- **Transform transitions**: `transition-transform`
+- **Duration**: `duration-200` for standard, `duration-300` for complex animations
 
-### Server action toolbar (`packages/renderer/src/App.tsx:840`)
-- **Purpose**: Row of buttons for editing, removing, and showing the enabled state.
-- **Key visuals**: `Button` ghost variant for text actions, and a custom `button` for the enabled badge: `rounded-md border px-3 py-1.5 text-xs font-semibold transition` with either emerald or muted colors.
-- **Usage**: Inline inside each server row’s header.
-- **Notes**: Enabled badge is not interactive (no onClick) yet but styled like a toggle; clarify intent during redesign.
+### Component States
+```tsx
+{/* Hover states */}
+<Button className="hover:bg-primary/90 transition-colors">
 
-### All-app master switch (`packages/renderer/src/App.tsx:186`, `App.tsx:872`)
-- **Purpose**: Applies uniform on/off/custom states per server.
-- **Key visuals**:
-  ```ts
-  const masterStateStyles = {
-    on: 'border-success/60 bg-success/10 text-success dark:text-success',
-    off: 'border-border bg-muted text-muted-foreground',
-    custom: 'border-warning/70 bg-warning/15 text-warning dark:text-warning'
-  };
-  ```
-  Buttons use `rounded-md border px-4 py-2 text-xs font-semibold transition`.
-- **Usage**: In the "All apps" card inside each server list row.
-- **Notes**: ✅ Migrated to semantic tokens (`success`, `warning`) for consistent theming.
+{/* Focus states */}
+<Input className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
 
-### Per-app toggle pills (`packages/renderer/src/App.tsx:192`, `App.tsx:891`)
-- **Purpose**: Enable/disable Cursor/Claude/Codex individually per server.
-- **Key visuals**:
-  ```ts
-  const appToggleStyles = {
-    on: 'border-success/70 bg-success/10 text-success dark:text-success',
-    off: 'border-border bg-muted text-muted-foreground'
-  };
-  ```
-  Buttons add `flex min-w-[130px] flex-col rounded-md border px-4 py-3 text-left text-xs uppercase tracking-[0.18em]`.
-- **Usage**: Server list rows (App) and again inside ServerModal (`ServerModal.tsx:418`).
-- **Notes**: ✅ Unified to semantic `success` token across both App and ServerModal.
+{/* Loading states */}
+<Switch disabled className="opacity-50">
+```
 
-### Server enable toggle in modal (`packages/renderer/src/components/ServerModal.tsx:395`)
-- **Purpose**: Lets users enable/disable a server while editing.
-- **Key visuals**: Custom pill `rounded-full border px-5 py-2 text-xs font-semibold uppercase tracking-[0.3em]` with success or muted colors.
-- **Usage**: Inside the modal's "Enabled" card.
-- **Notes**: ✅ Updated to use semantic `success` token; can be replaced with shadcn Switch component in Phase 2.
+## Color Usage Guidelines
 
-### Keychain env alias rows (`packages/renderer/src/components/ServerModal.tsx:452`)
-- **Purpose**: Manage Keychain-backed env names, aliases, and secrets.
-- **Key visuals**: Section wrapper `rounded-3xl border border-border bg-muted/30`, with each row `rounded-2xl border border-border bg-card/90 p-4` and uppercase labels.
-- **Usage**: Add/edit server modal.
-- **Notes**: ✅ Migrated to semantic theme tokens (`border`, `muted`, `card`).
+### Semantic Color Mapping
+- **Success**: Connected, enabled, successful operations
+- **Warning**: In-progress, updating, attention needed
+- **Destructive**: Errors, failed operations, destructive actions
+- **Muted**: Disabled, inactive, secondary information
+- **Primary**: Brand actions, primary interactive elements
 
-### Settings detection cards (`packages/renderer/src/App.tsx:948`)
-- **Purpose**: Show detection status and resolved config path per agent.
-- **Key visuals**: `rounded-lg border border-border/60 bg-muted/60 p-4`, uppercase label, `Badge variant="outline"` for status, monospace path row.
-- **Usage**: Settings card’s `<ul>`.
-- **Notes**: Detection badge colors come from `detectionStatusStyles`:
-  ```ts
-  const detectionStatusStyles = {
-    detected: 'border-success/60 bg-success/10 text-success dark:text-success',
-    missing: 'border-border bg-muted text-muted-foreground'
-  };
-  ```
-  ✅ Migrated to semantic `success` token.
+### Dark Mode Support
+All colors automatically adapt via CSS custom properties:
+- Light mode uses lighter values
+- Dark mode uses darker, higher contrast values
+- System theme respects user preferences
 
-### Sync status card (`packages/renderer/src/App.tsx:998`)
-- **Purpose**: Display last sync timestamp/error and provide “Sync Now”.
-- **Key visuals**: Card contains a bordered info block, uppercase label, and full-width primary button with uppercase tracking.
-- **Usage**: Third section in the App.
-- **Notes**: Sync badge is just `variant="outline"` plus text; no dedicated color tokens for run/error states yet.
+## Development Guidelines
 
-### Update check card (`packages/renderer/src/App.tsx:1022`)
-- **Purpose**: Manual update checks and auto-check toggle.
-- **Key visuals**: Three stat cards inside a grid, status badge using `updateStateStyles`, outline “Check for updates” button, and a custom `role="switch"` button with emerald/muted colors.
-- **Usage**: Final section in App.
-- **Notes**: `updateStateStyles` defines labels + tint strings:
-  ```ts
-  const updateStateStyles = {
-    idle: { label: 'Idle', className: 'border-border text-muted-foreground' },
-    checking: { label: 'Checking…', className: 'border-warning/70 text-warning dark:text-warning' },
-    up_to_date: { label: 'Up to date', className: 'border-success/70 text-success dark:text-success' },
-    update_available: { label: 'Update available', className: 'border-warning/70 text-warning dark:text-warning' },
-    offline: { label: 'Offline', className: 'border-border text-muted-foreground' },
-    error: { label: 'Error', className: 'border-destructive/70 text-destructive dark:text-destructive' }
-  };
-  ```
-  ✅ Migrated to semantic tokens (`success`, `warning`, `destructive`).
+### Component Usage
+1. **Always prefer shadcn components** over custom implementations
+2. **Use semantic tokens**, never raw colors (`text-red-500` → `text-destructive`)
+3. **Leverage Typography component** for consistent text styling
+4. **Maintain proper accessibility** with ARIA labels and keyboard navigation
 
-### Server modal overlay & header (`packages/renderer/src/components/ServerModal.tsx:348`)
-- **Purpose**: Full-screen dialog for add/edit flows.
-- **Key visuals**: Overlay `fixed inset-0 z-50 overflow-y-auto bg-background/80 ... backdrop-blur-sm`, inner container `rounded-xl border border-border bg-card p-6` with a header using uppercase primary text and `Button variant="ghost"` cancel.
-- **Usage**: Triggered by Add/Edit buttons via `modalState`.
-- **Notes**: ✅ Updated to use semantic `text-primary` token; maintains consistent styling with dashboard.
+### Code Patterns
+```tsx
+// ✅ Good: Use semantic tokens and components
+<Typography variant="label" color="muted">Field Label</Typography>
+<Input className="border-input" />
 
-### Modal form structure (`packages/renderer/src/components/ServerModal.tsx:366`)
-- **Purpose**: Collect server name, command, args, per-app scopes, env aliases, and actions.
-- **Key visuals**: Sections separated by rounded borders, uppercase labels (`text-[0.7rem] uppercase tracking-[0.25em] text-muted-foreground`), and consistent spacing (`space-y-2` / `gap-4`).
-- **Usage**: Entire modal form.
-- **Notes**: Uppercase label style repeats everywhere but is defined inline; extracting a typography helper would reduce duplication.
+// ❌ Avoid: Raw colors and custom styling
+<p className="text-gray-500 uppercase">Label</p>
+<input className="border-gray-300" />
+```
 
-### Modal error + action bar (`packages/renderer/src/components/ServerModal.tsx:516`)
-- **Purpose**: Surface submission errors and provide Cancel/Save CTAs.
-- **Key visuals**: Error box `rounded-2xl border border-destructive/40 bg-destructive/10`, action bar `flex justify-end gap-3` with outline cancel and default save button.
-- **Usage**: Bottom of the modal form.
-- **Notes**: ✅ Migrated to semantic `destructive` token; consistent with other error states.
+### Testing
+- **Visual regression**: Test all theme variants (light/dark/system)
+- **Accessibility**: Verify keyboard navigation and screen reader compatibility
+- **Responsive**: Test on mobile, tablet, and desktop breakpoints
+- **Component states**: Test all variants (default, hover, focus, disabled)
 
----
+## File Organization
 
-## 🔄 Phase 2: Component Standardization (Next Steps)
+```
+packages/renderer/src/
+├── components/
+│   ├── ui/                    # shadcn/ui components
+│   │   ├── button.tsx
+│   │   ├── card.tsx
+│   │   ├── switch.tsx
+│   │   ├── typography.tsx
+│   │   └── ...
+│   ├── mode-toggle.tsx       # Theme switcher
+│   └── ServerModal.tsx       # Main modal component
+├── theme.css                 # Color tokens and theme definitions
+├── styles.css               # Global styles and base layer
+└── App.tsx                  # Main application layout
+```
 
-### Typography Helpers Needed
-- Extract repeated uppercase label style: `text-[0.7rem] uppercase tracking-[0.25em] text-muted-foreground`
-- Create reusable Label components with proper variants
-- Consolidate header text styles
+## Advanced Features
 
-### Toggle Component Migration
-- Replace all custom toggle pills with shadcn `Switch` component
-- Master switch, per-app toggles, and server enable toggle need Switch implementation
-- Maintain current styling but use consistent component API
+### Loading States
+- **Skeleton components**: Consistent loading placeholders with `Skeleton` component
+- **LoadingSpinner**: Standardized loading indicator with size variants
+- **Progressive enhancement**: Content loads gracefully with proper fallbacks
 
-### Status Badge Consolidation
-- All status indicators now use enhanced Badge variants
-- Detection, sync, and update states use `success`, `warning`, `error` variants
-- Consider extracting StatusBadge component for common patterns
+```tsx
+{loading ? (
+  <div className="space-y-4">
+    <div className="flex items-center gap-2">
+      <LoadingSpinner size="sm" />
+      <Typography variant="small" color="muted">Loading...</Typography>
+    </div>
+    {Array.from({ length: 3 }).map((_, i) => (
+      <Skeleton key={i} className="h-16 w-full rounded-lg" />
+    ))}
+  </div>
+) : (
+  <Content />
+)}
+```
 
-## Still Unused After Phase 1
-- `DropdownMenu` component (`packages/renderer/src/components/ui/dropdown-menu.tsx:1`) is never imported. Removing it would also let us drop the `tw-animate-css` dependency unless future tasks require a menu.
-- Custom utilities `container`, `no-scrollbar`, `faded-bottom`, and `.CollapsibleContent` in `styles.css:88-136` are not referenced. Verify before deleting.
-- Button variants (`destructive`, `secondary`, `link`) and `lg` size are unused.
+### Error Handling
+- **ErrorBoundary**: Catch and gracefully handle component errors
+- **Fallback UI**: Default and custom error states with recovery options
+- **Status alerts**: Consistent error messaging with Alert component
 
-### Technical Notes
-- Scrollbar behavior depends on `useScrollDetection` scanning `[data-section]` elements; any new scroll container must follow that pattern or the scrollbar will stay invisible.
-- All color decisions now use semantic tokens; theme switching works consistently across all components.
+```tsx
+<ErrorBoundary fallback={({ error, reset }) => (
+  <Alert variant="destructive">
+    <AlertTitle>Something went wrong</AlertTitle>
+    <AlertDescription>{error.message}</AlertDescription>
+    <Button onClick={reset} variant="outline" size="sm">Try again</Button>
+  </Alert>
+)}>
+  <Component />
+</ErrorBoundary>
+```
 
-Use this inventory as the reference when consolidating components, extracting tokens, or deleting unused styles.
+### Accessibility Enhancements
+- **Focus management**: FocusTrap for modals and keyboard navigation
+- **Screen reader support**: Proper ARIA labels and live regions
+- **Keyboard shortcuts**: Escape to close modals, Ctrl/Cmd+K for quick actions
+- **Reduced motion**: Respects `prefers-reduced-motion` media queries
+
+### Motion & Animations
+- **Smooth transitions**: Custom easing functions for natural motion
+- **Micro-interactions**: Hover effects, active states, and focus animations
+- **Staggered animations**: Sequential element reveals for polished UX
+- **Performance optimized**: GPU-accelerated transforms with `will-change`
+
+```tsx
+<div className="animate-scale-in transition-all-300 hover-lift">
+  Content with smooth animations
+</div>
+```
+
+### Component Composition
+- **FormField**: Composed label/input/error patterns
+- **StatusCard**: Consistent status display with actions
+- **ErrorBoundary**: Wrapper for error-safe sections
+- **Typography**: Unified text styling system
+
+### Performance Optimizations
+- **Lazy error boundaries**: Section-by-section error isolation
+- **Optimized animations**: CSS transforms over layout changes
+- **Memory management**: Proper cleanup in useEffect hooks
+- **Bundle efficiency**: Tree-shakable component exports
+
+### Keyboard Navigation
+- **Escape handling**: Close modals and cancel operations
+- **Quick actions**: Ctrl/Cmd+K for common operations
+- **Tab order**: Logical focus progression through interactive elements
+- **Focus trapping**: Keep focus within modal dialogs
+
+## Development Workflow
+
+### Component Creation
+1. **Use existing patterns** before creating new components
+2. **Follow accessibility guidelines** with proper ARIA attributes
+3. **Include error boundaries** for robust error handling
+4. **Add motion classes** for smooth interactions
+5. **Document props** with TypeScript interfaces
+
+### Code Quality Standards
+```tsx
+// ✅ Recommended pattern
+<ErrorBoundary>
+  <FormField
+    label="Server Name"
+    description="Enter a descriptive name for your MCP server"
+    error={errors.name}
+    required
+  >
+    <Input
+      value={state.name}
+      onChange={(e) => updateField('name', e.target.value)}
+      placeholder="Workspace Relay"
+      className="transition-all-300"
+    />
+  </FormField>
+</ErrorBoundary>
+```
+
+### Testing Checklist
+- **Accessibility**: Test keyboard navigation and screen reader compatibility
+- **Error scenarios**: Verify error boundaries catch and display appropriately
+- **Performance**: Check animations are smooth and respect reduced motion
+- **Responsive**: Test on all supported viewport sizes
+- **Interactions**: Verify hover, focus, and active states work correctly
+
+## File Organization (Updated)
+
+```
+packages/renderer/src/
+├── components/
+│   ├── ui/                           # shadcn/ui + custom components
+│   │   ├── alert.tsx                 # Enhanced with success/warning/error
+│   │   ├── button.tsx                # Enhanced with smooth animations
+│   │   ├── card.tsx                  # shadcn/ui base component
+│   │   ├── error-boundary.tsx        # Error handling wrapper
+│   │   ├── focus-trap.tsx            # Focus management
+│   │   ├── form-field.tsx            # Composed form patterns
+│   │   ├── index.ts                  # Component exports and types
+│   │   ├── loading-spinner.tsx       # Loading indicators
+│   │   ├── skeleton.tsx              # Loading placeholders
+│   │   ├── status-card.tsx           # Status display component
+│   │   ├── switch.tsx                # Toggle component
+│   │   ├── typography.tsx            # Text styling system
+│   │   └── ...                      # Other shadcn/ui components
+│   ├── mode-toggle.tsx               # Theme switcher
+│   └── ServerModal.tsx               # Enhanced modal with focus trap
+├── theme.css                         # Color tokens and theme system
+├── styles.css                        # Global styles and base layer
+├── motion.css                        # Animation and motion definitions
+└── App.tsx                           # Main app with keyboard shortcuts
+```
+
+This comprehensive style guide includes all Phase 3 enhancements, ensuring Relay provides a professional, accessible, and delightful user experience while maintaining excellent performance and developer experience.
