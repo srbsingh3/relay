@@ -184,18 +184,18 @@ const masterLabels: Record<MasterState, string> = {
 };
 
 const masterStateStyles: Record<MasterState, string> = {
-  on: 'border-emerald-500/60 bg-emerald-500/10 text-emerald-700 dark:text-emerald-100',
+  on: 'border-success/60 bg-success/10 text-success dark:text-success',
   off: 'border-border bg-muted text-muted-foreground',
-  custom: 'border-sky-500/70 bg-sky-500/15 text-sky-700 dark:text-sky-100'
+  custom: 'border-warning/70 bg-warning/15 text-warning dark:text-warning'
 };
 
 const appToggleStyles = {
-  on: 'border-emerald-500/70 bg-emerald-500/10 text-emerald-700 dark:text-emerald-100',
+  on: 'border-success/70 bg-success/10 text-success dark:text-success',
   off: 'border-border bg-muted text-muted-foreground'
 };
 
 const detectionStatusStyles = {
-  detected: 'border-emerald-500/60 bg-emerald-500/10 text-emerald-700 dark:text-emerald-100',
+  detected: 'border-success/60 bg-success/10 text-success dark:text-success',
   missing: 'border-border bg-muted text-muted-foreground'
 };
 
@@ -207,11 +207,11 @@ const updateStateStyles: Record<
   }
 > = {
   idle: { label: 'Idle', className: 'border-border text-muted-foreground' },
-  checking: { label: 'Checking…', className: 'border-sky-500/70 text-sky-700 dark:text-sky-100' },
-  up_to_date: { label: 'Up to date', className: 'border-emerald-500/70 text-emerald-700 dark:text-emerald-100' },
-  update_available: { label: 'Update available', className: 'border-amber-500/70 text-amber-700 dark:text-amber-100' },
+  checking: { label: 'Checking…', className: 'border-warning/70 text-warning dark:text-warning' },
+  up_to_date: { label: 'Up to date', className: 'border-success/70 text-success dark:text-success' },
+  update_available: { label: 'Update available', className: 'border-warning/70 text-warning dark:text-warning' },
   offline: { label: 'Offline', className: 'border-border text-muted-foreground' },
-  error: { label: 'Error', className: 'border-rose-500/70 text-rose-700 dark:text-rose-100' }
+  error: { label: 'Error', className: 'border-destructive/70 text-destructive dark:text-destructive' }
 };
 
 const formatTimestamp = (isoValue?: string | null): string => {
@@ -812,8 +812,8 @@ const App = () => {
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
-              {loadError && <p className="text-sm text-rose-600 dark:text-rose-300">{loadError}</p>}
-              {mutationError && <p className="text-sm text-rose-600 dark:text-rose-300">{mutationError}</p>}
+              {loadError && <p className="text-sm text-destructive">{loadError}</p>}
+              {mutationError && <p className="text-sm text-destructive">{mutationError}</p>}
               {loading ? (
                 <p className="text-sm text-muted-foreground">Loading servers…</p>
               ) : servers.length === 0 ? (
@@ -849,7 +849,7 @@ const App = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="text-xs font-semibold text-rose-600 transition hover:text-rose-700 dark:text-rose-200 dark:hover:text-rose-100"
+                              className="text-xs font-semibold text-destructive transition hover:text-destructive/80"
                               onClick={() => void handleRemoveServer(server.id)}
                               type="button"
                             >
@@ -861,7 +861,7 @@ const App = () => {
                               className={cn(
                                 'rounded-md border px-3 py-1.5 text-xs font-semibold transition',
                                 server.enabled
-                                  ? 'border-emerald-500/70 bg-emerald-500/10 text-emerald-700 dark:text-emerald-100'
+                                  ? 'border-success/70 bg-success/10 text-success dark:text-success'
                                   : 'border-border bg-muted text-muted-foreground'
                               )}
                             >
@@ -947,7 +947,7 @@ const App = () => {
               )}
             </CardHeader>
             <CardContent className="space-y-4">
-              {detectionError && <p className="text-sm text-rose-600 dark:text-rose-300">{detectionError}</p>}
+              {detectionError && <p className="text-sm text-destructive">{detectionError}</p>}
               <ul className="space-y-3">
                 {SUPPORTED_AGENTS.map((agent) => {
                   const status = detection[agent];
@@ -992,10 +992,10 @@ const App = () => {
                 className={cn(
                   'text-[0.65rem] uppercase tracking-[0.3em]',
                   syncStatus.state === 'running'
-                    ? 'border-sky-500/70 text-sky-700 dark:text-sky-200'
+                    ? 'border-warning/70 text-warning dark:text-warning'
                     : syncStatus.state === 'error'
-                      ? 'border-rose-500/70 text-rose-700 dark:text-rose-200'
-                      : 'border-emerald-500/70 text-emerald-700 dark:text-emerald-100'
+                      ? 'border-destructive/70 text-destructive dark:text-destructive'
+                      : 'border-success/70 text-success dark:text-success'
                 )}
               >
                 {syncStatus.state === 'running' ? 'Syncing' : syncStatus.state === 'error' ? 'Error' : 'Ready'}
@@ -1006,7 +1006,7 @@ const App = () => {
                 <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Last sync</p>
                 <p className="mt-1 text-lg font-semibold text-foreground">{formatTimestamp(syncStatus.lastRun)}</p>
                 {syncStatus.lastError ? (
-                  <p className="mt-1 text-sm text-rose-600 dark:text-rose-300">{syncStatus.lastError}</p>
+                  <p className="mt-1 text-sm text-destructive">{syncStatus.lastError}</p>
                 ) : (
                   <p className="mt-1 text-sm text-muted-foreground">Every detected agent uses this timestamp.</p>
                 )}
@@ -1056,7 +1056,7 @@ const App = () => {
                 </div>
               </dl>
               <p className="text-xs text-muted-foreground">{updateStatus.message ?? 'No update checks have run yet.'}</p>
-              {updateError && <p className="text-xs text-rose-600 dark:text-rose-300">{updateError}</p>}
+              {updateError && <p className="text-xs text-destructive">{updateError}</p>}
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Button
                   type="button"
@@ -1076,7 +1076,7 @@ const App = () => {
                   className={cn(
                     'w-full rounded-md border px-4 py-2 text-center text-[0.75rem] font-semibold uppercase tracking-[0.2em] transition sm:w-auto',
                     updateStatus.autoCheckEnabled
-                      ? 'border-emerald-500/70 text-emerald-700 dark:text-emerald-100'
+                      ? 'border-success/70 text-success dark:text-success'
                       : 'border-border text-muted-foreground'
                   )}
                 >

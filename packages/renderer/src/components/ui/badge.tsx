@@ -12,7 +12,11 @@ const badgeVariants = cva(
         destructive:
           'border-transparent bg-destructive/80 text-destructive-foreground focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40',
         outline: 'border-input/70 text-foreground',
-        accent: 'border-transparent bg-accent text-accent-foreground'
+        accent: 'border-transparent bg-accent text-accent-foreground',
+        success: 'border-success/60 bg-success/10 text-success dark:text-success focus-visible:ring-success/20 dark:focus-visible:ring-success/40',
+        warning: 'border-warning/60 bg-warning/10 text-warning dark:text-warning focus-visible:ring-warning/20 dark:focus-visible:ring-warning/40',
+        error: 'border-destructive/60 bg-destructive/10 text-destructive dark:text-destructive focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40',
+        muted: 'border-border bg-muted text-muted-foreground'
       }
     },
     defaultVariants: {

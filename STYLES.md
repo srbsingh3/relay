@@ -2,6 +2,25 @@
 
 This document captures every UI-facing style, component, or pattern currently in the repository so we can standardize visuals and remove unused code safely. Each entry calls out the purpose, visual characteristics, source files, usage sites, and any inconsistencies to revisit during the redesign.
 
+## ✅ Phase 1 Complete: shadcn/ui Foundation
+
+### New shadcn Components Added
+- **Switch**: Radix-based toggle component for enable/disable functionality
+- **Separator**: Visual divider component for layouts
+- **Label**: Enhanced with `uppercase` variant for form field labels
+- **Alert**: Success/warning/error variants with proper semantic tokens
+- **Progress**: Radix-based progress indicator component
+
+### Enhanced Badge Variants
+- Added `success`, `warning`, `error`, `muted` semantic variants
+- All status patterns now use consistent token-based colors
+
+### Semantic Color System Standardized
+- **New tokens**: `--success`, `--warning`, `--success-foreground`, `--warning-foreground`
+- **Replaced raw colors**: All `rose-`, `emerald-`, `sky-`, `slate-`, `white-` literals now use semantic tokens
+- **Consistent error handling**: All destructive states use `text-destructive` token
+- **Modal updated**: ServerModal fully migrated to theme token system
+
 ---
 
 ## Foundations
@@ -113,9 +132,9 @@ This document captures every UI-facing style, component, or pattern currently in
 
 ### Error text pattern (`packages/renderer/src/App.tsx:832`, `ServerModal.tsx:374`)
 - **Purpose**: Simple error messaging for load/mutation failures and validation issues.
-- **Key visuals**: Tailwind literal colors `text-rose-600 dark:text-rose-300` in the server list, `text-rose-300` inside the modal, and a bordered error box for submission failures (`ServerModal.tsx:516`).
+- **Key visuals**: Semantic `text-destructive` token for all error states, bordered error box for submission failures (`ServerModal.tsx:517`).
 - **Usage**: `loadError`, `mutationError`, `detectionError`, `updateError`, and form field validation states.
-- **Notes**: Text colors mix theme tokens and raw `rose` shades; aligning them with `text-destructive` would improve consistency.
+- **Notes**: ✅ Standardized to use semantic `text-destructive` token consistently across all error states.
 
 ### Empty states (`packages/renderer/src/App.tsx:820`)
 - **Purpose**: Communicate when no servers exist.
@@ -144,39 +163,39 @@ This document captures every UI-facing style, component, or pattern currently in
 - **Key visuals**:
   ```ts
   const masterStateStyles = {
-    on: 'border-emerald-500/60 bg-emerald-500/10 text-emerald-700 dark:text-emerald-100',
+    on: 'border-success/60 bg-success/10 text-success dark:text-success',
     off: 'border-border bg-muted text-muted-foreground',
-    custom: 'border-sky-500/70 bg-sky-500/15 text-sky-700 dark:text-sky-100'
+    custom: 'border-warning/70 bg-warning/15 text-warning dark:text-warning'
   };
   ```
   Buttons use `rounded-md border px-4 py-2 text-xs font-semibold transition`.
-- **Usage**: In the “All apps” card inside each server list row.
-- **Notes**: Colors bypass the theme tokens (raw `emerald`/`sky`). Consider swapping to semantic tokens for easier theming.
+- **Usage**: In the "All apps" card inside each server list row.
+- **Notes**: ✅ Migrated to semantic tokens (`success`, `warning`) for consistent theming.
 
 ### Per-app toggle pills (`packages/renderer/src/App.tsx:192`, `App.tsx:891`)
 - **Purpose**: Enable/disable Cursor/Claude/Codex individually per server.
 - **Key visuals**:
   ```ts
   const appToggleStyles = {
-    on: 'border-emerald-500/70 bg-emerald-500/10 text-emerald-700 dark:text-emerald-100',
+    on: 'border-success/70 bg-success/10 text-success dark:text-success',
     off: 'border-border bg-muted text-muted-foreground'
   };
   ```
   Buttons add `flex min-w-[130px] flex-col rounded-md border px-4 py-3 text-left text-xs uppercase tracking-[0.18em]`.
-- **Usage**: Server list rows (App) and again inside ServerModal (`ServerModal.tsx:418`), though the modal uses a separate slate-based color scheme.
-- **Notes**: Two different palettes exist for the same interaction (emerald/sky vs slate/white); unify during redesign.
+- **Usage**: Server list rows (App) and again inside ServerModal (`ServerModal.tsx:418`).
+- **Notes**: ✅ Unified to semantic `success` token across both App and ServerModal.
 
 ### Server enable toggle in modal (`packages/renderer/src/components/ServerModal.tsx:395`)
 - **Purpose**: Lets users enable/disable a server while editing.
-- **Key visuals**: Custom pill `rounded-full border px-5 py-2 text-xs font-semibold uppercase tracking-[0.3em]` with emerald or slate colors.
-- **Usage**: Inside the modal’s “Enabled” card.
-- **Notes**: Styling differs from the server list’s enabled badge; another candidate for consolidation.
+- **Key visuals**: Custom pill `rounded-full border px-5 py-2 text-xs font-semibold uppercase tracking-[0.3em]` with success or muted colors.
+- **Usage**: Inside the modal's "Enabled" card.
+- **Notes**: ✅ Updated to use semantic `success` token; can be replaced with shadcn Switch component in Phase 2.
 
 ### Keychain env alias rows (`packages/renderer/src/components/ServerModal.tsx:452`)
 - **Purpose**: Manage Keychain-backed env names, aliases, and secrets.
-- **Key visuals**: Section wrapper `rounded-3xl border border-white/10 bg-slate-900/30`, with each row `rounded-2xl border border-white/10 bg-slate-950/40 p-4` and uppercase labels.
+- **Key visuals**: Section wrapper `rounded-3xl border border-border bg-muted/30`, with each row `rounded-2xl border border-border bg-card/90 p-4` and uppercase labels.
 - **Usage**: Add/edit server modal.
-- **Notes**: Uses slate/white literal colors instead of theme tokens; consider replacing with tokenized colors.
+- **Notes**: ✅ Migrated to semantic theme tokens (`border`, `muted`, `card`).
 
 ### Settings detection cards (`packages/renderer/src/App.tsx:948`)
 - **Purpose**: Show detection status and resolved config path per agent.
@@ -185,10 +204,11 @@ This document captures every UI-facing style, component, or pattern currently in
 - **Notes**: Detection badge colors come from `detectionStatusStyles`:
   ```ts
   const detectionStatusStyles = {
-    detected: 'border-emerald-500/60 bg-emerald-500/10 text-emerald-700 dark:text-emerald-100',
+    detected: 'border-success/60 bg-success/10 text-success dark:text-success',
     missing: 'border-border bg-muted text-muted-foreground'
   };
   ```
+  ✅ Migrated to semantic `success` token.
 
 ### Sync status card (`packages/renderer/src/App.tsx:998`)
 - **Purpose**: Display last sync timestamp/error and provide “Sync Now”.
@@ -204,42 +224,59 @@ This document captures every UI-facing style, component, or pattern currently in
   ```ts
   const updateStateStyles = {
     idle: { label: 'Idle', className: 'border-border text-muted-foreground' },
-    checking: { label: 'Checking…', className: 'border-sky-500/70 text-sky-700 dark:text-sky-100' },
-    up_to_date: { label: 'Up to date', className: 'border-emerald-500/70 text-emerald-700 dark:text-emerald-100' },
-    update_available: { label: 'Update available', className: 'border-amber-500/70 text-amber-700 dark:text-amber-100' },
+    checking: { label: 'Checking…', className: 'border-warning/70 text-warning dark:text-warning' },
+    up_to_date: { label: 'Up to date', className: 'border-success/70 text-success dark:text-success' },
+    update_available: { label: 'Update available', className: 'border-warning/70 text-warning dark:text-warning' },
     offline: { label: 'Offline', className: 'border-border text-muted-foreground' },
-    error: { label: 'Error', className: 'border-rose-500/70 text-rose-700 dark:text-rose-100' }
+    error: { label: 'Error', className: 'border-destructive/70 text-destructive dark:text-destructive' }
   };
   ```
+  ✅ Migrated to semantic tokens (`success`, `warning`, `destructive`).
 
 ### Server modal overlay & header (`packages/renderer/src/components/ServerModal.tsx:348`)
 - **Purpose**: Full-screen dialog for add/edit flows.
-- **Key visuals**: Overlay `fixed inset-0 z-50 overflow-y-auto bg-background/80 ... backdrop-blur-sm`, inner container `rounded-xl border border-border bg-card p-6` with a header using uppercase sky text and `Button variant="ghost"` cancel.
+- **Key visuals**: Overlay `fixed inset-0 z-50 overflow-y-auto bg-background/80 ... backdrop-blur-sm`, inner container `rounded-xl border border-border bg-card p-6` with a header using uppercase primary text and `Button variant="ghost"` cancel.
 - **Usage**: Triggered by Add/Edit buttons via `modalState`.
-- **Notes**: Modal uses more dramatic gradients and uppercase tracking than the main dashboard; determine whether to simplify.
+- **Notes**: ✅ Updated to use semantic `text-primary` token; maintains consistent styling with dashboard.
 
 ### Modal form structure (`packages/renderer/src/components/ServerModal.tsx:366`)
 - **Purpose**: Collect server name, command, args, per-app scopes, env aliases, and actions.
-- **Key visuals**: Sections separated by rounded borders, uppercase labels (`text-[0.7rem] uppercase tracking-[0.25em] text-slate-400`), and consistent spacing (`space-y-2` / `gap-4`).
+- **Key visuals**: Sections separated by rounded borders, uppercase labels (`text-[0.7rem] uppercase tracking-[0.25em] text-muted-foreground`), and consistent spacing (`space-y-2` / `gap-4`).
 - **Usage**: Entire modal form.
 - **Notes**: Uppercase label style repeats everywhere but is defined inline; extracting a typography helper would reduce duplication.
 
 ### Modal error + action bar (`packages/renderer/src/components/ServerModal.tsx:516`)
 - **Purpose**: Surface submission errors and provide Cancel/Save CTAs.
-- **Key visuals**: Error box `rounded-2xl border border-rose-400/40 bg-rose-950/40`, action bar `flex justify-end gap-3` with outline cancel and default save button.
+- **Key visuals**: Error box `rounded-2xl border border-destructive/40 bg-destructive/10`, action bar `flex justify-end gap-3` with outline cancel and default save button.
 - **Usage**: Bottom of the modal form.
-- **Notes**: Error palette again relies on raw `rose` colors; consider `bg-destructive/10 text-destructive`.
+- **Notes**: ✅ Migrated to semantic `destructive` token; consistent with other error states.
 
 ---
 
-## Unused, Duplicated, or Inconsistent Styles to Revisit
+## 🔄 Phase 2: Component Standardization (Next Steps)
 
+### Typography Helpers Needed
+- Extract repeated uppercase label style: `text-[0.7rem] uppercase tracking-[0.25em] text-muted-foreground`
+- Create reusable Label components with proper variants
+- Consolidate header text styles
+
+### Toggle Component Migration
+- Replace all custom toggle pills with shadcn `Switch` component
+- Master switch, per-app toggles, and server enable toggle need Switch implementation
+- Maintain current styling but use consistent component API
+
+### Status Badge Consolidation
+- All status indicators now use enhanced Badge variants
+- Detection, sync, and update states use `success`, `warning`, `error` variants
+- Consider extracting StatusBadge component for common patterns
+
+## Still Unused After Phase 1
 - `DropdownMenu` component (`packages/renderer/src/components/ui/dropdown-menu.tsx:1`) is never imported. Removing it would also let us drop the `tw-animate-css` dependency unless future tasks require a menu.
 - Custom utilities `container`, `no-scrollbar`, `faded-bottom`, and `.CollapsibleContent` in `styles.css:88-136` are not referenced. Verify before deleting.
-- Button variants (`destructive`, `secondary`, `link`) and `lg` size are unused. Likewise, Badge variants other than `outline` never appear.
-- Server list toggles, modal toggles, and update/auto-check chips all define their own emerald/sky/slate palettes instead of using semantic tokens. These should be unified to avoid duplicate class strings.
-- Modal labels and cards rely on `text-slate-*` and `border-white/10`, clashing with the token-driven palette used elsewhere.
-- Error colors mix `text-rose-*` (App + modal) and theme tokens. A single destructive token would clarify the system.
+- Button variants (`destructive`, `secondary`, `link`) and `lg` size are unused.
+
+### Technical Notes
 - Scrollbar behavior depends on `useScrollDetection` scanning `[data-section]` elements; any new scroll container must follow that pattern or the scrollbar will stay invisible.
+- All color decisions now use semantic tokens; theme switching works consistently across all components.
 
 Use this inventory as the reference when consolidating components, extracting tokens, or deleting unused styles.

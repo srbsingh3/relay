@@ -352,10 +352,10 @@ const ServerModal = ({
     >
       <div className="mx-auto flex min-h-full w-full max-w-4xl items-start justify-center">
         <div className="relative w-full rounded-xl border border-border bg-card p-6">
-        <header className="flex flex-col gap-3 border-b border-white/5 pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <header className="flex flex-col gap-3 border-b border-border/50 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-sky-300">Registry</p>
-            <h3 className="text-2xl font-semibold text-white" id="server-modal-title">
+            <p className="text-xs uppercase tracking-[0.3em] text-primary">Registry</p>
+            <h3 className="text-2xl font-semibold text-foreground" id="server-modal-title">
               {title}
             </h3>
           </div>
@@ -365,17 +365,17 @@ const ServerModal = ({
         </header>
         <form className="mt-6 flex flex-col gap-6" onSubmit={handleSubmit}>
           <div className="space-y-2">
-            <label className="text-[0.7rem] uppercase tracking-[0.25em] text-slate-400">Server name</label>
+            <label className="text-[0.7rem] uppercase tracking-[0.25em] text-muted-foreground">Server name</label>
             <Input
               value={state.name}
               onChange={(event) => updateField('name', event.target.value)}
               placeholder="Workspace Relay"
             />
-            {errors.name && <p className="text-xs text-rose-300">{errors.name}</p>}
+            {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-[0.7rem] uppercase tracking-[0.25em] text-slate-400">Launch command</label>
+              <label className="text-[0.7rem] uppercase tracking-[0.25em] text-muted-foreground">Launch command</label>
               <Input
                 value={state.command}
                 onChange={(event) => updateField('command', event.target.value)}
@@ -383,7 +383,7 @@ const ServerModal = ({
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[0.7rem] uppercase tracking-[0.25em] text-slate-400">Args (one per line)</label>
+              <label className="text-[0.7rem] uppercase tracking-[0.25em] text-muted-foreground">Args (one per line)</label>
               <Textarea
                 value={state.argsText}
                 onChange={(event) => updateField('argsText', event.target.value)}
@@ -391,12 +391,12 @@ const ServerModal = ({
               />
             </div>
           </div>
-          {errors.command && <p className="text-xs text-rose-300">{errors.command}</p>}
-          <div className="rounded-2xl border border-white/10 bg-slate-900/40 px-4 py-3">
+          {errors.command && <p className="text-xs text-destructive">{errors.command}</p>}
+          <div className="rounded-2xl border border-border bg-muted/40 px-4 py-3">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-[0.7rem] uppercase tracking-[0.25em] text-slate-400">Enabled</p>
-                <p className="text-sm text-slate-300">
+                <p className="text-[0.7rem] uppercase tracking-[0.25em] text-muted-foreground">Enabled</p>
+                <p className="text-sm text-foreground">
                   {state.enabled ? 'Server participates in sync.' : 'Server stays disabled until re-enabled.'}
                 </p>
               </div>
@@ -405,8 +405,8 @@ const ServerModal = ({
                 className={cn(
                   'rounded-full border px-5 py-2 text-xs font-semibold uppercase tracking-[0.3em]',
                   state.enabled
-                    ? 'border-emerald-400/70 bg-emerald-500/10 text-emerald-100'
-                    : 'border-slate-600/70 bg-slate-800/70 text-slate-300'
+                    ? 'border-success/70 bg-success/10 text-success'
+                    : 'border-muted-foreground/70 bg-muted/70 text-foreground'
                 )}
                 aria-pressed={state.enabled}
                 onClick={() => updateField('enabled', !state.enabled)}
@@ -415,11 +415,11 @@ const ServerModal = ({
               </button>
             </div>
           </div>
-          <div className="rounded-3xl border border-white/10 bg-slate-900/30 px-4 py-4" role="group" aria-label="App scope toggles">
+          <div className="rounded-3xl border border-border bg-muted/30 px-4 py-4" role="group" aria-label="App scope toggles">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-[0.7rem] uppercase tracking-[0.25em] text-slate-400">Per-app scope</p>
-                <p className="text-sm text-slate-300">Detected agents can be disabled per app.</p>
+                <p className="text-[0.7rem] uppercase tracking-[0.25em] text-muted-foreground">Per-app scope</p>
+                <p className="text-sm text-foreground">Detected agents can be disabled per app.</p>
               </div>
             </div>
             <div className="mt-4 flex flex-wrap gap-3">
@@ -433,15 +433,15 @@ const ServerModal = ({
                     type="button"
                     className={cn(
                       'flex min-w-[140px] flex-col rounded-2xl border px-4 py-3 text-left text-xs uppercase tracking-[0.25em] transition',
-                      on ? 'border-emerald-400/60 bg-emerald-500/10 text-emerald-100' : 'border-white/10 bg-slate-900/40 text-slate-200',
-                      disabled ? 'cursor-not-allowed opacity-40' : 'hover:border-white/40'
+                      on ? 'border-success/60 bg-success/10 text-success' : 'border-border bg-muted/40 text-card-foreground',
+                      disabled ? 'cursor-not-allowed opacity-40' : 'hover:border-border/40'
                     )}
                     disabled={disabled}
                     aria-pressed={on}
                     onClick={() => toggleApp(agent)}
                   >
                     <span className="text-[0.65rem]">{agent.charAt(0).toUpperCase() + agent.slice(1)}</span>
-                    <span className="text-base font-semibold tracking-normal text-white">
+                    <span className="text-base font-semibold tracking-normal text-foreground">
                       {!detected ? 'Not detected' : on ? 'On' : 'Off'}
                     </span>
                   </button>
@@ -449,13 +449,13 @@ const ServerModal = ({
               })}
             </div>
           </div>
-          <section className="space-y-4 rounded-3xl border border-white/10 bg-slate-900/30 px-4 py-4">
+          <section className="space-y-4 rounded-3xl border border-border bg-muted/30 px-4 py-4">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-[0.7rem] uppercase tracking-[0.25em] text-slate-400">Keychain env aliases</p>
-                <p className="text-sm text-slate-400">Env key + alias (Keychain holds the secret).</p>
+                <p className="text-[0.7rem] uppercase tracking-[0.25em] text-muted-foreground">Keychain env aliases</p>
+                <p className="text-sm text-muted-foreground">Env key + alias (Keychain holds the secret).</p>
               </div>
-              <Button variant="outline" size="sm" type="button" onClick={addEnvRow} className="rounded-full border-white/20 text-xs uppercase tracking-[0.2em]">
+              <Button variant="outline" size="sm" type="button" onClick={addEnvRow} className="rounded-full border-border/20 text-xs uppercase tracking-[0.2em]">
                 Add alias
               </Button>
             </div>
@@ -465,42 +465,42 @@ const ServerModal = ({
                 return (
                   <div
                     key={row.id}
-                    className="rounded-2xl border border-white/10 bg-slate-950/40 p-4"
+                    className="rounded-2xl border border-border bg-card/90 p-4"
                     aria-label="Env alias row"
                   >
                     <div className="grid gap-3 md:grid-cols-[1.1fr_1fr_1fr_auto]">
                       <div className="space-y-2">
-                        <label className="text-[0.65rem] uppercase tracking-[0.25em] text-slate-400">Env key</label>
+                        <label className="text-[0.65rem] uppercase tracking-[0.25em] text-muted-foreground">Env key</label>
                         <Input
                           value={row.key}
                           onChange={(event) => updateEnvRow(row.id, { key: event.target.value })}
                           placeholder="MCP_TOKEN"
                         />
-                        {rowErrors?.key && <p className="text-xs text-rose-300">{rowErrors.key}</p>}
+                        {rowErrors?.key && <p className="text-xs text-destructive">{rowErrors.key}</p>}
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[0.65rem] uppercase tracking-[0.25em] text-slate-400">Alias</label>
+                        <label className="text-[0.65rem] uppercase tracking-[0.25em] text-muted-foreground">Alias</label>
                         <Input
                           value={row.alias}
                           onChange={(event) => updateEnvRow(row.id, { alias: event.target.value })}
                           placeholder="workspace"
                         />
-                        {rowErrors?.alias && <p className="text-xs text-rose-300">{rowErrors.alias}</p>}
+                        {rowErrors?.alias && <p className="text-xs text-destructive">{rowErrors.alias}</p>}
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[0.65rem] uppercase tracking-[0.25em] text-slate-400">Secret (optional)</label>
+                        <label className="text-[0.65rem] uppercase tracking-[0.25em] text-muted-foreground">Secret (optional)</label>
                         <Input
                           type="password"
                           value={row.secret}
                           onChange={(event) => updateEnvRow(row.id, { secret: event.target.value })}
                           placeholder="•••••••"
                         />
-                        {rowErrors?.secret && <p className="text-xs text-rose-300">{rowErrors.secret}</p>}
+                        {rowErrors?.secret && <p className="text-xs text-destructive">{rowErrors.secret}</p>}
                       </div>
                       <div className="flex items-start justify-end">
                         <button
                           type="button"
-                          className="rounded-full border border-white/15 px-3 py-2 text-sm text-rose-200 transition hover:border-rose-300 hover:text-rose-100"
+                          className="rounded-full border border-border/15 px-3 py-2 text-sm text-destructive transition hover:border-destructive/80 hover:text-destructive"
                           aria-label="Remove alias row"
                           onClick={() => removeEnvRow(row.id)}
                         >
@@ -514,12 +514,12 @@ const ServerModal = ({
             </div>
           </section>
           {submissionError && (
-            <div className="rounded-2xl border border-rose-400/40 bg-rose-950/40 px-4 py-3 text-sm text-rose-200">
+            <div className="rounded-2xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
               {submissionError}
             </div>
           )}
           <div className="flex justify-end gap-3">
-            <Button variant="outline" type="button" onClick={onCancel} className="rounded-full border-white/15 text-xs uppercase tracking-[0.2em]">
+            <Button variant="outline" type="button" onClick={onCancel} className="rounded-full border-border/15 text-xs uppercase tracking-[0.2em]">
               Cancel
             </Button>
             <Button type="submit" disabled={hasErrors || submitting}>
