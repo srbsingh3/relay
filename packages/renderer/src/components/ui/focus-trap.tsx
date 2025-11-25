@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { focusTrap } from 'focus-trap';
+import { createFocusTrap } from 'focus-trap';
 import { cn } from '../../lib/utils';
 
-interface FocusTrapProps {
+export interface FocusTrapProps {
   children: React.ReactNode;
   className?: string;
   active?: boolean;
@@ -12,12 +12,12 @@ interface FocusTrapProps {
 const FocusTrap = React.forwardRef<HTMLDivElement, FocusTrapProps>(
   ({ children, className, active = true, onEscape }, ref) => {
     const containerRef = React.useRef<HTMLDivElement>(null);
-    const trapRef = React.useRef<ReturnType<typeof focusTrap> | null>(null);
+    const trapRef = React.useRef<ReturnType<typeof createFocusTrap> | null>(null);
 
     React.useEffect(() => {
       if (!active || !containerRef.current) return;
 
-      trapRef.current = focusTrap(containerRef.current, {
+      trapRef.current = createFocusTrap(containerRef.current, {
         escapeDeactivates: true,
         onDeactivate: onEscape,
       });

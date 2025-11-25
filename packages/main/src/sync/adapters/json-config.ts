@@ -76,11 +76,25 @@ const loadJsonConfig = async (agent: SupportedAgent, filePath: string): Promise<
   }
 };
 
+const normalizeServers = (input: unknown): JsonMcpServers => {
+  if (!isRecord(input)) {
+    return {};
+  }
+
+  const output: JsonMcpServers = {};
+  Object.entries(input).forEach(([key, value]) => {
+    if (isRecord(value)) {
+      output[key] = value;
+    }
+  });
+  return output;
+};
+
 const normalizeConfig = (input: unknown): JsonConfig => {
   const base = isRecord(input) ? { ...input } : {};
   const normalized: JsonConfig = {
     ...base,
-    mcpServers: isRecord(base.mcpServers) ? { ...base.mcpServers } : {}
+    mcpServers: normalizeServers(base.mcpServers)
   };
 
   const managed = normalizeManagedMap(base[RELAY_META_KEY]);

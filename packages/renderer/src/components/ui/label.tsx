@@ -19,10 +19,12 @@ const labelVariants = cva(
   }
 );
 
+export type LabelProps = React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> &
+  VariantProps<typeof labelVariants>;
+
 const Label = React.forwardRef<
   React.ElementRef<typeof LabelPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> &
-    VariantProps<typeof labelVariants>
+  LabelProps
 >(({ className, variant, ...props }, ref) => (
   <LabelPrimitive.Root
     ref={ref}

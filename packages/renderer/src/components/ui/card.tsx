@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { cn } from '../../lib/utils';
 
-export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {}
+export interface CardProps extends React.HTMLAttributes<HTMLDivElement> { }
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(({ className, ...props }, ref) => (
   <div
@@ -40,5 +40,10 @@ const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDi
   ({ className, ...props }, ref) => <div ref={ref} className={cn('flex flex-col gap-4', className)} {...props} />
 );
 CardContent.displayName = 'CardContent';
+
+export interface CardHeaderProps extends React.HTMLAttributes<HTMLDivElement> { }
+export interface CardTitleProps extends React.HTMLAttributes<HTMLHeadingElement> { }
+export interface CardDescriptionProps extends React.HTMLAttributes<HTMLParagraphElement> { }
+export interface CardContentProps extends React.HTMLAttributes<HTMLDivElement> { }
 
 export { Card, CardContent, CardDescription, CardHeader, CardTitle };

@@ -76,9 +76,23 @@ const loadCodexConfig = async (filePath: string): Promise<CodexConfig> => {
   }
 };
 
+const normalizeServers = (input: unknown): CodexServersMap => {
+  if (!isRecord(input)) {
+    return {};
+  }
+
+  const output: CodexServersMap = {};
+  Object.entries(input).forEach(([key, value]) => {
+    if (isRecord(value)) {
+      output[key] = value;
+    }
+  });
+  return output;
+};
+
 const normalizeConfig = (input: unknown): CodexConfig => {
   const base = isRecord(input) ? { ...input } : {};
-  const servers = isRecord(base.mcp_servers) ? { ...base.mcp_servers } : {};
+  const servers = normalizeServers(base.mcp_servers);
   const relay = isRelaySection(base.relay) ? { ...base.relay } : undefined;
 
   const managed = normalizeManaged(relay?.managed_servers);
@@ -181,7 +195,7 @@ const applyPlanToConfig = (plan: AgentSyncPlan, config: CodexConfig) => {
 };
 
 const serializeConfig = (config: CodexConfig): string => {
-  const output = stringifyToml(config);
+  const output = stringifyToml(config as any);
   return output.endsWith('\n') ? output : `${output}\n`;
 };
 

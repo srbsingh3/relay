@@ -30,21 +30,21 @@ const typographyVariants = cva('', {
 });
 
 export interface TypographyProps
-  extends React.HTMLAttributes<HTMLElement>,
-    VariantProps<typeof typographyVariants> {
-  as?: keyof JSX.IntrinsicElements;
+  extends Omit<React.HTMLAttributes<HTMLElement>, 'color'>,
+  VariantProps<typeof typographyVariants> {
+  as?: React.ElementType;
 }
 
 const Typography = React.forwardRef<HTMLElement, TypographyProps>(
   ({ className, variant, color, as, ...props }, ref) => {
     const Component = as ?? (
       variant === 'h1' ? 'h1' :
-      variant === 'h2' ? 'h2' :
-      variant === 'h3' ? 'h3' :
-      variant === 'h4' ? 'h4' :
-      variant === 'label' || variant === 'eyebrow' ? 'div' :
-      'p'
-    );
+        variant === 'h2' ? 'h2' :
+          variant === 'h3' ? 'h3' :
+            variant === 'h4' ? 'h4' :
+              variant === 'label' || variant === 'eyebrow' ? 'div' :
+                'p'
+    ) as React.ElementType;
 
     return (
       <Component

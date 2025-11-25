@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { DetectionStatus, DetectionSummary } from '../ipc/contracts';
+import type { DetectionStatus, DetectionSummary, SyncIssueAction } from '../ipc/contracts';
 import type { RegistryFile, RegistryServerRecord } from '../registry/schema';
 import type { SupportedAgent } from '../types/agents';
 import { SUPPORTED_AGENTS } from '../types/agents';
@@ -80,7 +80,7 @@ const createKeychain = (secrets?: Record<string, string | null>) => {
   };
 };
 
-const createPrompter = () => vi.fn(async () => 'skip_app');
+const createPrompter = () => vi.fn(async (): Promise<SyncIssueAction> => 'skip_app');
 
 describe('SyncService', () => {
   it('invokes adapters with effective servers for each detected agent', async () => {
@@ -211,7 +211,7 @@ describe('SyncService', () => {
       codex: false
     });
 
-    let release: (() => void) | null = null;
+    let release: ((value?: any) => void) | null = null;
     const cursorAdapter = {
       agent: 'cursor' as const,
       sync: vi.fn(
@@ -244,7 +244,7 @@ describe('SyncService', () => {
     expect(cursorAdapter.sync).toHaveBeenCalledTimes(1);
     expect(service.getStatus().state).toBe('running');
 
-    release?.();
+    (release as any)?.();
     const [firstResult, secondResult] = await Promise.all([first, second]);
 
     expect(firstResult).toEqual(secondResult);
@@ -297,7 +297,7 @@ describe('SyncService', () => {
       recoveryPrompter: prompter
     });
 
-    const result = await service.syncNow({ apps: ['cursor'] });
+    const result = await service.syncNow({ source: 'user', apps: ['cursor'] });
 
     expect(result.syncedApps).toEqual(['cursor']);
     expect(capturedEnv).toEqual([{ API_KEY: 'super-secret', MODE: 'debug' }]);
@@ -381,7 +381,7 @@ describe('SyncService', () => {
     });
 
     const keychain = createKeychain();
-    const prompter = vi.fn(async () => 'restore_backup');
+    const prompter = vi.fn(async (): Promise<SyncIssueAction> => 'restore_backup');
 
     const service = new SyncService({
       adapters,
@@ -392,7 +392,7 @@ describe('SyncService', () => {
       recoveryPrompter: prompter
     });
 
-    const result = await service.syncNow({ apps: ['cursor'] });
+    const result = await service.syncNow({ source: 'user', apps: ['cursor'] });
 
     expect(result.ok).toBe(false);
     expect(result.syncedApps).toEqual([]);

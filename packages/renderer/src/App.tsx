@@ -66,7 +66,7 @@ const UpdatesIcon = () => (
   </svg>
 );
 
-const SIDEBAR_SECTIONS: { id: SectionId; label: string; icon: JSX.Element }[] = [
+const SIDEBAR_SECTIONS: { id: SectionId; label: string; icon: React.ReactElement }[] = [
   { id: 'servers', label: 'MCP Servers', icon: <ServersIcon /> },
   { id: 'settings', label: 'Settings', icon: <SettingsIcon /> },
   { id: 'sync', label: 'Sync', icon: <SyncIcon /> },
@@ -237,6 +237,7 @@ const normalizeAppOverrides = (overrides?: RegistryServerEntry['apps']): Registr
   }
 
   return entries.reduce<RegistryServerEntry['apps']>((acc, [key]) => {
+    if (!acc) acc = {};
     acc[key as SupportedAgent] = false;
     return acc;
   }, {} as RegistryServerEntry['apps']);
@@ -249,6 +250,7 @@ export const deriveAppsForMasterToggle = (
 ): RegistryServerEntry['apps'] | undefined => {
   if (target === 'off') {
     return SUPPORTED_AGENTS.reduce<RegistryServerEntry['apps']>((acc, agent) => {
+      if (!acc) acc = {};
       acc[agent] = false;
       return acc;
     }, {} as RegistryServerEntry['apps']);
@@ -292,7 +294,7 @@ const resolveBridge = () => (typeof window !== 'undefined' ? window.relay : unde
 // Hook to detect scrolling and add/remove CSS class for scrollbar visibility
 const useScrollDetection = () => {
   useEffect(() => {
-    let scrollTimeout: NodeJS.Timeout;
+    let scrollTimeout: ReturnType<typeof setTimeout>;
 
     const handleScroll = () => {
       // Add scrolling class to document.documentElement and body to show scrollbar thumb
@@ -317,8 +319,8 @@ const useScrollDetection = () => {
     // Listen for scroll events on the main content area after component mounts
     const setupScrollListeners = () => {
       const mainContent = document.querySelector('[data-section]') ||
-                          document.querySelector('.relative.min-h-[420px]') ||
-                          document.querySelector('main > div:last-child');
+        document.querySelector('.relative.min-h-[420px]') ||
+        document.querySelector('main > div:last-child');
 
       if (mainContent) {
         mainContent.addEventListener('scroll', handleScroll, { passive: true });
@@ -344,8 +346,8 @@ const useScrollDetection = () => {
 
       // Clean up all scroll listeners
       const mainContent = document.querySelector('[data-section]') ||
-                          document.querySelector('.relative.min-h-[420px]') ||
-                          document.querySelector('main > div:last-child');
+        document.querySelector('.relative.min-h-[420px]') ||
+        document.querySelector('main > div:last-child');
 
       if (mainContent) {
         mainContent.removeEventListener('scroll', handleScroll);
@@ -390,23 +392,7 @@ const App = () => {
   useScrollDetection();
 
   // Keyboard navigation handler
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Escape key closes modal
-      if (event.key === 'Escape' && modalState) {
-        setModalState(null);
-      }
 
-      // Ctrl/Cmd + K for quick add server (if modal is not open)
-      if ((event.metaKey || event.ctrlKey) && event.key === 'k' && !modalState) {
-        event.preventDefault();
-        setModalState({ mode: 'add', server: undefined });
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [modalState]);
   const versionLabel = typeof window !== 'undefined' ? window.relay?.version ?? 'dev' : 'dev';
   const [servers, setServers] = useState<RegistryServerEntry[]>(() =>
     bridge ? [] : fallbackRegistrySnapshot.servers
@@ -431,6 +417,25 @@ const App = () => {
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [modalState, setModalState] = useState<ModalState>(null);
   const [activeSection, setActiveSection] = useState<SectionId>('servers');
+
+  // Keyboard navigation handler
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Escape key closes modal
+      if (event.key === 'Escape' && modalState) {
+        setModalState(null);
+      }
+
+      // Ctrl/Cmd + K for quick add server (if modal is not open)
+      if ((event.metaKey || event.ctrlKey) && event.key === 'k' && !modalState) {
+        event.preventDefault();
+        setModalState({ mode: 'add', server: undefined } as any);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [modalState]);
 
   useEffect(() => {
     if (!bridge) {
@@ -648,48 +653,48 @@ const App = () => {
     const nextServers =
       payload.mode === 'add'
         ? [
-            ...servers,
-            {
-              id: generateServerId(payload.data.name, servers),
-              name: payload.data.name,
-              enabled: payload.data.enabled,
-              launch: {
-                mode: 'command',
-                command: payload.data.launch.command,
-                args: payload.data.launch.args
-              },
-              env: payload.data.env,
-              ...(payload.data.apps ? { apps: payload.data.apps } : {})
-            }
-          ]
+          ...servers,
+          {
+            id: generateServerId(payload.data.name, servers),
+            name: payload.data.name,
+            enabled: payload.data.enabled,
+            launch: {
+              mode: 'command',
+              command: payload.data.launch.command,
+              args: payload.data.launch.args
+            },
+            env: payload.data.env,
+            ...(payload.data.apps ? { apps: payload.data.apps } : {})
+          }
+        ]
         : servers.map((server) => {
-            if (server.id !== payload.serverId) {
-              return server;
-            }
-            const updated: RegistryServerEntry = {
-              ...server,
-              name: payload.data.name,
-              enabled: payload.data.enabled,
-              launch: {
-                ...server.launch,
-                mode: 'command',
-                command: payload.data.launch.command,
-                args: payload.data.launch.args
-              },
-              env: payload.data.env
-            };
-            if (payload.data.apps && Object.keys(payload.data.apps).length > 0) {
-              updated.apps = payload.data.apps;
-            } else {
-              delete updated.apps;
-            }
+          if (server.id !== payload.serverId) {
+            return server;
+          }
+          const updated: RegistryServerEntry = {
+            ...server,
+            name: payload.data.name,
+            enabled: payload.data.enabled,
+            launch: {
+              ...server.launch,
+              mode: 'command',
+              command: payload.data.launch.command,
+              args: payload.data.launch.args
+            },
+            env: payload.data.env
+          };
+          if (payload.data.apps && Object.keys(payload.data.apps).length > 0) {
+            updated.apps = payload.data.apps;
+          } else {
+            delete updated.apps;
+          }
           return updated;
         });
 
     setMutationError(null);
     const previousServers = servers.slice();
-    setServers(nextServers);
-    const saved = await persistServers(nextServers);
+    setServers(nextServers as any);
+    const saved = await persistServers(nextServers as any);
     if (!saved) {
       setServers(previousServers);
       throw new Error('Unable to save registry changes.');
@@ -777,8 +782,8 @@ const App = () => {
       typeof window === 'undefined'
         ? true
         : window.confirm(
-            `Remove "${target.name}"? This deletes the registry entry and lets Keychain drop unused secrets.`
-          );
+          `Remove "${target.name}"? This deletes the registry entry and lets Keychain drop unused secrets.`
+        );
     if (!confirmed) {
       return;
     }
@@ -802,337 +807,337 @@ const App = () => {
     [detection]
   );
 
-  const sectionContent: Record<SectionId, JSX.Element> = {
+  const sectionContent: Record<SectionId, React.ReactElement> = {
     servers: (
       <Card className="p-6" aria-labelledby="servers-heading">
-            <CardHeader className="flex flex-col gap-4 pb-2 md:flex-row md:items-start md:justify-between">
-              <div className="space-y-1.5">
-                <p className="text-xs uppercase tracking-[0.24em] text-primary/70">Servers</p>
-                <CardTitle id="servers-heading" className="text-2xl">
-                  Workspace registry
-                </CardTitle>
-                <CardDescription>
-                  {servers.length} server{servers.length === 1 ? '' : 's'} • {detectedCount} detected app
-                  {detectedCount === 1 ? '' : 's'}
-                </CardDescription>
+        <CardHeader className="flex flex-col gap-4 pb-2 md:flex-row md:items-start md:justify-between">
+          <div className="space-y-1.5">
+            <p className="text-xs uppercase tracking-[0.24em] text-primary/70">Servers</p>
+            <CardTitle id="servers-heading" className="text-2xl">
+              Workspace registry
+            </CardTitle>
+            <CardDescription>
+              {servers.length} server{servers.length === 1 ? '' : 's'} • {detectedCount} detected app
+              {detectedCount === 1 ? '' : 's'}
+            </CardDescription>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs font-semibold text-muted-foreground"
+            onClick={() => setModalState({ mode: 'add' })}
+            type="button"
+          >
+            Add server
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {loadError && <p className="text-sm text-destructive">{loadError}</p>}
+          {mutationError && <p className="text-sm text-destructive">{mutationError}</p>}
+          {loading ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <LoadingSpinner size="sm" />
+                <Typography variant="small" color="muted">Loading servers…</Typography>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs font-semibold text-muted-foreground"
-                onClick={() => setModalState({ mode: 'add' })}
-                type="button"
-              >
-                Add server
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {loadError && <p className="text-sm text-destructive">{loadError}</p>}
-              {mutationError && <p className="text-sm text-destructive">{mutationError}</p>}
-              {loading ? (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <LoadingSpinner size="sm" />
-                    <Typography variant="small" color="muted">Loading servers…</Typography>
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} className="rounded-lg border border-border bg-card p-5 space-y-3">
+                  <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                    <div className="space-y-2">
+                      <Skeleton className="h-6 w-48" />
+                      <Skeleton className="h-6 w-64" />
+                    </div>
+                    <div className="flex gap-2">
+                      <Skeleton className="h-8 w-16 rounded-md" />
+                      <Skeleton className="h-8 w-16 rounded-md" />
+                    </div>
                   </div>
-                  {Array.from({ length: 2 }).map((_, i) => (
-                    <div key={i} className="rounded-lg border border-border bg-card p-5 space-y-3">
-                      <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                        <div className="space-y-2">
-                          <Skeleton className="h-6 w-48" />
-                          <Skeleton className="h-6 w-64" />
-                        </div>
-                        <div className="flex gap-2">
-                          <Skeleton className="h-8 w-16 rounded-md" />
-                          <Skeleton className="h-8 w-16 rounded-md" />
-                        </div>
+                  <div className="mt-4 space-y-3">
+                    <Skeleton className="h-16 w-full rounded-lg" />
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      {Array.from({ length: 3 }).map((_, j) => (
+                        <Skeleton key={j} className="h-16 w-full rounded-lg" />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : servers.length === 0 ? (
+            <div className="rounded-lg border border-border/60 bg-muted/60 p-6 text-center text-sm text-muted-foreground">
+              <p className="text-base font-medium text-foreground/90">No servers yet</p>
+              <span>Use Add server to register your first shared MCP endpoint.</span>
+            </div>
+          ) : (
+            <ul className="space-y-4">
+              {servers.map((server) => {
+                const masterState = computeMasterState(server, detection);
+                return (
+                  <li key={server.id} className="rounded-lg border border-border bg-card p-5">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                      <div>
+                        <p className="text-lg font-semibold text-foreground">{server.name}</p>
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          <code className="rounded-md bg-muted/60 px-3 py-1 font-mono text-sm text-foreground">
+                            {formatCommand(server)}
+                          </code>
+                        </p>
                       </div>
-                      <div className="mt-4 space-y-3">
-                        <Skeleton className="h-16 w-full rounded-lg" />
-                        <div className="grid gap-3 sm:grid-cols-3">
-                          {Array.from({ length: 3 }).map((_, j) => (
-                            <Skeleton key={j} className="h-16 w-full rounded-lg" />
-                          ))}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs font-semibold text-muted-foreground"
+                          onClick={() => setModalState({ mode: 'edit', serverId: server.id })}
+                          type="button"
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs font-semibold text-destructive transition hover:text-destructive/80"
+                          onClick={() => void handleRemoveServer(server.id)}
+                          type="button"
+                        >
+                          Remove
+                        </Button>
+                        <button
+                          type="button"
+                          aria-pressed={server.enabled}
+                          className={cn(
+                            'rounded-md border px-3 py-1.5 text-xs font-semibold transition',
+                            server.enabled
+                              ? 'border-success/70 bg-success/10 text-success dark:text-success'
+                              : 'border-border bg-muted text-muted-foreground'
+                          )}
+                        >
+                          {server.enabled ? 'Enabled' : 'Disabled'}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-4 rounded-lg border border-border/60 bg-muted/60 px-4 py-3 md:mt-3">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <Typography variant="label" color="muted">All apps</Typography>
+                          <Typography variant="small">{masterLabels[masterState]}</Typography>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Badge
+                            variant={masterState === 'custom' ? 'warning' : masterState === 'on' ? 'success' : 'muted'}
+                            className="text-xs"
+                          >
+                            {masterState === 'custom' ? 'Custom' : masterState === 'on' ? 'All on' : 'All off'}
+                          </Badge>
+                          <Switch
+                            checked={masterState === 'on' || masterState === 'custom'}
+                            onCheckedChange={(checked: boolean) =>
+                              handleMasterToggle(server.id, checked ? 'on' : 'off')
+                            }
+                          />
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              ) : servers.length === 0 ? (
-                <div className="rounded-lg border border-border/60 bg-muted/60 p-6 text-center text-sm text-muted-foreground">
-                  <p className="text-base font-medium text-foreground/90">No servers yet</p>
-                  <span>Use Add server to register your first shared MCP endpoint.</span>
-                </div>
-              ) : (
-                <ul className="space-y-4">
-                  {servers.map((server) => {
-                    const masterState = computeMasterState(server, detection);
-                    return (
-                      <li key={server.id} className="rounded-lg border border-border bg-card p-5">
-                        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                          <div>
-                            <p className="text-lg font-semibold text-foreground">{server.name}</p>
-                            <p className="mt-2 text-xs text-muted-foreground">
-                              <code className="rounded-md bg-muted/60 px-3 py-1 font-mono text-sm text-foreground">
-                                {formatCommand(server)}
-                              </code>
-                            </p>
-                          </div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-xs font-semibold text-muted-foreground"
-                              onClick={() => setModalState({ mode: 'edit', serverId: server.id })}
-                              type="button"
-                            >
-                              Edit
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-xs font-semibold text-destructive transition hover:text-destructive/80"
-                              onClick={() => void handleRemoveServer(server.id)}
-                              type="button"
-                            >
-                              Remove
-                            </Button>
-                            <button
-                              type="button"
-                              aria-pressed={server.enabled}
-                              className={cn(
-                                'rounded-md border px-3 py-1.5 text-xs font-semibold transition',
-                                server.enabled
-                                  ? 'border-success/70 bg-success/10 text-success dark:text-success'
-                                  : 'border-border bg-muted text-muted-foreground'
-                              )}
-                            >
-                              {server.enabled ? 'Enabled' : 'Disabled'}
-                            </button>
-                          </div>
-                        </div>
-                        <div className="mt-4 rounded-lg border border-border/60 bg-muted/60 px-4 py-3 md:mt-3">
-                          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                              <Typography variant="label" color="muted">All apps</Typography>
-                              <Typography variant="small">{masterLabels[masterState]}</Typography>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <Badge
-                                variant={masterState === 'custom' ? 'warning' : masterState === 'on' ? 'success' : 'muted'}
-                                className="text-xs"
-                              >
-                                {masterState === 'custom' ? 'Custom' : masterState === 'on' ? 'All on' : 'All off'}
-                              </Badge>
-                              <Switch
-                                checked={masterState === 'on' || masterState === 'custom'}
-                                onCheckedChange={(checked) =>
-                                  handleMasterToggle(server.id, checked ? 'on' : 'off')
-                                }
-                              />
-                            </div>
-                          </div>
-                        </div>
-                        <div className="mt-4 grid gap-3 sm:grid-cols-3" role="group" aria-label="Per-app toggles">
-                          {SUPPORTED_AGENTS.map((agent) => {
-                            const status = detection[agent];
-                            const detected = Boolean(status?.detected);
-                            const effectiveEnabled = Boolean(server.enabled) && server.apps?.[agent] !== false;
-                            const disabled = !detected || !server.enabled;
+                    <div className="mt-4 grid gap-3 sm:grid-cols-3" role="group" aria-label="Per-app toggles">
+                      {SUPPORTED_AGENTS.map((agent) => {
+                        const status = detection[agent];
+                        const detected = Boolean(status?.detected);
+                        const effectiveEnabled = Boolean(server.enabled) && server.apps?.[agent] !== false;
+                        const disabled = !detected || !server.enabled;
 
-                            return (
-                              <div
-                                key={`${server.id}-${agent}`}
-                                className={cn(
-                                  'flex items-center justify-between rounded-lg border border-border bg-card p-3',
-                                  !detected && 'opacity-50'
-                                )}
-                              >
-                                <div className="flex-1">
-                                  <Typography variant="eyebrow" color="muted">
-                                    {agentLabels[agent]}
-                                  </Typography>
-                                  <Typography variant="small" color="default">
-                                    {!detected ? 'Not detected' : effectiveEnabled ? 'Enabled' : 'Disabled'}
-                                  </Typography>
-                                </div>
-                                <Switch
-                                  checked={effectiveEnabled}
-                                  onCheckedChange={() => handleAgentToggle(server.id, agent)}
-                                  disabled={disabled}
-                                />
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
+                        return (
+                          <div
+                            key={`${server.id}-${agent}`}
+                            className={cn(
+                              'flex items-center justify-between rounded-lg border border-border bg-card p-3',
+                              !detected && 'opacity-50'
+                            )}
+                          >
+                            <div className="flex-1">
+                              <Typography variant="eyebrow" color="muted">
+                                {agentLabels[agent]}
+                              </Typography>
+                              <Typography variant="small" color="default">
+                                {!detected ? 'Not detected' : effectiveEnabled ? 'Enabled' : 'Disabled'}
+                              </Typography>
+                            </div>
+                            <Switch
+                              checked={effectiveEnabled}
+                              onCheckedChange={() => handleAgentToggle(server.id, agent)}
+                              disabled={disabled}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
     ),
     settings: (
       <Card className="p-6" aria-labelledby="detection-heading">
-            <CardHeader className="flex flex-col gap-3 pb-3 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.24em] text-primary/70">Settings</p>
-                <CardTitle id="detection-heading">Agent detection</CardTitle>
-                <CardDescription>Resolved config paths are read-only and shared across Cursor, Claude, and Codex.</CardDescription>
-              </div>
-              {bridge && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-[0.75rem] font-semibold text-muted-foreground"
-                  type="button"
-                  disabled={detectionBusy}
-                  onClick={handleDetectionRefresh}
-                >
-                  {detectionBusy ? 'Scanning…' : 'Re-scan'}
-                </Button>
-              )}
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {detectionError && <p className="text-sm text-destructive">{detectionError}</p>}
-              <ul className="space-y-3">
-                {SUPPORTED_AGENTS.map((agent) => {
-                  const status = detection[agent];
-                  const detected = Boolean(status?.detected);
-                  const badgeStyle = detected ? detectionStatusStyles.detected : detectionStatusStyles.missing;
-                  return (
-                    <li key={`detection-${agent}`} className="rounded-lg border border-border/60 bg-muted/60 p-4">
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">{agentLabels[agent]}</p>
-                          <p className="text-xs text-muted-foreground">Read-only config path</p>
-                        </div>
-                        <Badge variant="outline" className={cn('px-3 py-1 text-[0.65rem] uppercase tracking-[0.2em]', badgeStyle)}>
-                          {detected ? 'Detected' : 'Not detected'}
-                        </Badge>
-                      </div>
-                      <p
-                        className="mt-3 truncate font-mono text-sm text-foreground/90"
-                        data-readonly="config-path"
-                        title="Relay displays project-scoped configs in read-only mode."
-                      >
-                        {status?.path ?? 'Unknown path'}
-                      </p>
-                      <p className="mt-1 text-xs text-muted-foreground/80">Last checked {formatTimestamp(status?.lastChecked)}</p>
-                    </li>
-                  );
-                })}
-              </ul>
-            </CardContent>
-          </Card>
+        <CardHeader className="flex flex-col gap-3 pb-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.24em] text-primary/70">Settings</p>
+            <CardTitle id="detection-heading">Agent detection</CardTitle>
+            <CardDescription>Resolved config paths are read-only and shared across Cursor, Claude, and Codex.</CardDescription>
+          </div>
+          {bridge && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-[0.75rem] font-semibold text-muted-foreground"
+              type="button"
+              disabled={detectionBusy}
+              onClick={handleDetectionRefresh}
+            >
+              {detectionBusy ? 'Scanning…' : 'Re-scan'}
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {detectionError && <p className="text-sm text-destructive">{detectionError}</p>}
+          <ul className="space-y-3">
+            {SUPPORTED_AGENTS.map((agent) => {
+              const status = detection[agent];
+              const detected = Boolean(status?.detected);
+              const badgeStyle = detected ? detectionStatusStyles.detected : detectionStatusStyles.missing;
+              return (
+                <li key={`detection-${agent}`} className="rounded-lg border border-border/60 bg-muted/60 p-4">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{agentLabels[agent]}</p>
+                      <p className="text-xs text-muted-foreground">Read-only config path</p>
+                    </div>
+                    <Badge variant="outline" className={cn('px-3 py-1 text-[0.65rem] uppercase tracking-[0.2em]', badgeStyle)}>
+                      {detected ? 'Detected' : 'Not detected'}
+                    </Badge>
+                  </div>
+                  <p
+                    className="mt-3 truncate font-mono text-sm text-foreground/90"
+                    data-readonly="config-path"
+                    title="Relay displays project-scoped configs in read-only mode."
+                  >
+                    {status?.path ?? 'Unknown path'}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground/80">Last checked {formatTimestamp(status?.lastChecked)}</p>
+                </li>
+              );
+            })}
+          </ul>
+        </CardContent>
+      </Card>
     ),
     sync: (
       <Card className="p-6" aria-labelledby="sync-heading">
-            <CardHeader className="flex items-start justify-between gap-4 pb-3">
-              <div className="space-y-1">
-                <p className="text-xs uppercase tracking-[0.24em] text-primary/70">Sync</p>
-                <CardTitle id="sync-heading">Deterministic writes</CardTitle>
-                <CardDescription>Invokes the same locked-down main-process service used by the tray and schedule.</CardDescription>
-              </div>
-              <Badge
-                variant="outline"
-                className={cn(
-                  'text-[0.65rem] uppercase tracking-[0.3em]',
-                  syncStatus.state === 'running'
-                    ? 'border-warning/70 text-warning dark:text-warning'
-                    : syncStatus.state === 'error'
-                      ? 'border-destructive/70 text-destructive dark:text-destructive'
-                      : 'border-success/70 text-success dark:text-success'
-                )}
-              >
-                {syncStatus.state === 'running' ? 'Syncing' : syncStatus.state === 'error' ? 'Error' : 'Ready'}
-              </Badge>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="rounded-lg border border-border/60 bg-muted/60 p-4">
-                <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Last sync</p>
-                <p className="mt-1 text-lg font-semibold text-foreground">{formatTimestamp(syncStatus.lastRun)}</p>
-                {syncStatus.lastError ? (
-                  <p className="mt-1 text-sm text-destructive">{syncStatus.lastError}</p>
-                ) : (
-                  <p className="mt-1 text-sm text-muted-foreground">Every detected agent uses this timestamp.</p>
-                )}
-              </div>
-              <Button
-                type="button"
-                onClick={handleSyncNow}
-                disabled={syncBusy}
-                className="w-full text-xs font-semibold uppercase tracking-[0.2em]"
-              >
-                {syncStatus.state === 'running' ? 'Syncing…' : 'Sync Now'}
-              </Button>
-            </CardContent>
-          </Card>
+        <CardHeader className="flex items-start justify-between gap-4 pb-3">
+          <div className="space-y-1">
+            <p className="text-xs uppercase tracking-[0.24em] text-primary/70">Sync</p>
+            <CardTitle id="sync-heading">Deterministic writes</CardTitle>
+            <CardDescription>Invokes the same locked-down main-process service used by the tray and schedule.</CardDescription>
+          </div>
+          <Badge
+            variant="outline"
+            className={cn(
+              'text-[0.65rem] uppercase tracking-[0.3em]',
+              syncStatus.state === 'running'
+                ? 'border-warning/70 text-warning dark:text-warning'
+                : syncStatus.state === 'error'
+                  ? 'border-destructive/70 text-destructive dark:text-destructive'
+                  : 'border-success/70 text-success dark:text-success'
+            )}
+          >
+            {syncStatus.state === 'running' ? 'Syncing' : syncStatus.state === 'error' ? 'Error' : 'Ready'}
+          </Badge>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="rounded-lg border border-border/60 bg-muted/60 p-4">
+            <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Last sync</p>
+            <p className="mt-1 text-lg font-semibold text-foreground">{formatTimestamp(syncStatus.lastRun)}</p>
+            {syncStatus.lastError ? (
+              <p className="mt-1 text-sm text-destructive">{syncStatus.lastError}</p>
+            ) : (
+              <p className="mt-1 text-sm text-muted-foreground">Every detected agent uses this timestamp.</p>
+            )}
+          </div>
+          <Button
+            type="button"
+            onClick={handleSyncNow}
+            disabled={syncBusy}
+            className="w-full text-xs font-semibold uppercase tracking-[0.2em]"
+          >
+            {syncStatus.state === 'running' ? 'Syncing…' : 'Sync Now'}
+          </Button>
+        </CardContent>
+      </Card>
     ),
     updates: (
       <Card className="p-6" aria-labelledby="updates-heading">
-            <CardHeader className="flex items-start justify-between gap-4 pb-3">
-              <div className="space-y-1">
-                <p className="text-xs uppercase tracking-[0.24em] text-primary/70">Updates</p>
-                <CardTitle id="updates-heading">Manifest checks</CardTitle>
-                <CardDescription>Manual checks stay in the main process and never include registry or secret data.</CardDescription>
-              </div>
-              <Badge
-                variant="outline"
-                className={cn(
-                  'text-[0.65rem] uppercase tracking-[0.3em]',
-                  updateStateStyles[updateStatus.state].className
-                )}
-              >
-                {updateStateStyles[updateStatus.state].label}
-              </Badge>
-            </CardHeader>
-            <CardContent className="space-y-4 text-sm text-foreground/90">
-              <dl className="grid grid-cols-1 gap-3 text-sm text-foreground/90">
-                <div className="rounded-lg border border-border/60 bg-muted/60 p-4">
-                  <dt className="text-xs uppercase tracking-wide text-muted-foreground">Current build</dt>
-                  <dd className="text-base font-medium text-foreground">{updateStatus.currentVersion}</dd>
-                </div>
-                <div className="rounded-lg border border-border/60 bg-muted/60 p-4">
-                  <dt className="text-xs uppercase tracking-wide text-muted-foreground">Latest manifest</dt>
-                  <dd className="text-base font-medium text-foreground">{updateStatus.latestVersion ?? '—'}</dd>
-                </div>
-                <div className="rounded-lg border border-border/60 bg-muted/60 p-4">
-                  <dt className="text-xs uppercase tracking-wide text-muted-foreground">Last checked</dt>
-                  <dd className="text-base font-medium text-foreground">{formatTimestamp(updateStatus.checkedAt)}</dd>
-                </div>
-              </dl>
-              <p className="text-xs text-muted-foreground">{updateStatus.message ?? 'No update checks have run yet.'}</p>
-              {updateError && <p className="text-xs text-destructive">{updateError}</p>}
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleUpdateCheck}
-                  disabled={updateBusy}
-                  className="flex-1 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground"
-                >
-                  {updateStatus.state === 'checking' ? 'Checking…' : 'Check for updates'}
-                </Button>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={updateStatus.autoCheckEnabled}
-                  onClick={handleUpdatePreferenceToggle}
-                  disabled={updateBusy}
-                  className={cn(
-                    'w-full rounded-md border px-4 py-2 text-center text-[0.75rem] font-semibold uppercase tracking-[0.2em] transition sm:w-auto',
-                    updateStatus.autoCheckEnabled
-                      ? 'border-success/70 text-success dark:text-success'
-                      : 'border-border text-muted-foreground'
-                  )}
-                >
-                  {updateStatus.autoCheckEnabled ? 'Auto checks on' : 'Auto checks off'}
-                </button>
-              </div>
-            </CardContent>
-          </Card>
+        <CardHeader className="flex items-start justify-between gap-4 pb-3">
+          <div className="space-y-1">
+            <p className="text-xs uppercase tracking-[0.24em] text-primary/70">Updates</p>
+            <CardTitle id="updates-heading">Manifest checks</CardTitle>
+            <CardDescription>Manual checks stay in the main process and never include registry or secret data.</CardDescription>
+          </div>
+          <Badge
+            variant="outline"
+            className={cn(
+              'text-[0.65rem] uppercase tracking-[0.3em]',
+              updateStateStyles[updateStatus.state].className
+            )}
+          >
+            {updateStateStyles[updateStatus.state].label}
+          </Badge>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm text-foreground/90">
+          <dl className="grid grid-cols-1 gap-3 text-sm text-foreground/90">
+            <div className="rounded-lg border border-border/60 bg-muted/60 p-4">
+              <dt className="text-xs uppercase tracking-wide text-muted-foreground">Current build</dt>
+              <dd className="text-base font-medium text-foreground">{updateStatus.currentVersion}</dd>
+            </div>
+            <div className="rounded-lg border border-border/60 bg-muted/60 p-4">
+              <dt className="text-xs uppercase tracking-wide text-muted-foreground">Latest manifest</dt>
+              <dd className="text-base font-medium text-foreground">{updateStatus.latestVersion ?? '—'}</dd>
+            </div>
+            <div className="rounded-lg border border-border/60 bg-muted/60 p-4">
+              <dt className="text-xs uppercase tracking-wide text-muted-foreground">Last checked</dt>
+              <dd className="text-base font-medium text-foreground">{formatTimestamp(updateStatus.checkedAt)}</dd>
+            </div>
+          </dl>
+          <p className="text-xs text-muted-foreground">{updateStatus.message ?? 'No update checks have run yet.'}</p>
+          {updateError && <p className="text-xs text-destructive">{updateError}</p>}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleUpdateCheck}
+              disabled={updateBusy}
+              className="flex-1 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground"
+            >
+              {updateStatus.state === 'checking' ? 'Checking…' : 'Check for updates'}
+            </Button>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={updateStatus.autoCheckEnabled}
+              onClick={handleUpdatePreferenceToggle}
+              disabled={updateBusy}
+              className={cn(
+                'w-full rounded-md border px-4 py-2 text-center text-[0.75rem] font-semibold uppercase tracking-[0.2em] transition sm:w-auto',
+                updateStatus.autoCheckEnabled
+                  ? 'border-success/70 text-success dark:text-success'
+                  : 'border-border text-muted-foreground'
+              )}
+            >
+              {updateStatus.autoCheckEnabled ? 'Auto checks on' : 'Auto checks off'}
+            </button>
+          </div>
+        </CardContent>
+      </Card>
     )
   };
 
@@ -1145,7 +1150,7 @@ const App = () => {
           style={{
             WebkitAppRegion: 'drag',
             WebkitUserSelect: 'none'
-          }}
+          } as any}
         />
         <aside className="fixed left-0 top-0 bottom-0 w-[240px] flex-col border-r border-border/60 bg-card px-6 py-14 overflow-hidden hidden md:flex">
           <div className="space-y-4">
@@ -1157,7 +1162,7 @@ const App = () => {
                 <p className="text-sm font-semibold text-foreground">Relay</p>
               </div>
             </div>
-            </div>
+          </div>
           <nav className="mt-8 flex-1 flex flex-col gap-2" aria-label="Primary">
             {SIDEBAR_SECTIONS.map((section) => {
               const isActive = activeSection === section.id;
@@ -1185,7 +1190,7 @@ const App = () => {
           <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-6 py-14 lg:px-10">
             <header
               className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between"
-              style={{ WebkitAppRegion: 'drag' }}
+              style={({ WebkitAppRegion: 'drag' }) as any}
             >
               <div className="space-y-3">
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary/80">Relay</p>
@@ -1199,7 +1204,7 @@ const App = () => {
                 <Button
                   variant="outline"
                   className="self-start text-xs font-semibold text-muted-foreground"
-                  style={{ WebkitAppRegion: 'no-drag' }}
+                  style={{ WebkitAppRegion: 'no-drag' } as any}
                   type="button"
                   aria-label="Open settings panel"
                   onClick={() => handleSectionChange('settings')}
@@ -1208,41 +1213,41 @@ const App = () => {
                 </Button>
               </div>
             </header>
-          <div className="relative min-h-[420px]">
-            {SIDEBAR_SECTIONS.map((section) => {
-              const isActive = activeSection === section.id;
-              return (
-                <section
-                  key={`section-${section.id}`}
-                  data-section={section.id}
-                  aria-hidden={!isActive}
-                  className={cn(
-                    'transition-all duration-300',
-                    isActive
-                      ? 'relative opacity-100'
-                      : 'absolute inset-0 -z-10 pointer-events-none opacity-0'
-                  )}
-                >
-                  <ErrorBoundary key={section.id}>
-                    {sectionContent[section.id]}
-                  </ErrorBoundary>
-                </section>
-              );
-            })}
+            <div className="relative min-h-[420px]">
+              {SIDEBAR_SECTIONS.map((section) => {
+                const isActive = activeSection === section.id;
+                return (
+                  <section
+                    key={`section-${section.id}`}
+                    data-section={section.id}
+                    aria-hidden={!isActive}
+                    className={cn(
+                      'transition-all duration-300',
+                      isActive
+                        ? 'relative opacity-100'
+                        : 'absolute inset-0 -z-10 pointer-events-none opacity-0'
+                    )}
+                  >
+                    <ErrorBoundary key={section.id}>
+                      {sectionContent[section.id]}
+                    </ErrorBoundary>
+                  </section>
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
-      {modalState && (
-        <ServerModal
-          mode={modalState.mode}
-          server={modalState.mode === 'edit' ? servers.find((server) => server.id === modalState.serverId) : undefined}
-          detection={detection}
-          existingServers={servers}
-          onCancel={() => setModalState(null)}
-          onSubmit={handleServerModalSubmit}
-        />
-      )}
-    </main>
+        {modalState && (
+          <ServerModal
+            mode={modalState.mode}
+            server={modalState.mode === 'edit' ? servers.find((server) => server.id === modalState.serverId) : undefined}
+            detection={detection}
+            existingServers={servers}
+            onCancel={() => setModalState(null)}
+            onSubmit={handleServerModalSubmit}
+          />
+        )}
+      </main>
     </ThemeProvider>
   );
 };

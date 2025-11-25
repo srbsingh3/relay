@@ -3,7 +3,7 @@ import { Label } from './label';
 import { Typography } from './typography';
 import { cn } from '../../lib/utils';
 
-interface FormFieldProps {
+export interface FormFieldProps {
   label?: string;
   description?: string;
   error?: string;
@@ -23,7 +23,7 @@ const FormField = React.forwardRef<HTMLDivElement, FormFieldProps>(
             {label}
           </Label>
         )}
-        {React.cloneElement(children as React.ReactElement, {
+        {React.cloneElement(children as React.ReactElement<any>, {
           id,
           'aria-invalid': error ? 'true' : 'undefined',
           'aria-describedby': error ? `${id}-error` : description ? `${id}-description` : undefined

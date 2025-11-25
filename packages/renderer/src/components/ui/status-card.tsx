@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { Badge } from './badge';
 import { Card, CardContent, CardHeader } from './card';
-import { Typography } from './ typography';
+import { Typography } from './typography';
 import { cn } from '../../lib/utils';
 
-interface StatusCardProps {
+export interface StatusCardProps {
   title: string;
   description?: string;
   status: 'idle' | 'loading' | 'success' | 'warning' | 'error';

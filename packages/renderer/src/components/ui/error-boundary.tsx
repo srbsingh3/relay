@@ -7,7 +7,7 @@ interface ErrorBoundaryState {
   error?: Error;
 }
 
-interface ErrorBoundaryProps {
+export interface ErrorBoundaryProps {
   children: React.ReactNode;
   fallback?: React.ComponentType<{ error?: Error; reset: () => void }>;
 }
