@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import './styles.css';
 import type {
   DetectionStatus,
   DetectionSummary,
@@ -13,23 +12,11 @@ import { REGISTRY_VERSION } from '../../main/src/registry/schema';
 import type { SupportedAgent } from '../../main/src/types/agents';
 import { SUPPORTED_AGENTS } from '../../main/src/types/agents';
 import ServerModal, { type ServerFormSubmitPayload } from './components/ServerModal';
-import { Badge } from './components/ui/badge';
-import { Button } from './components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card';
-import { ErrorBoundary } from './components/ui/error-boundary';
-import { LoadingSpinner } from './components/ui/loading-spinner';
-import { Skeleton } from './components/ui/skeleton';
-import { StatusCard } from './components/ui/status-card';
-import { ModeToggle } from './components/mode-toggle';
-import { Switch } from './components/ui/switch';
-import { ThemeProvider } from './components/theme-provider';
-import { Typography } from './components/ui/typography';
-import { cn } from './lib/utils';
 
 type SectionId = 'servers' | 'settings' | 'sync' | 'updates';
 
 const ServersIcon = () => (
-  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6}>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
     <rect x="4" y="5" width="16" height="4" rx="1.5" />
     <rect x="4" y="13" width="16" height="4" rx="1.5" />
     <circle cx="8" cy="7" r="0.7" />
@@ -38,7 +25,7 @@ const ServersIcon = () => (
 );
 
 const SettingsIcon = () => (
-  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6}>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -48,7 +35,7 @@ const SettingsIcon = () => (
 );
 
 const SyncIcon = () => (
-  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6}>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -60,7 +47,7 @@ const SyncIcon = () => (
 );
 
 const UpdatesIcon = () => (
-  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6}>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v9m0-9 3 3m-3-3-3 3" />
     <rect x="5" y="15" width="14" height="3" rx="1.2" />
   </svg>
@@ -189,25 +176,13 @@ const masterLabels: Record<MasterState, string> = {
   custom: 'Mix of enabled/disabled apps'
 };
 
-
-const detectionStatusStyles = {
-  detected: 'border-success/60 bg-success/10 text-success dark:text-success',
-  missing: 'border-border bg-muted text-muted-foreground'
-};
-
-const updateStateStyles: Record<
-  UpdateState,
-  {
-    label: string;
-    className: string;
-  }
-> = {
-  idle: { label: 'Idle', className: 'border-border text-muted-foreground' },
-  checking: { label: 'Checking…', className: 'border-warning/70 text-warning dark:text-warning' },
-  up_to_date: { label: 'Up to date', className: 'border-success/70 text-success dark:text-success' },
-  update_available: { label: 'Update available', className: 'border-warning/70 text-warning dark:text-warning' },
-  offline: { label: 'Offline', className: 'border-border text-muted-foreground' },
-  error: { label: 'Error', className: 'border-destructive/70 text-destructive dark:text-destructive' }
+const updateStateLabels: Record<UpdateState, string> = {
+  idle: 'Idle',
+  checking: 'Checking…',
+  up_to_date: 'Up to date',
+  update_available: 'Update available',
+  offline: 'Offline',
+  error: 'Error'
 };
 
 const formatTimestamp = (isoValue?: string | null): string => {
@@ -291,76 +266,6 @@ const formatCommand = (server: RegistryServerEntry) => {
 
 const resolveBridge = () => (typeof window !== 'undefined' ? window.relay : undefined);
 
-// Hook to detect scrolling and add/remove CSS class for scrollbar visibility
-const useScrollDetection = () => {
-  useEffect(() => {
-    let scrollTimeout: ReturnType<typeof setTimeout>;
-
-    const handleScroll = () => {
-      // Add scrolling class to document.documentElement and body to show scrollbar thumb
-      document.documentElement.classList.add('scrolling');
-      document.body.classList.add('scrolling');
-
-      // Clear existing timeout
-      if (scrollTimeout) {
-        clearTimeout(scrollTimeout);
-      }
-
-      // Remove scrolling class after scrolling stops
-      scrollTimeout = setTimeout(() => {
-        document.documentElement.classList.remove('scrolling');
-        document.body.classList.remove('scrolling');
-      }, 500);
-    };
-
-    // Add scroll listeners to window and any scrollable elements
-    window.addEventListener('scroll', handleScroll, { passive: true });
-
-    // Listen for scroll events on the main content area after component mounts
-    const setupScrollListeners = () => {
-      const mainContent = document.querySelector('[data-section]') ||
-        document.querySelector('.relative.min-h-[420px]') ||
-        document.querySelector('main > div:last-child');
-
-      if (mainContent) {
-        mainContent.addEventListener('scroll', handleScroll, { passive: true });
-      }
-
-      // Also listen for scroll events on any potential scrollable container
-      const scrollableElements = document.querySelectorAll('[data-section], .overflow-auto, .overflow-y-auto');
-      scrollableElements.forEach((element) => {
-        element.addEventListener('scroll', handleScroll, { passive: true });
-      });
-    };
-
-    // Setup listeners immediately and also after a short delay to ensure DOM is ready
-    setupScrollListeners();
-    const timeoutId = setTimeout(setupScrollListeners, 100);
-
-    return () => {
-      if (scrollTimeout) {
-        clearTimeout(scrollTimeout);
-      }
-      clearTimeout(timeoutId);
-      window.removeEventListener('scroll', handleScroll);
-
-      // Clean up all scroll listeners
-      const mainContent = document.querySelector('[data-section]') ||
-        document.querySelector('.relative.min-h-[420px]') ||
-        document.querySelector('main > div:last-child');
-
-      if (mainContent) {
-        mainContent.removeEventListener('scroll', handleScroll);
-      }
-
-      const scrollableElements = document.querySelectorAll('[data-section], .overflow-auto, .overflow-y-auto');
-      scrollableElements.forEach((element) => {
-        element.removeEventListener('scroll', handleScroll);
-      });
-    };
-  }, []);
-};
-
 const computeMasterState = (server: RegistryServerEntry, detection: DetectionSummary): MasterState => {
   if (!server.enabled) {
     return 'off';
@@ -387,11 +292,6 @@ const computeMasterState = (server: RegistryServerEntry, detection: DetectionSum
 
 const App = () => {
   const bridge = resolveBridge();
-
-  // Enable scroll-based scrollbar visibility
-  useScrollDetection();
-
-  // Keyboard navigation handler
 
   const versionLabel = typeof window !== 'undefined' ? window.relay?.version ?? 'dev' : 'dev';
   const [servers, setServers] = useState<RegistryServerEntry[]>(() =>
@@ -809,136 +709,92 @@ const App = () => {
 
   const sectionContent: Record<SectionId, React.ReactElement> = {
     servers: (
-      <Card className="p-6" aria-labelledby="servers-heading">
-        <CardHeader className="flex flex-col gap-4 pb-2 md:flex-row md:items-start md:justify-between">
-          <div className="space-y-1.5">
-            <p className="text-xs uppercase tracking-[0.24em] text-primary/70">Servers</p>
-            <CardTitle id="servers-heading" className="text-2xl">
-              Workspace registry
-            </CardTitle>
-            <CardDescription>
+      <div aria-labelledby="servers-heading">
+        <header>
+          <div>
+            <p>Servers</p>
+            <h2 id="servers-heading">Workspace registry</h2>
+            <p>
               {servers.length} server{servers.length === 1 ? '' : 's'} • {detectedCount} detected app
               {detectedCount === 1 ? '' : 's'}
-            </CardDescription>
+            </p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs font-semibold text-muted-foreground"
+          <button
             onClick={() => setModalState({ mode: 'add' })}
             type="button"
           >
             Add server
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {loadError && <p className="text-sm text-destructive">{loadError}</p>}
-          {mutationError && <p className="text-sm text-destructive">{mutationError}</p>}
+          </button>
+        </header>
+        <div>
+          {loadError && <p>{loadError}</p>}
+          {mutationError && <p>{mutationError}</p>}
           {loading ? (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <LoadingSpinner size="sm" />
-                <Typography variant="small" color="muted">Loading servers…</Typography>
+            <div>
+              <div>
+                <span>Loading servers…</span>
               </div>
-              {Array.from({ length: 2 }).map((_, i) => (
-                <div key={i} className="rounded-lg border border-border bg-card p-5 space-y-3">
-                  <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                    <div className="space-y-2">
-                      <Skeleton className="h-6 w-48" />
-                      <Skeleton className="h-6 w-64" />
-                    </div>
-                    <div className="flex gap-2">
-                      <Skeleton className="h-8 w-16 rounded-md" />
-                      <Skeleton className="h-8 w-16 rounded-md" />
-                    </div>
-                  </div>
-                  <div className="mt-4 space-y-3">
-                    <Skeleton className="h-16 w-full rounded-lg" />
-                    <div className="grid gap-3 sm:grid-cols-3">
-                      {Array.from({ length: 3 }).map((_, j) => (
-                        <Skeleton key={j} className="h-16 w-full rounded-lg" />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ))}
             </div>
           ) : servers.length === 0 ? (
-            <div className="rounded-lg border border-border/60 bg-muted/60 p-6 text-center text-sm text-muted-foreground">
-              <p className="text-base font-medium text-foreground/90">No servers yet</p>
-              <span>Use Add server to register your first shared MCP endpoint.</span>
+            <div>
+              <p>No servers yet</p>
+              <p>Use Add server to register your first shared MCP endpoint.</p>
             </div>
           ) : (
-            <ul className="space-y-4">
+            <ul>
               {servers.map((server) => {
                 const masterState = computeMasterState(server, detection);
                 return (
-                  <li key={server.id} className="rounded-lg border border-border bg-card p-5">
-                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                  <li key={server.id}>
+                    <div>
                       <div>
-                        <p className="text-lg font-semibold text-foreground">{server.name}</p>
-                        <p className="mt-2 text-xs text-muted-foreground">
-                          <code className="rounded-md bg-muted/60 px-3 py-1 font-mono text-sm text-foreground">
-                            {formatCommand(server)}
-                          </code>
+                        <p>{server.name}</p>
+                        <p>
+                          <code>{formatCommand(server)}</code>
                         </p>
                       </div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-xs font-semibold text-muted-foreground"
+                      <div>
+                        <button
                           onClick={() => setModalState({ mode: 'edit', serverId: server.id })}
                           type="button"
                         >
                           Edit
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-xs font-semibold text-destructive transition hover:text-destructive/80"
+                        </button>
+                        <button
                           onClick={() => void handleRemoveServer(server.id)}
                           type="button"
                         >
                           Remove
-                        </Button>
+                        </button>
                         <button
                           type="button"
                           aria-pressed={server.enabled}
-                          className={cn(
-                            'rounded-md border px-3 py-1.5 text-xs font-semibold transition',
-                            server.enabled
-                              ? 'border-success/70 bg-success/10 text-success dark:text-success'
-                              : 'border-border bg-muted text-muted-foreground'
-                          )}
                         >
                           {server.enabled ? 'Enabled' : 'Disabled'}
                         </button>
                       </div>
                     </div>
-                    <div className="mt-4 rounded-lg border border-border/60 bg-muted/60 px-4 py-3 md:mt-3">
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <div>
                         <div>
-                          <Typography variant="label" color="muted">All apps</Typography>
-                          <Typography variant="small">{masterLabels[masterState]}</Typography>
+                          <span>All apps</span>
+                          <span>{masterLabels[masterState]}</span>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <Badge
-                            variant={masterState === 'custom' ? 'warning' : masterState === 'on' ? 'success' : 'muted'}
-                            className="text-xs"
-                          >
+                        <div>
+                          <span>
                             {masterState === 'custom' ? 'Custom' : masterState === 'on' ? 'All on' : 'All off'}
-                          </Badge>
-                          <Switch
+                          </span>
+                          <input
+                            type="checkbox"
                             checked={masterState === 'on' || masterState === 'custom'}
-                            onCheckedChange={(checked: boolean) =>
-                              handleMasterToggle(server.id, checked ? 'on' : 'off')
+                            onChange={(e) =>
+                              handleMasterToggle(server.id, e.target.checked ? 'on' : 'off')
                             }
                           />
                         </div>
                       </div>
                     </div>
-                    <div className="mt-4 grid gap-3 sm:grid-cols-3" role="group" aria-label="Per-app toggles">
+                    <div role="group" aria-label="Per-app toggles">
                       {SUPPORTED_AGENTS.map((agent) => {
                         const status = detection[agent];
                         const detected = Boolean(status?.detected);
@@ -946,24 +802,17 @@ const App = () => {
                         const disabled = !detected || !server.enabled;
 
                         return (
-                          <div
-                            key={`${server.id}-${agent}`}
-                            className={cn(
-                              'flex items-center justify-between rounded-lg border border-border bg-card p-3',
-                              !detected && 'opacity-50'
-                            )}
-                          >
-                            <div className="flex-1">
-                              <Typography variant="eyebrow" color="muted">
-                                {agentLabels[agent]}
-                              </Typography>
-                              <Typography variant="small" color="default">
+                          <div key={`${server.id}-${agent}`}>
+                            <div>
+                              <span>{agentLabels[agent]}</span>
+                              <span>
                                 {!detected ? 'Not detected' : effectiveEnabled ? 'Enabled' : 'Disabled'}
-                              </Typography>
+                              </span>
                             </div>
-                            <Switch
+                            <input
+                              type="checkbox"
                               checked={effectiveEnabled}
-                              onCheckedChange={() => handleAgentToggle(server.id, agent)}
+                              onChange={() => handleAgentToggle(server.id, agent)}
                               disabled={disabled}
                             />
                           </div>
@@ -975,280 +824,215 @@ const App = () => {
               })}
             </ul>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     ),
     settings: (
-      <Card className="p-6" aria-labelledby="detection-heading">
-        <CardHeader className="flex flex-col gap-3 pb-3 md:flex-row md:items-center md:justify-between">
+      <div aria-labelledby="detection-heading">
+        <header>
           <div>
-            <p className="text-xs uppercase tracking-[0.24em] text-primary/70">Settings</p>
-            <CardTitle id="detection-heading">Agent detection</CardTitle>
-            <CardDescription>Resolved config paths are read-only and shared across Cursor, Claude, and Codex.</CardDescription>
+            <p>Settings</p>
+            <h2 id="detection-heading">Agent detection</h2>
+            <p>Resolved config paths are read-only and shared across Cursor, Claude, and Codex.</p>
           </div>
           {bridge && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-[0.75rem] font-semibold text-muted-foreground"
+            <button
               type="button"
               disabled={detectionBusy}
               onClick={handleDetectionRefresh}
             >
               {detectionBusy ? 'Scanning…' : 'Re-scan'}
-            </Button>
+            </button>
           )}
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {detectionError && <p className="text-sm text-destructive">{detectionError}</p>}
-          <ul className="space-y-3">
+        </header>
+        <div>
+          {detectionError && <p>{detectionError}</p>}
+          <ul>
             {SUPPORTED_AGENTS.map((agent) => {
               const status = detection[agent];
               const detected = Boolean(status?.detected);
-              const badgeStyle = detected ? detectionStatusStyles.detected : detectionStatusStyles.missing;
               return (
-                <li key={`detection-${agent}`} className="rounded-lg border border-border/60 bg-muted/60 p-4">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <li key={`detection-${agent}`}>
+                  <div>
                     <div>
-                      <p className="text-sm font-semibold text-foreground">{agentLabels[agent]}</p>
-                      <p className="text-xs text-muted-foreground">Read-only config path</p>
+                      <p>{agentLabels[agent]}</p>
+                      <p>Read-only config path</p>
                     </div>
-                    <Badge variant="outline" className={cn('px-3 py-1 text-[0.65rem] uppercase tracking-[0.2em]', badgeStyle)}>
+                    <span>
                       {detected ? 'Detected' : 'Not detected'}
-                    </Badge>
+                    </span>
                   </div>
-                  <p
-                    className="mt-3 truncate font-mono text-sm text-foreground/90"
-                    data-readonly="config-path"
-                    title="Relay displays project-scoped configs in read-only mode."
-                  >
+                  <p title="Relay displays project-scoped configs in read-only mode.">
                     {status?.path ?? 'Unknown path'}
                   </p>
-                  <p className="mt-1 text-xs text-muted-foreground/80">Last checked {formatTimestamp(status?.lastChecked)}</p>
+                  <p>Last checked {formatTimestamp(status?.lastChecked)}</p>
                 </li>
               );
             })}
           </ul>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     ),
     sync: (
-      <Card className="p-6" aria-labelledby="sync-heading">
-        <CardHeader className="flex items-start justify-between gap-4 pb-3">
-          <div className="space-y-1">
-            <p className="text-xs uppercase tracking-[0.24em] text-primary/70">Sync</p>
-            <CardTitle id="sync-heading">Deterministic writes</CardTitle>
-            <CardDescription>Invokes the same locked-down main-process service used by the tray and schedule.</CardDescription>
+      <div aria-labelledby="sync-heading">
+        <header>
+          <div>
+            <p>Sync</p>
+            <h2 id="sync-heading">Deterministic writes</h2>
+            <p>Invokes the same locked-down main-process service used by the tray and schedule.</p>
           </div>
-          <Badge
-            variant="outline"
-            className={cn(
-              'text-[0.65rem] uppercase tracking-[0.3em]',
-              syncStatus.state === 'running'
-                ? 'border-warning/70 text-warning dark:text-warning'
-                : syncStatus.state === 'error'
-                  ? 'border-destructive/70 text-destructive dark:text-destructive'
-                  : 'border-success/70 text-success dark:text-success'
-            )}
-          >
+          <span>
             {syncStatus.state === 'running' ? 'Syncing' : syncStatus.state === 'error' ? 'Error' : 'Ready'}
-          </Badge>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="rounded-lg border border-border/60 bg-muted/60 p-4">
-            <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Last sync</p>
-            <p className="mt-1 text-lg font-semibold text-foreground">{formatTimestamp(syncStatus.lastRun)}</p>
+          </span>
+        </header>
+        <div>
+          <div>
+            <p>Last sync</p>
+            <p>{formatTimestamp(syncStatus.lastRun)}</p>
             {syncStatus.lastError ? (
-              <p className="mt-1 text-sm text-destructive">{syncStatus.lastError}</p>
+              <p>{syncStatus.lastError}</p>
             ) : (
-              <p className="mt-1 text-sm text-muted-foreground">Every detected agent uses this timestamp.</p>
+              <p>Every detected agent uses this timestamp.</p>
             )}
           </div>
-          <Button
+          <button
             type="button"
             onClick={handleSyncNow}
             disabled={syncBusy}
-            className="w-full text-xs font-semibold uppercase tracking-[0.2em]"
           >
             {syncStatus.state === 'running' ? 'Syncing…' : 'Sync Now'}
-          </Button>
-        </CardContent>
-      </Card>
+          </button>
+        </div>
+      </div>
     ),
     updates: (
-      <Card className="p-6" aria-labelledby="updates-heading">
-        <CardHeader className="flex items-start justify-between gap-4 pb-3">
-          <div className="space-y-1">
-            <p className="text-xs uppercase tracking-[0.24em] text-primary/70">Updates</p>
-            <CardTitle id="updates-heading">Manifest checks</CardTitle>
-            <CardDescription>Manual checks stay in the main process and never include registry or secret data.</CardDescription>
+      <div aria-labelledby="updates-heading">
+        <header>
+          <div>
+            <p>Updates</p>
+            <h2 id="updates-heading">Manifest checks</h2>
+            <p>Manual checks stay in the main process and never include registry or secret data.</p>
           </div>
-          <Badge
-            variant="outline"
-            className={cn(
-              'text-[0.65rem] uppercase tracking-[0.3em]',
-              updateStateStyles[updateStatus.state].className
-            )}
-          >
-            {updateStateStyles[updateStatus.state].label}
-          </Badge>
-        </CardHeader>
-        <CardContent className="space-y-4 text-sm text-foreground/90">
-          <dl className="grid grid-cols-1 gap-3 text-sm text-foreground/90">
-            <div className="rounded-lg border border-border/60 bg-muted/60 p-4">
-              <dt className="text-xs uppercase tracking-wide text-muted-foreground">Current build</dt>
-              <dd className="text-base font-medium text-foreground">{updateStatus.currentVersion}</dd>
+          <span>
+            {updateStateLabels[updateStatus.state]}
+          </span>
+        </header>
+        <div>
+          <dl>
+            <div>
+              <dt>Current build</dt>
+              <dd>{updateStatus.currentVersion}</dd>
             </div>
-            <div className="rounded-lg border border-border/60 bg-muted/60 p-4">
-              <dt className="text-xs uppercase tracking-wide text-muted-foreground">Latest manifest</dt>
-              <dd className="text-base font-medium text-foreground">{updateStatus.latestVersion ?? '—'}</dd>
+            <div>
+              <dt>Latest manifest</dt>
+              <dd>{updateStatus.latestVersion ?? '—'}</dd>
             </div>
-            <div className="rounded-lg border border-border/60 bg-muted/60 p-4">
-              <dt className="text-xs uppercase tracking-wide text-muted-foreground">Last checked</dt>
-              <dd className="text-base font-medium text-foreground">{formatTimestamp(updateStatus.checkedAt)}</dd>
+            <div>
+              <dt>Last checked</dt>
+              <dd>{formatTimestamp(updateStatus.checkedAt)}</dd>
             </div>
           </dl>
-          <p className="text-xs text-muted-foreground">{updateStatus.message ?? 'No update checks have run yet.'}</p>
-          {updateError && <p className="text-xs text-destructive">{updateError}</p>}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Button
+          <p>{updateStatus.message ?? 'No update checks have run yet.'}</p>
+          {updateError && <p>{updateError}</p>}
+          <div>
+            <button
               type="button"
-              variant="outline"
               onClick={handleUpdateCheck}
               disabled={updateBusy}
-              className="flex-1 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground"
             >
               {updateStatus.state === 'checking' ? 'Checking…' : 'Check for updates'}
-            </Button>
+            </button>
             <button
               type="button"
               role="switch"
               aria-checked={updateStatus.autoCheckEnabled}
               onClick={handleUpdatePreferenceToggle}
               disabled={updateBusy}
-              className={cn(
-                'w-full rounded-md border px-4 py-2 text-center text-[0.75rem] font-semibold uppercase tracking-[0.2em] transition sm:w-auto',
-                updateStatus.autoCheckEnabled
-                  ? 'border-success/70 text-success dark:text-success'
-                  : 'border-border text-muted-foreground'
-              )}
             >
               {updateStatus.autoCheckEnabled ? 'Auto checks on' : 'Auto checks off'}
             </button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     )
   };
 
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="relay-ui-theme">
-      <main className="relative flex min-h-screen bg-background font-sans text-foreground antialiased">
-        <div
-          aria-hidden="true"
-          className="fixed left-0 right-0 top-0 z-50 h-6"
-          style={{
-            WebkitAppRegion: 'drag',
-            WebkitUserSelect: 'none'
-          } as any}
-        />
-        <aside className="fixed left-0 top-0 bottom-0 w-[240px] flex-col border-r border-border/60 bg-card px-6 py-14 overflow-hidden hidden md:flex">
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-lg font-semibold text-primary">
-                R
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-foreground">Relay</p>
-              </div>
-            </div>
-          </div>
-          <nav className="mt-8 flex-1 flex flex-col gap-2" aria-label="Primary">
-            {SIDEBAR_SECTIONS.map((section) => {
-              const isActive = activeSection === section.id;
-              return (
-                <button
-                  key={section.id}
-                  type="button"
-                  onClick={() => handleSectionChange(section.id)}
-                  aria-current={isActive ? 'page' : undefined}
-                  className={cn(
-                    'group flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
-                    isActive ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
-                  )}
-                >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-md bg-muted text-muted-foreground group-hover:text-foreground">
-                    {section.icon}
-                  </span>
-                  <span>{section.label}</span>
-                </button>
-              );
-            })}
-          </nav>
-        </aside>
-        <div className="relative min-h-screen bg-background md:ml-[240px]">
-          <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-6 py-14 lg:px-10">
-            <header
-              className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between"
-              style={({ WebkitAppRegion: 'drag' }) as any}
-            >
-              <div className="space-y-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary/80">Relay</p>
-                <h1 className="text-3xl font-semibold text-foreground sm:text-4xl">Shared MCP Orchestrator</h1>
-                <p className="max-w-2xl text-base text-muted-foreground">
-                  Shared MCP shell keeps Cursor, Claude, and Codex servers in sync with secure Keychain storage.
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <ModeToggle />
-                <Button
-                  variant="outline"
-                  className="self-start text-xs font-semibold text-muted-foreground"
-                  style={{ WebkitAppRegion: 'no-drag' } as any}
-                  type="button"
-                  aria-label="Open settings panel"
-                  onClick={() => handleSectionChange('settings')}
-                >
-                  Settings
-                </Button>
-              </div>
-            </header>
-            <div className="relative min-h-[420px]">
-              {SIDEBAR_SECTIONS.map((section) => {
-                const isActive = activeSection === section.id;
-                return (
-                  <section
-                    key={`section-${section.id}`}
-                    data-section={section.id}
-                    aria-hidden={!isActive}
-                    className={cn(
-                      'transition-all duration-300',
-                      isActive
-                        ? 'relative opacity-100'
-                        : 'absolute inset-0 -z-10 pointer-events-none opacity-0'
-                    )}
-                  >
-                    <ErrorBoundary key={section.id}>
-                      {sectionContent[section.id]}
-                    </ErrorBoundary>
-                  </section>
-                );
-              })}
+    <main style={{ backgroundColor: 'white', minHeight: '100vh', color: 'black' }}>
+      <aside>
+        <div>
+          <div>
+            <div>R</div>
+            <div>
+              <p>Relay</p>
             </div>
           </div>
         </div>
-        {modalState && (
-          <ServerModal
-            mode={modalState.mode}
-            server={modalState.mode === 'edit' ? servers.find((server) => server.id === modalState.serverId) : undefined}
-            detection={detection}
-            existingServers={servers}
-            onCancel={() => setModalState(null)}
-            onSubmit={handleServerModalSubmit}
-          />
-        )}
-      </main>
-    </ThemeProvider>
+        <nav aria-label="Primary">
+          {SIDEBAR_SECTIONS.map((section) => {
+            const isActive = activeSection === section.id;
+            return (
+              <button
+                key={section.id}
+                type="button"
+                onClick={() => handleSectionChange(section.id)}
+                aria-current={isActive ? 'page' : undefined}
+              >
+                <span>{section.icon}</span>
+                <span>{section.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      </aside>
+      <div>
+        <div>
+          <header>
+            <div>
+              <p>Relay</p>
+              <h1>Shared MCP Orchestrator</h1>
+              <p>
+                Shared MCP shell keeps Cursor, Claude, and Codex servers in sync with secure Keychain storage.
+              </p>
+            </div>
+            <div>
+              <button
+                type="button"
+                aria-label="Open settings panel"
+                onClick={() => handleSectionChange('settings')}
+              >
+                Settings
+              </button>
+            </div>
+          </header>
+          <div>
+            {SIDEBAR_SECTIONS.map((section) => {
+              const isActive = activeSection === section.id;
+              return (
+                <section
+                  key={`section-${section.id}`}
+                  data-section={section.id}
+                  aria-hidden={!isActive}
+                  style={{ display: isActive ? 'block' : 'none' }}
+                >
+                  {sectionContent[section.id]}
+                </section>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+      {modalState && (
+        <ServerModal
+          mode={modalState.mode}
+          server={modalState.mode === 'edit' ? servers.find((server) => server.id === modalState.serverId) : undefined}
+          detection={detection}
+          existingServers={servers}
+          onCancel={() => setModalState(null)}
+          onSubmit={handleServerModalSubmit}
+        />
+      )}
+    </main>
   );
 };
 
