@@ -18,11 +18,11 @@ describe('buildMainWindowOptions', () => {
     expect(options.webPreferences?.devTools).toBe(false);
   });
 
-  it('enables Liquid Glass chrome defaults', () => {
+  it('enables window chrome defaults', () => {
     const options = buildMainWindowOptions(baseArgs);
 
-    expect(options.width).toBe(900);
-    expect(options.height).toBe(600);
+    expect(options.width).toBe(1100);
+    expect(options.height).toBe(700);
     expect(options.transparent).toBe(true);
     expect(options.titleBarStyle).toBe('hiddenInset');
   });
