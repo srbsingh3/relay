@@ -77,7 +77,7 @@ export function Sidebar({
       id: 'settings' as const,
       label: 'Settings',
       icon: <SettingsIcon />,
-      badge: detectedCount > 0 ? `${detectedCount}/3` : undefined,
+      badge: detectedCount > 0 ? detectedCount.toString() : undefined,
     },
   ];
 

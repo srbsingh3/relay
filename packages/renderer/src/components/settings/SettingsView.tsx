@@ -21,18 +21,37 @@ interface SettingsViewProps {
   detectionBusy: boolean;
 }
 
-const AGENTS: SupportedAgent[] = ['cursor', 'claude', 'codex'];
+const AGENTS: SupportedAgent[] = [
+  'cursor',
+  'claude',
+  'codex',
+  'cline',
+  'roo',
+  'kilo',
+  'opencode',
+  'antigravity',
+];
 
 const agentLabels: Record<SupportedAgent, string> = {
   cursor: 'Cursor',
   claude: 'Claude Code',
   codex: 'Codex',
+  cline: 'Cline',
+  roo: 'Roo Code',
+  kilo: 'Kilo Code',
+  opencode: 'OpenCode',
+  antigravity: 'Antigravity',
 };
 
 const agentDescriptions: Record<SupportedAgent, string> = {
   cursor: 'AI-powered code editor',
   claude: 'Anthropic CLI assistant',
   codex: 'OpenAI coding assistant',
+  cline: 'VS Code AI assistant',
+  roo: 'VS Code coding agent',
+  kilo: 'VS Code AI coding agent',
+  opencode: 'Terminal AI coding agent',
+  antigravity: 'Google AI IDE',
 };
 
 function formatTimestamp(isoValue?: string | null): string {
@@ -94,7 +113,7 @@ export function SettingsView({
           <div>
             <h2 className="text-sm font-semibold text-foreground">Detected Agents</h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {detectedCount} of 3 supported apps detected on this machine
+              {detectedCount} of {AGENTS.length} supported apps detected on this machine
             </p>
           </div>
           <Button

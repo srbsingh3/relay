@@ -10,7 +10,12 @@ const buildDetection = (detected: Partial<Record<SupportedAgent, boolean>>): Det
   return {
     cursor: { detected: Boolean(detected.cursor), path: null, lastChecked: timestamp },
     claude: { detected: Boolean(detected.claude), path: null, lastChecked: timestamp },
-    codex: { detected: Boolean(detected.codex), path: null, lastChecked: timestamp }
+    codex: { detected: Boolean(detected.codex), path: null, lastChecked: timestamp },
+    cline: { detected: Boolean(detected.cline), path: null, lastChecked: timestamp },
+    roo: { detected: Boolean(detected.roo), path: null, lastChecked: timestamp },
+    kilo: { detected: Boolean(detected.kilo), path: null, lastChecked: timestamp },
+    opencode: { detected: Boolean(detected.opencode), path: null, lastChecked: timestamp },
+    antigravity: { detected: Boolean(detected.antigravity), path: null, lastChecked: timestamp },
   };
 };
 

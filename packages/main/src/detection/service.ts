@@ -75,10 +75,24 @@ export class DetectionService {
 
   constructor(options: DetectionServiceOptions = {}) {
     this.homeDirectory = options.homeDirectory ?? os.homedir();
+    // VS Code extensions storage path on macOS
+    const vscodeGlobalStorage = path.join(
+      this.homeDirectory,
+      'Library',
+      'Application Support',
+      'Code',
+      'User',
+      'globalStorage'
+    );
     this.configPaths = {
       cursor: path.join(this.homeDirectory, '.cursor', 'mcp.json'),
       claude: path.join(this.homeDirectory, '.claude.json'),
-      codex: path.join(this.homeDirectory, '.codex', 'config.toml')
+      codex: path.join(this.homeDirectory, '.codex', 'config.toml'),
+      cline: path.join(vscodeGlobalStorage, 'saoudrizwan.claude-dev', 'settings', 'cline_mcp_settings.json'),
+      roo: path.join(vscodeGlobalStorage, 'rooveterinaryinc.roo-cline', 'settings', 'cline_mcp_settings.json'),
+      kilo: path.join(vscodeGlobalStorage, 'kilocode.kilo-code', 'settings', 'mcp_settings.json'),
+      opencode: path.join(this.homeDirectory, '.config', 'opencode', 'opencode.json'),
+      antigravity: path.join(this.homeDirectory, '.gemini', 'antigravity', 'mcp_config.json'),
     };
     this.pathProvider = options.pathProvider ?? (() => process.env.PATH ?? '');
     this.now = options.now ?? (() => new Date());
@@ -119,7 +133,25 @@ export class DetectionService {
       claude: async () =>
         (await pathExists(this.configPaths.claude)) || Boolean(await findExecutableInPath('claude', this.pathProvider())),
       codex: async () =>
-        (await pathExists(this.configPaths.codex)) || Boolean(await findExecutableInPath('codex', this.pathProvider()))
+        (await pathExists(this.configPaths.codex)) || Boolean(await findExecutableInPath('codex', this.pathProvider())),
+      // VS Code extensions: detect by extension folder or config file
+      cline: async () =>
+        (await pathExists(this.configPaths.cline)) ||
+        (await pathExists(path.dirname(path.dirname(this.configPaths.cline)))), // extension folder
+      roo: async () =>
+        (await pathExists(this.configPaths.roo)) ||
+        (await pathExists(path.dirname(path.dirname(this.configPaths.roo)))), // extension folder
+      kilo: async () =>
+        (await pathExists(this.configPaths.kilo)) ||
+        (await pathExists(path.dirname(path.dirname(this.configPaths.kilo)))), // extension folder
+      // CLI tools: detect by config file or binary in PATH
+      opencode: async () =>
+        (await pathExists(this.configPaths.opencode)) ||
+        Boolean(await findExecutableInPath('opencode', this.pathProvider())),
+      // Antigravity: detect by config file or .app bundle
+      antigravity: async () =>
+        (await pathExists(this.configPaths.antigravity)) ||
+        (await pathExists(path.join(this.homeDirectory, '.gemini', 'antigravity'))),
     };
   }
 

@@ -52,7 +52,12 @@ interface MissingSecretWarning {
 const AGENT_LABELS: Record<SupportedAgent, string> = {
   cursor: 'Cursor',
   claude: 'Claude',
-  codex: 'Codex'
+  codex: 'Codex',
+  cline: 'Cline',
+  roo: 'Roo Code',
+  kilo: 'Kilo Code',
+  opencode: 'OpenCode',
+  antigravity: 'Antigravity',
 };
 
 const SOURCE_LABELS: Record<SyncInvocationPayload['source'], string> = {

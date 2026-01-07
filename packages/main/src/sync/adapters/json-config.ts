@@ -32,7 +32,12 @@ const isEnoent = (error: unknown): boolean => (error as NodeJS.ErrnoException)?.
 const AGENT_LABELS: Record<SupportedAgent, string> = {
   cursor: 'Cursor',
   claude: 'Claude',
-  codex: 'Codex'
+  codex: 'Codex',
+  cline: 'Cline',
+  roo: 'Roo Code',
+  kilo: 'Kilo Code',
+  opencode: 'OpenCode',
+  antigravity: 'Antigravity',
 };
 
 const agentLabel = (agent: SupportedAgent) => AGENT_LABELS[agent] ?? 'Agent';
@@ -249,3 +254,18 @@ export const createJsonMcpAdapter = (options: JsonAdapterOptions): SyncAdapter =
 
 export const defaultCursorPath = () => path.join(os.homedir(), '.cursor', 'mcp.json');
 export const defaultClaudePath = () => path.join(os.homedir(), '.claude.json');
+
+// VS Code extensions use globalStorage path on macOS
+const vscodeGlobalStorage = () =>
+  path.join(os.homedir(), 'Library', 'Application Support', 'Code', 'User', 'globalStorage');
+
+export const defaultClinePath = () =>
+  path.join(vscodeGlobalStorage(), 'saoudrizwan.claude-dev', 'settings', 'cline_mcp_settings.json');
+export const defaultRooPath = () =>
+  path.join(vscodeGlobalStorage(), 'rooveterinaryinc.roo-cline', 'settings', 'cline_mcp_settings.json');
+export const defaultKiloPath = () =>
+  path.join(vscodeGlobalStorage(), 'kilocode.kilo-code', 'settings', 'mcp_settings.json');
+export const defaultOpencodePath = () =>
+  path.join(os.homedir(), '.config', 'opencode', 'opencode.json');
+export const defaultAntigravityPath = () =>
+  path.join(os.homedir(), '.gemini', 'antigravity', 'mcp_config.json');

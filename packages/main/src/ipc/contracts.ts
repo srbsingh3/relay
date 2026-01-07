@@ -39,6 +39,11 @@ export interface DetectionSummary {
   cursor: DetectionStatus;
   claude: DetectionStatus;
   codex: DetectionStatus;
+  cline: DetectionStatus;
+  roo: DetectionStatus;
+  kilo: DetectionStatus;
+  opencode: DetectionStatus;
+  antigravity: DetectionStatus;
 }
 
 export interface SyncInvocationPayload {

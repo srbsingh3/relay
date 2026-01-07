@@ -46,7 +46,12 @@ const createAdapterMap = (overrides?: Partial<SyncAdaptersMap>): SyncAdaptersMap
   const base = {
     cursor: createAdapter('cursor'),
     claude: createAdapter('claude'),
-    codex: createAdapter('codex')
+    codex: createAdapter('codex'),
+    cline: createAdapter('cline'),
+    roo: createAdapter('roo'),
+    kilo: createAdapter('kilo'),
+    opencode: createAdapter('opencode'),
+    antigravity: createAdapter('antigravity'),
   } satisfies SyncAdaptersMap;
 
   return {
@@ -100,7 +105,12 @@ describe('SyncService', () => {
     const detection = buildDetectionSummary({
       cursor: true,
       claude: true,
-      codex: true
+      codex: true,
+      cline: true,
+      roo: true,
+      kilo: true,
+      opencode: true,
+      antigravity: true,
     });
 
     const adapters = createAdapterMap();
@@ -154,11 +164,14 @@ describe('SyncService', () => {
       ]
     });
 
-    expect(result.syncedApps).toEqual(['cursor', 'claude', 'codex']);
+    // All 8 agents synced: the servers map to different apps based on their 'apps' config
+    expect(result.syncedApps).toEqual([
+      'cursor', 'claude', 'codex', 'cline', 'roo', 'kilo', 'opencode', 'antigravity'
+    ]);
     expect(result.ok).toBe(true);
     expect(result.issues).toEqual([]);
     expect(result.finishedAt).toBe('2024-03-01T12:00:00.000Z');
-    expect(result.message).toBe('Synced 3 apps');
+    expect(result.message).toBe('Synced 8 apps');
     expect(service.getStatus()).toEqual({ state: 'idle', lastRun: '2024-03-01T12:00:00.000Z' });
     expect(prompter).not.toHaveBeenCalled();
   });
@@ -174,7 +187,13 @@ describe('SyncService', () => {
     const detection = buildDetectionSummary({
       cursor: true,
       claude: false,
-      codex: true
+      codex: true,
+      // New agents undetected for this test
+      cline: false,
+      roo: false,
+      kilo: false,
+      opencode: false,
+      antigravity: false,
     });
 
     const adapters = createAdapterMap();
@@ -195,7 +214,10 @@ describe('SyncService', () => {
     expect(result.syncedApps).toEqual(['cursor']);
     expect(result.ok).toBe(true);
     expect(result.issues).toEqual([]);
-    expect(result.message).toBe('Synced 1/3 apps; skipped Claude (undetected), Codex (no enabled servers)');
+    // All undetected agents are listed in skip message
+    expect(result.message).toBe(
+      'Synced 1/8 apps; skipped Claude (undetected), Codex (no enabled servers), Cline (undetected), Roo Code (undetected), Kilo Code (undetected), OpenCode (undetected), Antigravity (undetected)'
+    );
     expect(adapters.cursor.sync).toHaveBeenCalledTimes(1);
     expect(adapters.claude.sync).not.toHaveBeenCalled();
     expect(adapters.codex.sync).not.toHaveBeenCalled();
@@ -322,7 +344,12 @@ describe('SyncService', () => {
     const detection = buildDetectionSummary({
       cursor: true,
       claude: true,
-      codex: false
+      codex: false,
+      cline: false,
+      roo: false,
+      kilo: false,
+      opencode: false,
+      antigravity: false,
     });
 
     const keychain = createKeychain();
@@ -352,7 +379,7 @@ describe('SyncService', () => {
     expect(result.syncedApps).toEqual(['cursor', 'claude']);
     expect(capturedEnv).toEqual([{ FALLBACK: '1' }]);
     expect(result.message).toBe(
-      'Synced 2/3 apps; skipped Codex (undetected); missing secrets: Workspace API_KEY (alias missing_api)'
+      'Synced 2/8 apps; skipped Codex (undetected), Cline (undetected), Roo Code (undetected), Kilo Code (undetected), OpenCode (undetected), Antigravity (undetected); missing secrets: Workspace API_KEY (alias missing_api)'
     );
     expect(result.ok).toBe(true);
     expect(result.issues).toHaveLength(1);

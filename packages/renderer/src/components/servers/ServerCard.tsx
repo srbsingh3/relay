@@ -15,7 +15,16 @@ interface ServerCardProps {
   onDelete: () => void;
 }
 
-const AGENTS: SupportedAgent[] = ['cursor', 'claude', 'codex'];
+const AGENTS: SupportedAgent[] = [
+  'cursor',
+  'claude',
+  'codex',
+  'cline',
+  'roo',
+  'kilo',
+  'opencode',
+  'antigravity',
+];
 
 // Determine server type from the registry entry
 function getServerType(server: RegistryServerEntry): ServerType {
@@ -101,7 +110,6 @@ export function ServerCard({
             <MasterToggle
               checked={isEnabled}
               onCheckedChange={onMasterToggle}
-              size="lg"
             />
           </div>
         </div>
