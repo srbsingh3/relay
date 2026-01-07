@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   DetectionStatus,
   DetectionSummary,
@@ -163,6 +163,10 @@ export default function App() {
   const [updateBusy, setUpdateBusy] = useState(false);
   const [detectionBusy, setDetectionBusy] = useState(false);
 
+  // Debounced sync
+  const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const SYNC_DEBOUNCE_MS = 500;
+
   // Errors
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -228,6 +232,56 @@ export default function App() {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [modalState]);
+
+  // Cleanup debounce timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Debounced sync - triggers sync after a short delay to batch rapid changes
+  const scheduleDebouncedSync = useCallback(() => {
+    if (syncTimeoutRef.current) {
+      clearTimeout(syncTimeoutRef.current);
+    }
+    syncTimeoutRef.current = setTimeout(() => {
+      syncTimeoutRef.current = null;
+      // Trigger sync (inline to avoid circular dependency with handleSync)
+      if (syncBusy) return;
+      setSyncBusy(true);
+      setSyncStatus((prev) => ({ ...prev, state: 'running' }));
+
+      const runSync = async () => {
+        try {
+          if (!bridge) {
+            await new Promise((r) => setTimeout(r, 300));
+            setSyncStatus({ state: 'idle', lastRun: new Date().toISOString() });
+            return;
+          }
+
+          const result = await bridge.sync.invoke({ source: 'user' });
+          setSyncStatus({
+            state: result.ok ? 'idle' : 'error',
+            lastRun: result.finishedAt,
+            lastError: result.ok ? undefined : result.message,
+          });
+        } catch {
+          setSyncStatus((prev) => ({
+            ...prev,
+            state: 'error',
+            lastError: 'Sync failed',
+          }));
+        } finally {
+          setSyncBusy(false);
+        }
+      };
+
+      void runSync();
+    }, SYNC_DEBOUNCE_MS);
+  }, [bridge, syncBusy]);
 
   // Persist servers
   const persistServers = useCallback(
@@ -305,10 +359,11 @@ export default function App() {
 
       const nextServers = [...servers, newServer];
       setServers(nextServers);
-      await persistServers(nextServers);
+      const ok = await persistServers(nextServers);
+      if (ok) scheduleDebouncedSync();
       setModalState(null);
     },
-    [bridge, servers, persistServers]
+    [bridge, servers, persistServers, scheduleDebouncedSync]
   );
 
   const handleMasterToggle = useCallback(
@@ -334,9 +389,11 @@ export default function App() {
         }
       });
       setServers(nextServers);
-      void persistServers(nextServers);
+      void persistServers(nextServers).then((ok) => {
+        if (ok) scheduleDebouncedSync();
+      });
     },
-    [servers, detection, persistServers]
+    [servers, detection, persistServers, scheduleDebouncedSync]
   );
 
   const handleAppToggle = useCallback(
@@ -354,9 +411,11 @@ export default function App() {
         return { ...s, apps: normalizeAppOverrides(apps) };
       });
       setServers(nextServers);
-      void persistServers(nextServers);
+      void persistServers(nextServers).then((ok) => {
+        if (ok) scheduleDebouncedSync();
+      });
     },
-    [servers, detection, persistServers]
+    [servers, detection, persistServers, scheduleDebouncedSync]
   );
 
   const handleDeleteServer = useCallback(
@@ -369,9 +428,10 @@ export default function App() {
 
       const nextServers = servers.filter((s) => s.id !== serverId);
       setServers(nextServers);
-      await persistServers(nextServers);
+      const ok = await persistServers(nextServers);
+      if (ok) scheduleDebouncedSync();
     },
-    [servers, persistServers]
+    [servers, persistServers, scheduleDebouncedSync]
   );
 
   const handleSync = useCallback(async () => {
