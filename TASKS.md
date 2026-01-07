@@ -503,3 +503,77 @@ This milestone transforms the UX with a paste-to-add flow (replacing manual form
   - [ ] 7.5.1 Signed, hardened `.dmg` passes offline startup tests and enforces security flags in production.
   - [ ] 7.5.2 Manual QA checklist + release notes completed, documenting coverage of missing secrets, invalid configs, and disabled apps.
   - [ ] 7.5.3 Update-check workflow verified end-to-end: manifest fetch is the only network call, opt-out honored, and notifications surface without auto-installing.
+
+---
+
+## Future Enhancements (Post-MVP)
+
+These features are explicitly out of scope for MVP but documented here for future consideration.
+
+### F.1 **Import Existing Servers (Brownfield Support)**
+
+Allow users who already have MCP servers configured in their agents to "adopt" them into Relay without recreating from scratch.
+
+- [ ] F.1.1 **Discovery phase**
+  - [ ] F.1.1.1 Scan all detected agent configs for servers not in `__relayManagedServers`.
+  - [ ] F.1.1.2 Deduplicate servers that appear in multiple agents (same name + command).
+  - [ ] F.1.1.3 Track which agents each unmanaged server exists in.
+
+- [ ] F.1.2 **Import UI flow**
+  - [ ] F.1.2.1 Entry point: "Import Existing" button in Servers view (or auto-prompt on first launch if unmanaged servers detected).
+  - [ ] F.1.2.2 Display list of discovered servers with:
+    - [ ] F.1.2.2.1 Server name and command/URL preview.
+    - [ ] F.1.2.2.2 Which agents it was found in.
+    - [ ] F.1.2.2.3 Warning badge if secrets detected in env vars.
+    - [ ] F.1.2.2.4 Checkbox to select for import.
+  - [ ] F.1.2.3 Secret migration step:
+    - [ ] F.1.2.3.1 For each selected server with env vars containing potential secrets.
+    - [ ] F.1.2.3.2 Show current value (read from agent config).
+    - [ ] F.1.2.3.3 Prompt to store in Keychain with alias.
+    - [ ] F.1.2.3.4 Option to skip (leave as plaintext, not recommended).
+  - [ ] F.1.2.4 Confirmation step:
+    - [ ] F.1.2.4.1 Summary of servers to import.
+    - [ ] F.1.2.4.2 Per-app scoping defaults (based on where server was found).
+    - [ ] F.1.2.4.3 Number of secrets to be stored in Keychain.
+
+- [ ] F.1.3 **Import execution**
+  - [ ] F.1.3.1 Generate unique IDs for each imported server (`srv_<slug>`).
+  - [ ] F.1.3.2 Store secrets in Keychain, replace env values with `keychain:<alias>`.
+  - [ ] F.1.3.3 Add servers to registry with appropriate `apps` scoping.
+  - [ ] F.1.3.4 Update agent configs to add `__relayManagedServers` metadata for imported servers.
+  - [ ] F.1.3.5 Show success toast with count of imported servers.
+
+- [ ] F.1.4 **Edge cases**
+  - [ ] F.1.4.1 Name collision with existing Relay server: append suffix or prompt for rename.
+  - [ ] F.1.4.2 Same server with different configs across agents: show diff, let user pick canonical version.
+  - [ ] F.1.4.3 Partial import: user can select subset of discovered servers.
+
+- [ ] F.1.5 **Simpler alternative (if full flow too heavy)**
+  - [ ] F.1.5.1 Detection banner in Servers view: "N servers in your configs aren't managed by Relay".
+  - [ ] F.1.5.2 Per-server "Add to Relay" inline button.
+  - [ ] F.1.5.3 Opens standard Add Server modal, pre-filled with detected config.
+  - [ ] F.1.5.4 Reuses existing UI, lower implementation cost.
+
+### F.2 **Drift Detection**
+
+Detect when a user manually modifies a Relay-managed server's config outside of Relay.
+
+- [ ] F.2.1 Store hash of last-synced config per server per agent.
+- [ ] F.2.2 On sync, compare current config to stored hash.
+- [ ] F.2.3 If mismatch detected, prompt user: "Overwrite local changes?" / "Keep local" / "View diff".
+
+### F.3 **Name Collision Handling**
+
+Prevent silent overwrites when user-created servers share names with Relay servers.
+
+- [ ] F.3.1 Before sync, check for name collisions with unmanaged servers.
+- [ ] F.3.2 Prompt user to rename Relay server or adopt the existing one.
+- [ ] F.3.3 Never silently overwrite user-managed servers.
+
+### F.4 **Project-Scoped Configs**
+
+Support per-project MCP server configurations (e.g., `.cursor/mcp.json` in a repo).
+
+- [ ] F.4.1 Detect project-scoped config files.
+- [ ] F.4.2 Read-only display in UI (show which servers are project-scoped).
+- [ ] F.4.3 Option to "elevate" project server to global scope.
