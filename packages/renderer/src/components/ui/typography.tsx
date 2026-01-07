@@ -5,14 +5,16 @@ import { cn } from '../../lib/utils';
 const typographyVariants = cva('', {
   variants: {
     variant: {
-      h1: 'text-3xl font-bold tracking-tight',
-      h2: 'text-2xl font-semibold tracking-tight',
-      h3: 'text-xl font-semibold tracking-tight',
-      h4: 'text-lg font-semibold tracking-tight',
-      body: 'text-base',
-      small: 'text-sm',
-      label: 'text-xs uppercase tracking-[0.25em] font-medium',
-      eyebrow: 'text-xs font-semibold uppercase tracking-[0.3em]',
+      // Minimal 4-size scale: lg (18px), base (16px), sm (14px), xs (12px)
+      // Use weight, color, and space for hierarchy instead of more sizes
+      h1: 'text-lg font-semibold tracking-tight',
+      h2: 'text-base font-semibold',
+      h3: 'text-sm font-semibold',
+      h4: 'text-sm font-medium',
+      body: 'text-sm',
+      small: 'text-xs',
+      label: 'text-xs uppercase tracking-wide font-medium',
+      caption: 'text-xs',
     },
     color: {
       default: 'text-foreground',
@@ -42,7 +44,7 @@ const Typography = React.forwardRef<HTMLElement, TypographyProps>(
         variant === 'h2' ? 'h2' :
           variant === 'h3' ? 'h3' :
             variant === 'h4' ? 'h4' :
-              variant === 'label' || variant === 'eyebrow' ? 'div' :
+              variant === 'label' || variant === 'caption' ? 'div' :
                 'p'
     ) as React.ElementType;
 

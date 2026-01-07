@@ -92,8 +92,8 @@ export function SettingsView({
       <section>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-base font-semibold text-foreground">Detected Agents</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="text-sm font-semibold text-foreground">Detected Agents</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
               {detectedCount} of 3 supported apps detected on this machine
             </p>
           </div>
@@ -159,7 +159,7 @@ export function SettingsView({
                   </p>
                   {detected && status?.path && (
                     <p
-                      className="text-[11px] text-muted-foreground font-mono truncate max-w-[200px]"
+                      className="text-xs text-muted-foreground/60 font-mono truncate max-w-[200px] mt-0.5"
                       title={status.path}
                     >
                       {status.path}
@@ -176,8 +176,8 @@ export function SettingsView({
       <section>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-base font-semibold text-foreground">Sync Status</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="text-sm font-semibold text-foreground">Sync Status</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
               Sync your server configs to all detected apps
             </p>
           </div>
@@ -186,12 +186,12 @@ export function SettingsView({
         <div className="p-4 rounded-xl border border-border bg-card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Last synced</p>
-              <p className="text-lg font-medium text-foreground">
+              <p className="text-xs text-muted-foreground">Last synced</p>
+              <p className="text-sm font-medium text-foreground mt-0.5">
                 {formatTimestamp(syncStatus.lastRun)}
               </p>
               {syncStatus.lastError && (
-                <p className="text-sm text-destructive mt-1">
+                <p className="text-xs text-destructive mt-1">
                   {syncStatus.lastError}
                 </p>
               )}
@@ -211,8 +211,8 @@ export function SettingsView({
       <section>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-base font-semibold text-foreground">Updates</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="text-sm font-semibold text-foreground">Updates</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
               Check for new versions of Relay
             </p>
           </div>
@@ -221,21 +221,21 @@ export function SettingsView({
         <div className="p-4 rounded-xl border border-border bg-card space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Current version</p>
-              <p className="text-lg font-medium font-mono text-foreground">
+              <p className="text-xs text-muted-foreground">Current version</p>
+              <p className="text-sm font-medium font-mono text-foreground mt-0.5">
                 {updateStatus.currentVersion}
               </p>
             </div>
             <div className="text-right">
-              <p className="text-sm text-muted-foreground">Latest</p>
-              <p className="text-lg font-medium font-mono text-foreground">
+              <p className="text-xs text-muted-foreground">Latest</p>
+              <p className="text-sm font-medium font-mono text-foreground mt-0.5">
                 {updateStatus.latestVersion ?? '—'}
               </p>
             </div>
           </div>
 
           {updateStatus.message && (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               {updateStatus.message}
             </p>
           )}
@@ -247,7 +247,7 @@ export function SettingsView({
                 onCheckedChange={onToggleAutoUpdate}
                 disabled={updateBusy}
               />
-              <span className="text-sm text-muted-foreground">
+              <span className="text-xs text-muted-foreground">
                 Auto-check for updates
               </span>
             </div>

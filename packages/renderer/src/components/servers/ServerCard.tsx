@@ -108,7 +108,7 @@ export function ServerCard({
 
         {/* App Toggles */}
         <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border/50">
-          <span className="text-[11px] text-muted-foreground uppercase tracking-wide mr-2">
+          <span className="text-xs text-muted-foreground/60 uppercase tracking-wide mr-2">
             Apps
           </span>
           {AGENTS.map((agent) => {

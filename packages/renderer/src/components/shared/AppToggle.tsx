@@ -51,8 +51,8 @@ export function AppToggle({
       onClick={onChange}
       disabled={isDisabled}
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-md border font-medium transition-all duration-150',
-        size === 'sm' ? 'px-2 py-1 text-[11px]' : 'px-2.5 py-1.5 text-xs',
+        'inline-flex items-center gap-1.5 rounded-md border font-medium transition-all duration-150 text-xs',
+        size === 'sm' ? 'px-2 py-1' : 'px-2.5 py-1.5',
         isDisabled && 'opacity-40 cursor-not-allowed',
         !isDisabled && 'hover:border-border/80',
         enabled && detected
@@ -71,7 +71,7 @@ export function AppToggle({
       </span>
       <span>{appLabels[app]}</span>
       {!detected && (
-        <span className="text-muted-foreground/50 text-[9px]">(N/A)</span>
+        <span className="text-muted-foreground/50">(N/A)</span>
       )}
     </button>
   );

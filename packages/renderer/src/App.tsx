@@ -474,10 +474,10 @@ export default function App() {
         {/* Header */}
         <header className="flex items-center justify-between px-8 py-5 border-b border-border bg-background/80 backdrop-blur-sm">
           <div>
-            <h1 className="text-xl font-semibold text-foreground">
+            <h1 className="text-base font-semibold text-foreground">
               {activeView === 'servers' ? 'MCP Servers' : 'Settings'}
             </h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs text-muted-foreground mt-0.5">
               {activeView === 'servers'
                 ? `${servers.length} server${servers.length !== 1 ? 's' : ''} configured`
                 : `${detectedCount} of 3 apps detected`}

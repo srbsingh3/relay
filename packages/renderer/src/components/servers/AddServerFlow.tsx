@@ -196,8 +196,8 @@ export function AddServerFlow({ onComplete, onCancel }: AddServerFlowProps) {
         <div className="px-6 py-4 border-b border-border">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-foreground">Add Server</h2>
-              <p className="text-sm text-muted-foreground">
+              <h2 className="text-sm font-semibold text-foreground">Add Server</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
                 {step === 'paste' && 'Paste your MCP server configuration'}
                 {step === 'secrets' && 'Enter your API keys and secrets'}
                 {step === 'preview' && 'Review and confirm'}
@@ -373,13 +373,13 @@ Example:
             <div className="space-y-4">
               <div className="p-4 rounded-lg bg-muted/50 border border-border space-y-3">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-base font-semibold text-foreground">
+                  <h3 className="text-sm font-semibold text-foreground">
                     {parsedServer.name}
                   </h3>
                   <TypeBadge type={parsedServer.type} />
                 </div>
 
-                <div className="space-y-2 text-sm">
+                <div className="space-y-2 text-xs">
                   {parsedServer.type === 'url' && parsedServer.url && (
                     <div>
                       <span className="text-muted-foreground">URL:</span>{' '}

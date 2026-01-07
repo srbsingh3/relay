@@ -57,8 +57,8 @@ export function ServerList({
     return (
       <div className="flex flex-col items-center justify-center h-64 text-center">
         <ServerIcon />
-        <h3 className="mt-4 text-lg font-medium text-foreground">No servers yet</h3>
-        <p className="mt-1 text-sm text-muted-foreground max-w-sm">
+        <h3 className="mt-4 text-sm font-semibold text-foreground">No servers yet</h3>
+        <p className="mt-1 text-xs text-muted-foreground max-w-sm">
           Add your first MCP server by pasting its configuration.
           Just copy the JSON from your provider's docs.
         </p>
