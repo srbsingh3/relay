@@ -4,9 +4,12 @@ This checklist mirrors the build phases in `AGENTS.md` and the contracts in `PRD
 Use it as the primary execution plan for the macOS MVP.
 
 ## How to Use This Checklist
-1. Start each milestone by rereading the “Milestone Handshake” section in `AGENTS.md` so the intent is fresh.
+1. Start each milestone by rereading the "Milestone Handshake" section in `AGENTS.md` so the intent is fresh.
 2. Work through the checkboxes below; add sub-tasks in your tooling if a step needs deeper tracking.
 3. Keep `PRD.md` open for data contracts/guardrails when making design or implementation decisions.
+
+## Current Priority: Milestone 3A — UX Refresh (Paste-to-Add & Modern UI)
+This milestone introduces the simplified paste-to-add flow, theme system, and modern developer-focused UI.
 
 ---
 
@@ -177,6 +180,121 @@ Use it as the primary execution plan for the macOS MVP.
 - [x] 3.6 **Milestone exit gate**
   - [x] 3.6.1 Server list renders with All Apps master switch + per-app pills, reflecting detection state.
   - [x] 3.6.2 Add/Edit modal saves to registry + Keychain with inline validation and respects alias reuse rules.
+
+---
+
+## Milestone 3A — UX Refresh (Paste-to-Add & Modern UI)
+
+This milestone transforms the UX with a paste-to-add flow (replacing manual forms), modern developer-focused design, and theme support.
+
+- [ ] 3A.1 **Theme System**
+  - [ ] 3A.1.1 Implement theme provider with Dark/Light/System modes.
+  - [ ] 3A.1.2 Use CSS custom properties for theme tokens (colors, spacing, etc.).
+  - [ ] 3A.1.3 Add theme toggle to Settings view.
+  - [ ] 3A.1.4 Persist theme preference to registry or local storage.
+  - [ ] 3A.1.5 Apply saved theme on app launch.
+  - [ ] 3A.1.6 Ensure all components respect theme changes without reload.
+
+- [ ] 3A.2 **Registry Schema v2 Migration**
+  - [ ] 3A.2.1 Update TypeScript types to support both `command` and `url` server types.
+  - [ ] 3A.2.2 Add `type` field to server schema (`"command"` | `"url"`).
+  - [ ] 3A.2.3 For URL servers: `url`, `headers` fields.
+  - [ ] 3A.2.4 For command servers: `command`, `args`, `env` fields.
+  - [ ] 3A.2.5 Implement migration from v1 → v2 (add `type: "command"` to existing servers).
+  - [ ] 3A.2.6 Update `saveRegistry()` to write version 2.
+  - [ ] 3A.2.7 Add tests for migration logic.
+
+- [ ] 3A.3 **Config Parser Service (Paste-to-Add)**
+  - [ ] 3A.3.1 Implement JSON parser for MCP config snippets.
+  - [ ] 3A.3.2 Detect server type from pasted config:
+    - [ ] 3A.3.2.1 URL-based: has `url` field.
+    - [ ] 3A.3.2.2 Command-based: has `command` field.
+  - [ ] 3A.3.3 Extract server name from `mcpServers` object key.
+  - [ ] 3A.3.4 Implement placeholder detection patterns:
+    - [ ] 3A.3.4.1 `YOUR_API_KEY`, `YOUR_TOKEN`, `YOUR_SECRET`
+    - [ ] 3A.3.4.2 `<api-key>`, `<token>`, `<secret>`
+    - [ ] 3A.3.4.3 `REPLACE_ME`, `CHANGEME`, `XXX`
+    - [ ] 3A.3.4.4 All-caps patterns ending in `_KEY`, `_TOKEN`, `_SECRET`
+  - [ ] 3A.3.5 Return parsed result with:
+    - [ ] 3A.3.5.1 Server name.
+    - [ ] 3A.3.5.2 Server type (url/command).
+    - [ ] 3A.3.5.3 Config data.
+    - [ ] 3A.3.5.4 List of detected placeholders with locations.
+  - [ ] 3A.3.6 Handle parse errors gracefully with clear error messages.
+  - [ ] 3A.3.7 Add unit tests for parser with various input formats.
+
+- [ ] 3A.4 **Modern UI Design System**
+  - [ ] 3A.4.1 Establish Linear/Cursor-inspired design tokens:
+    - [ ] 3A.4.1.1 Color palette for dark and light modes.
+    - [ ] 3A.4.1.2 Typography scale (system fonts, monospace for code).
+    - [ ] 3A.4.1.3 Spacing and border radius values.
+    - [ ] 3A.4.1.4 Shadow and elevation system.
+  - [ ] 3A.4.2 Update shadcn/ui component styling to match aesthetic.
+  - [ ] 3A.4.3 Implement subtle, intentional motion (transitions only, no animations).
+  - [ ] 3A.4.4 Create consistent icon usage guidelines (Lucide, minimal decorative use).
+
+- [ ] 3A.5 **Paste-to-Add UI Flow**
+  - [ ] 3A.5.1 Replace Add Server modal with paste-first flow:
+    - [ ] 3A.5.1.1 Large textarea for pasting config JSON.
+    - [ ] 3A.5.1.2 Real-time parsing feedback as user pastes.
+    - [ ] 3A.5.1.3 Show parse errors inline with helpful hints.
+  - [ ] 3A.5.2 Secret prompt step:
+    - [ ] 3A.5.2.1 Display labeled input for each detected placeholder.
+    - [ ] 3A.5.2.2 Show context (which field the secret is for).
+    - [ ] 3A.5.2.3 Password-style inputs with show/hide toggle.
+  - [ ] 3A.5.3 Preview step before save:
+    - [ ] 3A.5.3.1 Show parsed server name and type badge.
+    - [ ] 3A.5.3.2 Display endpoint/command summary.
+    - [ ] 3A.5.3.3 Confirm All Apps default ON.
+  - [ ] 3A.5.4 Save action:
+    - [ ] 3A.5.4.1 Generate unique ID.
+    - [ ] 3A.5.4.2 Store secrets in Keychain.
+    - [ ] 3A.5.4.3 Add server to registry.
+    - [ ] 3A.5.4.4 Close flow and show success toast.
+
+- [ ] 3A.6 **Server List Redesign**
+  - [ ] 3A.6.1 Card-based layout for each server:
+    - [ ] 3A.6.1.1 Prominent master toggle (large, accessible).
+    - [ ] 3A.6.1.2 Server name with type badge (URL/Command).
+    - [ ] 3A.6.1.3 Endpoint or command preview (truncated if long).
+  - [ ] 3A.6.2 Per-app toggles row:
+    - [ ] 3A.6.2.1 Smaller toggles for Cursor / Claude / Codex.
+    - [ ] 3A.6.2.2 Disabled state for undetected apps.
+    - [ ] 3A.6.2.3 Visual indication of Custom vs All Apps state.
+  - [ ] 3A.6.3 Server actions:
+    - [ ] 3A.6.3.1 Edit button (opens edit view).
+    - [ ] 3A.6.3.2 Delete button with confirmation dialog.
+  - [ ] 3A.6.4 Empty state when no servers configured.
+  - [ ] 3A.6.5 Add Server CTA (opens paste-to-add flow).
+
+- [ ] 3A.7 **Edit Server View**
+  - [ ] 3A.7.1 Display read-only server summary:
+    - [ ] 3A.7.1.1 Name, type, endpoint/command.
+  - [ ] 3A.7.2 Editable secrets section:
+    - [ ] 3A.7.2.1 List current secrets (masked).
+    - [ ] 3A.7.2.2 Update button to change secret value.
+  - [ ] 3A.7.3 Per-app toggles (editable).
+  - [ ] 3A.7.4 Delete server option.
+  - [ ] 3A.7.5 Back navigation to server list.
+
+- [ ] 3A.8 **Settings View Updates**
+  - [ ] 3A.8.1 Theme selector (Dark / Light / System).
+  - [ ] 3A.8.2 Detected agents cards (existing).
+  - [ ] 3A.8.3 Sync status and Sync Now button (existing).
+  - [ ] 3A.8.4 Update check card (existing).
+
+- [ ] 3A.9 **Sync Engine Updates for URL Servers**
+  - [ ] 3A.9.1 Update Cursor adapter to handle URL servers:
+    - [ ] 3A.9.1.1 Output `url` + `headers` instead of `command` + `args` for URL type.
+  - [ ] 3A.9.2 Update Claude adapter for URL servers.
+  - [ ] 3A.9.3 Update Codex adapter for URL servers.
+  - [ ] 3A.9.4 Add tests for URL server sync output.
+
+- [ ] 3A.10 **Milestone exit gate**
+  - [ ] 3A.10.1 Paste-to-add flow works end-to-end: paste JSON → detect placeholders → prompt for secrets → save to registry + Keychain.
+  - [ ] 3A.10.2 Theme toggle (Dark/Light/System) persists and applies on restart.
+  - [ ] 3A.10.3 Both URL and command server types sync correctly to all adapters.
+  - [ ] 3A.10.4 UI matches modern developer tool aesthetic (Linear/Cursor-inspired).
 
 ---
 
