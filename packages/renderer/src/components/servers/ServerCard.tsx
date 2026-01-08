@@ -68,6 +68,7 @@ export function ServerCard({
   const serverType = getServerType(server);
   const masterState = computeMasterState(server, detection);
   const isEnabled = masterState === 'on' || masterState === 'custom';
+  const detectedAgents = AGENTS.filter((agent) => detection[agent]?.detected);
 
   return (
     <div
@@ -114,26 +115,29 @@ export function ServerCard({
           </div>
         </div>
 
-        {/* App Toggles */}
-        <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border/50">
+        {/* App Toggles - Only show detected agents */}
+        <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-border/50">
           <span className="text-xs text-muted-foreground/60 uppercase tracking-wide mr-2">
             Apps
           </span>
-          {AGENTS.map((agent) => {
-            const detected = detection[agent]?.detected ?? false;
-            const enabled = server.enabled && server.apps?.[agent] !== false;
-            return (
-              <AppToggle
-                key={agent}
-                app={agent}
-                enabled={enabled}
-                detected={detected}
-                onChange={() => onAppToggle(agent)}
-                disabled={!server.enabled}
-                size="sm"
-              />
-            );
-          })}
+          {detectedAgents.length === 0 ? (
+            <span className="text-xs text-muted-foreground/50">No agents detected</span>
+          ) : (
+            detectedAgents.map((agent) => {
+              const enabled = server.enabled && server.apps?.[agent] !== false;
+              return (
+                <AppToggle
+                  key={agent}
+                  app={agent}
+                  enabled={enabled}
+                  detected={true}
+                  onChange={() => onAppToggle(agent)}
+                  disabled={!server.enabled}
+                  size="sm"
+                />
+              );
+            })
+          )}
         </div>
       </div>
 
