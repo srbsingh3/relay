@@ -89,8 +89,11 @@ export function Sidebar({
 
   return (
     <aside className="flex flex-col w-56 h-full bg-sidebar border-r border-sidebar-border">
-      {/* Logo */}
-      <div className="flex items-center gap-3 px-5 py-5">
+      {/* Logo - draggable region for window movement (traffic lights area) */}
+      <div
+        className="flex items-center gap-3 px-5 py-5 pt-7"
+        style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
+      >
         <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-foreground text-background font-semibold text-sm">
           R
         </div>

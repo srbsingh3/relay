@@ -531,8 +531,11 @@ export default function App() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Header */}
-        <header className="flex items-center justify-between px-8 py-5 border-b border-border bg-background/80 backdrop-blur-sm">
+        {/* Header - draggable region for window movement */}
+        <header
+          className="flex items-center justify-between px-8 py-5 border-b border-border bg-background/80 backdrop-blur-sm"
+          style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
+        >
           <div>
             <h1 className="text-base font-semibold text-foreground">
               {activeView === 'servers' ? 'MCP Servers' : 'Settings'}
@@ -545,10 +548,12 @@ export default function App() {
           </div>
 
           {activeView === 'servers' && (
-            <Button onClick={() => setModalState({ mode: 'add' })}>
-              <PlusIcon />
-              Add Server
-            </Button>
+            <div style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
+              <Button onClick={() => setModalState({ mode: 'add' })}>
+                <PlusIcon />
+                Add Server
+              </Button>
+            </div>
           )}
         </header>
 

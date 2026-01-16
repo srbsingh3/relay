@@ -69,7 +69,14 @@ const createWindow = (): BrowserWindow => {
     })
   );
 
-  window.once('ready-to-show', () => window.show());
+  window.once('ready-to-show', () => {
+    // In development, show without stealing focus to avoid disrupting workflow
+    if (app.isPackaged) {
+      window.show();
+    } else {
+      window.showInactive();
+    }
+  });
   window.loadFile(ensureRendererBundle());
 
   window.on('closed', () => {
