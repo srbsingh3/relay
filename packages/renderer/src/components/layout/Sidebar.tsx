@@ -99,7 +99,6 @@ export function Sidebar({
         </div>
         <div>
           <h1 className="text-sm font-semibold text-foreground">Relay</h1>
-          <p className="text-xs text-muted-foreground/70">MCP Manager</p>
         </div>
       </div>
 
