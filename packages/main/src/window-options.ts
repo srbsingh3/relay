@@ -4,15 +4,19 @@ interface WindowOptionsArgs {
   preloadPath: string;
   isMac: boolean;
   allowDevTools: boolean;
+  savedBounds?: { x?: number; y?: number; width?: number; height?: number } | null;
 }
 
 export const buildMainWindowOptions = ({
   preloadPath,
   isMac,
-  allowDevTools
+  allowDevTools,
+  savedBounds
 }: WindowOptionsArgs): BrowserWindowConstructorOptions => ({
-  width: 1100,
-  height: 700,
+  width: savedBounds?.width ?? 1100,
+  height: savedBounds?.height ?? 700,
+  x: savedBounds?.x,
+  y: savedBounds?.y,
   minWidth: 1100,
   minHeight: 700,
   show: false,

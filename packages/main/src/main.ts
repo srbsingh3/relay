@@ -4,6 +4,7 @@ import { app, BrowserWindow, nativeTheme, session } from 'electron';
 import { registerIpcHandlers } from './ipc/handlers';
 import { initializeTray } from './tray';
 import { buildMainWindowOptions } from './window-options';
+import { loadWindowBounds, trackWindowBounds } from './window-bounds';
 
 const isMac = process.platform === 'darwin';
 const rendererHtml = path.join(__dirname, '../../renderer/dist/index.html');
@@ -61,11 +62,15 @@ const createWindow = (): BrowserWindow => {
     return mainWindow;
   }
 
+  // Load saved window position (in dev mode to preserve position across reloads)
+  const savedBounds = !app.isPackaged ? loadWindowBounds() : null;
+
   const window = new BrowserWindow(
     buildMainWindowOptions({
       preloadPath,
       isMac,
-      allowDevTools: !app.isPackaged
+      allowDevTools: !app.isPackaged,
+      savedBounds
     })
   );
 
@@ -82,6 +87,11 @@ const createWindow = (): BrowserWindow => {
   window.on('closed', () => {
     mainWindow = null;
   });
+
+  // Track window bounds changes (in dev mode to preserve position across reloads)
+  if (!app.isPackaged) {
+    trackWindowBounds(window);
+  }
 
   mainWindow = window;
   return window;
